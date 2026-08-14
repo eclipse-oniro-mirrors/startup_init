@@ -80,6 +80,7 @@ static bool IsPublicParam(const char *param)
         "persist.ffrt", "persist.filemanagement.param_watcher.on",
         "persist.global", "persist.graphic.profiler",
         "persist.hdc.jdwp", "persist.hiview",
+        "persist.init", "persist.hmos_fusion_mgr.ctl.support_hmos",
         "persist.kernel", "persist.location.locationhub_state",
         "persist.mmitest.isrunning", "persist.moduleupdate.bms",
         "persist.multimedia", "persist.nearlink.switch_enable",
@@ -130,7 +131,7 @@ static void LoadPersistParam_(const bool clearFactoryPersistParams, const char *
         } else {
             ret = SplitParamString(buffer, NULL, 0, LoadOnePublicPersistParam_, (uint32_t*)&clearFactoryPersistParams);
         }
-        PARAM_CHECK(ret == 0, continue, "Failed to set param %d %s", ret, buffer);
+        PARAM_CHECK(ret == 0, continue, "failed set param %d %s", ret, buffer);
         paramNum++;
     }
     (void)fclose(fp);
@@ -202,7 +203,7 @@ static int LoadPersistParam(int fileType)
     }
     const uint32_t buffSize = PARAM_NAME_LEN_MAX + PARAM_CONST_VALUE_LEN_MAX + 10;  // 10 max len
     char *buffer = calloc(1, buffSize);
-    PARAM_CHECK(buffer != NULL, return -1, "Failed to alloc");
+    PARAM_CHECK(buffer != NULL, return -1, "failed alloc");
 
     char *tmpPath = "";
     char *path = "";
@@ -242,7 +243,7 @@ static int SavePersistParam(const char *name, const char *value)
     }
     ParamMutexPost(&g_saveMutex);
     if (ret <= 0) {
-        PARAM_LOGE("Failed to save persist param %s", name);
+        PARAM_LOGE("failed save persist param %s", name);
     }
     return ret;
 }

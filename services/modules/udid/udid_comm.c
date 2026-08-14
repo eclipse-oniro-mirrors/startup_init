@@ -28,9 +28,10 @@ INIT_LOCAL_API const char *GetSerial_(void)
 #ifdef OHOS_LITE
     return HalGetSerial();
 #else
-    static char *ohosSerial = NULL;
-    if (ohosSerial != NULL) {
-        return ohosSerial;
+    static char *_Atomic ohosSerial = NULL;
+    char *cached = atomic_load(&ohosSerial);
+    if (cached != NULL) {
+        return cached;
     }
 
     char *value;
@@ -39,12 +40,11 @@ INIT_LOCAL_API const char *GetSerial_(void)
     int ret = SystemGetParameter("ohos.boot.sn", value, &len);
     BEGET_CHECK(ret == 0, free(value);
         return NULL);
-    if (ohosSerial != NULL) {
+    char *expected = NULL;
+    if (!atomic_compare_exchange_strong(&ohosSerial, &expected, value)) {
         free(value);
-        return ohosSerial;
     }
-    ohosSerial = value;
-    return ohosSerial;
+    return atomic_load(&ohosSerial);
 #endif
 }
 

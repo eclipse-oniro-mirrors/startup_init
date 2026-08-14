@@ -94,15 +94,6 @@ template("lib_parameterbase_template") {
       if (defined(init_lite_memory_size)) {
         defines += [ "PARAM_WORKSPACE_MAX=${init_lite_memory_size}" ]
       }
-      if (defined(init_lite_param_const_value_len_max)) {
-        defines += [ "PARAM_CONST_VALUE_LEN_MAX=${init_lite_param_const_value_len_max}" ]
-      }
-      if (defined(init_lite_param_value_len_max)) {
-        defines += [ "PARAM_VALUE_LEN_MAX=${init_lite_param_value_len_max}" ]
-      }
-      if (defined(init_lite_param_name_len_max)) {
-        defines += [ "PARAM_NAME_LEN_MAX=${init_lite_param_name_len_max}" ]
-      }
     }
   } else {
     if (!startup_init_with_param_base) {
@@ -134,9 +125,11 @@ template("lib_parameterbase_template") {
     }
 
     ohos_static_library(target_name) {
+      branch_protector_ret = "pac_ret"
       visibility = [
         ":*",
         "//third_party/musl/*",
+        "//vendor/open_source/jemalloc",
         "//out/*"
       ]
       sources = comm_sources
@@ -203,6 +196,7 @@ lib_parameterbase_template("parameterbase_noflto") {
 if (!defined(ohos_lite)) {
   # extend for base
   ohos_static_library("parameterbase_ext") {
+    branch_protector_ret = "pac_ret"
     sources = comm_sources
     sources += [
       "//base/startup/init/services/log/init_commlog.c",

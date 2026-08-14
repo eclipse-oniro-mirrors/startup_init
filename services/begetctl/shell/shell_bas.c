@@ -717,7 +717,11 @@ const char *BShellEnvGetStringParam(BShellHandle handle, const char *name)
     if (param == NULL) {
         return "";
     }
-    BSH_ONLY_CHECK(param->type != PARAM_STRING || param->value.string == NULL, return param->value.string);
+
+    if (param->type == PARAM_STRING && param->value.string != NULL) {
+        return param->value.string;
+    }
+
     return "";
 }
 

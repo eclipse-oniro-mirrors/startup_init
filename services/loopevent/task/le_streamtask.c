@@ -59,7 +59,7 @@ static LE_STATUS HandleRecvMsg_(const LoopHandle loopHandle,
 {
     LE_STATUS status = LE_SUCCESS;
     LE_Buffer *buffer = CreateBuffer(LOOP_DEFAULT_BUFFER);
-    LE_CHECK(buffer != NULL, return LE_NO_MEMORY, "Failed to create buffer");
+    LE_CHECK(buffer != NULL, return LE_NO_MEMORY, "failed create buffer");
     int readLen = 0;
     while (1) {
         if (handleRecvMsg != NULL) {
@@ -214,10 +214,10 @@ LE_STATUS LE_CreateStreamServer(const LoopHandle loopHandle,
     int ret = 0;
     if (info->socketId <= 0) {
         fd = CreateSocket(info->baseInfo.flags, info->server);
-        LE_CHECK(fd > 0, return LE_FAILURE, "Failed to create socket %s", info->server);
+        LE_CHECK(fd > 0, return LE_FAILURE, "failed create socket %s", info->server);
     } else {
         ret = listenSocket(fd, info->baseInfo.flags, info->server);
-        LE_CHECK(ret == 0, return LE_FAILURE, "Failed to listen socket %s", info->server);
+        LE_CHECK(ret == 0, return LE_FAILURE, "failed listen socket %s", info->server);
     }
 
     EventLoop *loop = (EventLoop *)loopHandle;
@@ -231,7 +231,7 @@ LE_STATUS LE_CreateStreamServer(const LoopHandle loopHandle,
     task->incommingConnect = info->incommingConnect;
     loop->addEvent(loop, (const BaseTask *)task, EVENT_READ);
     ret = memcpy_s(task->server, strlen(info->server) + 1, info->server, strlen(info->server) + 1);
-    LE_CHECK(ret == 0, return LE_FAILURE, "Failed to copy server name %s", info->server);
+    LE_CHECK(ret == 0, return LE_FAILURE, "failed copy server name %s", info->server);
     *taskHandle = (TaskHandle)task;
     return LE_SUCCESS;
 }
@@ -241,9 +241,10 @@ LE_STATUS LE_CreateStreamClient(const LoopHandle loopHandle,
 {
     LE_CHECK(loopHandle != NULL && taskHandle != NULL && info != NULL, return LE_INVALID_PARAM, "Invalid parameters");
     LE_CHECK(info->recvMessage != NULL, return LE_FAILURE, "Invalid parameters recvMessage %s", info->server);
+    LE_CHECK(info->server != NULL, return LE_FAILURE, "Invalid parameters server %s", info->server);
 
     int fd = CreateSocket(info->baseInfo.flags, info->server);
-    LE_CHECK(fd > 0, return LE_FAILURE, "Failed to create socket %s", info->server);
+    LE_CHECK(fd > 0, return LE_FAILURE, "failed create socket %s", info->server);
 
     StreamClientTask *task = (StreamClientTask *)CreateTask(loopHandle, fd, &info->baseInfo, sizeof(StreamClientTask));
     LE_CHECK(task != NULL, close(fd);
@@ -273,7 +274,7 @@ LE_STATUS LE_AcceptStreamClient(const LoopHandle loopHandle, const TaskHandle se
     int fd = -1;
     if ((info->baseInfo.flags & TASK_TEST) != TASK_TEST) {
         fd = AcceptSocket(GetSocketFd(server), info->baseInfo.flags);
-        LE_CHECK(fd > 0, return LE_FAILURE, "Failed to accept socket %d", GetSocketFd(server));
+        LE_CHECK(fd > 0, return LE_FAILURE, "failed accept socket %d", GetSocketFd(server));
     }
     StreamConnectTask *task = (StreamConnectTask *)CreateTask(
         loopHandle, fd, &info->baseInfo, sizeof(StreamConnectTask));

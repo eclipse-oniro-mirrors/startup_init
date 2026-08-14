@@ -16,6 +16,13 @@
 #include "le_loop.h"
 #include "le_epoll.h"
 
+#ifndef OHOS_LITE
+#include <limits.h>
+#include <stdint.h>
+#include "securec.h"
+
+#define PATH_MAX_LENGTH 128
+#endif
 
 static int TaskNodeCompare(const HashNode *node1, const HashNode *node2)
 {
@@ -47,6 +54,9 @@ static void TaskNodeFree(const HashNode *node, void *context)
 {
     BaseTask *task = HASHMAP_ENTRY(node, BaseTask, hashNode);
     CloseTask((const LoopHandle)context, task);
+    if (task == NULL) {
+        return;
+    }
     free(task);
     task = NULL;
 }
@@ -55,7 +65,7 @@ static LE_STATUS CreateLoop_(EventLoop **loop, uint32_t maxevents, uint32_t time
 {
 #ifdef LOOP_EVENT_USE_EPOLL
     LE_STATUS ret = CreateEpollLoop(loop, maxevents, timeout);
-    LE_CHECK(ret == LE_SUCCESS, return ret, "Failed to create epoll loop");
+    LE_CHECK(ret == LE_SUCCESS, return ret, "failed create epoll loop");
 #endif
     (*loop)->maxevents = maxevents;
     (*loop)->timeout = timeout;
@@ -73,7 +83,7 @@ static LE_STATUS CreateLoop_(EventLoop **loop, uint32_t maxevents, uint32_t time
         128
     };
     ret = OH_HashMapCreate(&(*loop)->taskMap, &info);
-    LE_CHECK(ret == LE_SUCCESS, return ret, "failed to create hash map loop");
+    LE_CHECK(ret == LE_SUCCESS, return ret, "failed create hash map loop");
     OH_ListInit(&((*loop)->timerList));
     return ret;
 }
@@ -90,13 +100,33 @@ LE_STATUS CloseLoop(EventLoop *loop)
     return LE_SUCCESS;
 }
 
+#ifndef OHOS_LITE
+static void CheckFdInfo(int fd)
+{
+    LE_CHECK(fd >= 0, return, "invalid fd");
+    char fdPath[PATH_MAX_LENGTH] = {0};
+    int len = snprintf_s(fdPath, sizeof(fdPath), sizeof(fdPath) - 1,
+        "/proc/%d/fd/%d", getpid(), fd);
+    LE_CHECK(len > 0, return, "build fd path failed");
+
+    char fdLink[PATH_MAX_LENGTH] = {0};
+    ssize_t bytes = readlink(fdPath, fdLink, sizeof(fdLink) - 1);
+    LE_CHECK(bytes > 0, return, "read fd link failed %d", errno);
+    fdLink[bytes] = '\0';
+    LE_LOGI("get fd link %s", fdLink);
+}
+#endif
+
 LE_STATUS ProcessEvent(const EventLoop *loop, int fd, uint32_t oper)
 {
     BaseTask *task = GetTaskByFd((EventLoop *)loop, fd);
     if (task != NULL) {
         task->handleEvent((LoopHandle)loop, (TaskHandle)task, oper);
     } else {
-        LE_LOGE("ProcessEvent with invalid fd %d", fd);
+#ifndef OHOS_LITE
+        LE_CHECK(getpid() != 1, return LE_FAILURE, "ignore init loop");
+        CheckFdInfo(fd);
+#endif
     }
     return LE_SUCCESS;
 }

@@ -144,7 +144,6 @@ static bool SpawnHitraceBootTrace(void)
         /* Child transitions init -> hitrace via SELinux domain_auto_transition.
          * hitrace domain needs data_local_tmp access (developer_only policy). */
         (void)execl("/system/bin/hitrace", "hitrace", "boot-trace", (char *)NULL);
-        _exit(EXIT_FAILURE);
     }
     if (pid < 0) {
         PLUGIN_LOGE("SpawnHitraceBootTrace: fork failed, errno:%d", errno);
@@ -163,13 +162,13 @@ static char *ReadFile(const char *path)
     char realPath[PATH_MAX] = "";
     realpath(path, realPath);
     FILE *fd = fopen(realPath, "r");
-    PLUGIN_CHECK(fd != NULL, return NULL, "Failed to fopen path %s", path);
+    PLUGIN_CHECK(fd != NULL, return NULL, "failed fopen path %s", path);
     char *buffer = NULL;
     do {
         buffer = (char*)calloc((size_t)(fileStat.st_size + 1), sizeof(char));
-        PLUGIN_CHECK(buffer != NULL, break, "Failed to alloc memory for path %s", path);
+        PLUGIN_CHECK(buffer != NULL, break, "failed alloc memory for path %s", path);
         if (fread(buffer, fileStat.st_size, 1, fd) != 1) {
-            PLUGIN_LOGE("Failed to read file %s errno:%d", path, errno);
+            PLUGIN_LOGE("failed read file %s errno:%d", path, errno);
             free(buffer);
             buffer = NULL;
         } else {
@@ -186,7 +185,7 @@ static int InitTraceWorkspace(TraceWorkspace *workspace)
     workspace->traceState = TRACE_STATE_IDLE;
     workspace->compress = 0;
     char *fileBuf = ReadFile(TRACE_CFG_PATH);
-    PLUGIN_CHECK(fileBuf != NULL, return -1, "Failed to read file content %s", TRACE_CFG_PATH);
+    PLUGIN_CHECK(fileBuf != NULL, return -1, "failed read file content %s", TRACE_CFG_PATH);
     workspace->jsonRootNode = cJSON_Parse(fileBuf);
     PLUGIN_CHECK(workspace->jsonRootNode != NULL, free(fileBuf);
         return -1, "Failed to parse json file %s", TRACE_CFG_PATH);
@@ -213,10 +212,10 @@ static bool IsTraceMountedInner(TraceWorkspace *workspace, const char *fsPath)
 {
     int len = sprintf_s((char *)workspace->buffer, sizeof(workspace->buffer),
         "%s%s", fsPath, TRACE_MARKER_PATH);
-    PLUGIN_CHECK(len > 0, return false, "Failed to format path %s", fsPath);
+    PLUGIN_CHECK(len > 0, return false, "failed format path %s", fsPath);
     if (access(workspace->buffer, F_OK) != -1) {
         workspace->traceRootPath = strdup(fsPath);
-        PLUGIN_CHECK(workspace->traceRootPath != NULL, return false, "Failed to dup fsPath");
+        PLUGIN_CHECK(workspace->traceRootPath != NULL, return false, "failed dup fsPath");
         return true;
     }
     return false;
@@ -231,10 +230,10 @@ static bool IsTraceMounted(TraceWorkspace *workspace)
 static bool IsWritableFile(const char *filename)
 {
     TraceWorkspace *workspace = GetTraceWorkspace();
-    PLUGIN_CHECK(workspace != NULL, return false, "Failed to get trace workspace");
+    PLUGIN_CHECK(workspace != NULL, return false, "failed get trace workspace");
     int len = sprintf_s((char *)workspace->buffer, sizeof(workspace->buffer),
         "%s%s", workspace->traceRootPath, filename);
-    PLUGIN_CHECK(len > 0, return false, "Failed to format path %s", filename);
+    PLUGIN_CHECK(len > 0, return false, "failed format path %s", filename);
     return access(workspace->buffer, W_OK) != -1;
 }
 
@@ -242,14 +241,14 @@ static bool WriteStrToFile(const char *filename, const char *str)
 {
     PLUGIN_LOGV("WriteStrToFile filename %s %s", filename, str);
     TraceWorkspace *workspace = GetTraceWorkspace();
-    PLUGIN_CHECK(workspace != NULL, return false, "Failed to get trace workspace");
+    PLUGIN_CHECK(workspace != NULL, return false, "failed get trace workspace");
     int len = sprintf_s((char *)workspace->buffer, sizeof(workspace->buffer),
         "%s%s", workspace->traceRootPath, filename);
-    PLUGIN_CHECK(len > 0, return false, "Failed to format path %s", filename);
+    PLUGIN_CHECK(len > 0, return false, "failed format path %s", filename);
     char realPath[PATH_MAX] = "";
     realpath(workspace->buffer, realPath);
     FILE *outfile = fopen(realPath, "w");
-    PLUGIN_CHECK(outfile != NULL, return false, "Failed to open file %s.", workspace->buffer);
+    PLUGIN_CHECK(outfile != NULL, return false, "failed open file %s.", workspace->buffer);
     (void)fprintf(outfile, "%s", str);
     (void)fflush(outfile);
     (void)fclose(outfile);
@@ -264,11 +263,11 @@ static bool SetTraceEnabled(const char *path, bool enabled)
 static bool SetBufferSize(int bufferSize)
 {
     if (!WriteStrToFile(TRACE_CURRENT_TRACER, "nop")) {
-        PLUGIN_LOGE("Error: write \"nop\" to %s", TRACE_CURRENT_TRACER);
+        PLUGIN_LOGE("%s", "Error: write \"nop\" to %s\n", TRACE_CURRENT_TRACER);
     }
     char buffer[20] = {0}; // 20 max int number
     int len = sprintf_s((char *)buffer, sizeof(buffer), "%d", bufferSize);
-    PLUGIN_CHECK(len > 0, return false, "Failed to format int %d", bufferSize);
+    PLUGIN_CHECK(len > 0, return false, "failed format int %d", bufferSize);
     PLUGIN_LOGE("SetBufferSize path %s %s", TRACE_BUFFER_SIZE_KB, buffer);
     return WriteStrToFile(TRACE_BUFFER_SIZE_KB, buffer);
 }
@@ -291,9 +290,9 @@ static bool SetTgidEnable(bool enabled)
 static bool SetTraceTagsEnabled(uint64_t tags)
 {
     TraceWorkspace *workspace = GetTraceWorkspace();
-    PLUGIN_CHECK(workspace != NULL, return false, "Failed to get trace workspace");
+    PLUGIN_CHECK(workspace != NULL, return false, "failed get trace workspace");
     int len = sprintf_s((char *)workspace->buffer, sizeof(workspace->buffer), "%" PRIu64 "", tags);
-    PLUGIN_CHECK(len > 0, return false, "Failed to format tags %" PRIu64 "", tags);
+    PLUGIN_CHECK(len > 0, return false, "failed format tags %" PRId64 "", tags);
     return SystemWriteParam(TRACE_TAG_PARAMETER, workspace->buffer) == 0;
 }
 
@@ -313,10 +312,10 @@ static cJSON *GetArrayItem(const cJSON *fileRoot, int *arrSize, const char *arrN
 static bool SetUserSpaceSettings(void)
 {
     TraceWorkspace *workspace = GetTraceWorkspace();
-    PLUGIN_CHECK(workspace != NULL, return false, "Failed to get trace workspace");
+    PLUGIN_CHECK(workspace != NULL, return false, "failed get trace workspace");
     int size = 0;
     cJSON *userItem = GetArrayItem(workspace->jsonRootNode, &size, TRACE_CFG_USER);
-    PLUGIN_CHECK(userItem != NULL, return false, "Failed to get user info");
+    PLUGIN_CHECK(userItem != NULL, return false, "failed get user info");
 
     PLUGIN_LOGI("SetUserSpaceSettings: %d", size);
     uint64_t enabledTags = 0;
@@ -326,7 +325,7 @@ static bool SetUserSpaceSettings(void)
         int tag = cJSON_GetNumberValue(cJSON_GetObjectItem(item, "tag"));
         enabledTags |= 1ULL << tag;
     }
-    PLUGIN_LOGI("User enabledTags: %" PRIu64 "", enabledTags);
+    PLUGIN_LOGI("User enabledTags: %" PRId64 "", enabledTags);
     return SetTraceTagsEnabled(enabledTags) && RefreshServices();
 }
 
@@ -341,7 +340,7 @@ static bool SetKernelTraceEnabled(const TraceWorkspace *workspace, bool enabled)
     PLUGIN_LOGI("SetKernelTraceEnabled %s", enabled ? "enable" : "disable");
     int size = 0;
     cJSON *kernelItem = GetArrayItem(workspace->jsonRootNode, &size, TRACE_CFG_KERNEL);
-    PLUGIN_CHECK(kernelItem != NULL, return false, "Failed to get user info");
+    PLUGIN_CHECK(kernelItem != NULL, return false, "failed get user info");
     for (int i = 0; i < size; i++) {
         cJSON *tagJson = cJSON_GetArrayItem(kernelItem, i);
         const char *name = cJSON_GetStringValue(cJSON_GetObjectItem(tagJson, "name"));
@@ -367,7 +366,7 @@ static bool SetKernelTraceEnabled(const TraceWorkspace *workspace, bool enabled)
 static bool DisableAllTraceEvents(void)
 {
     TraceWorkspace *workspace = GetTraceWorkspace();
-    PLUGIN_CHECK(workspace != NULL, return false, "Failed to get trace workspace");
+    PLUGIN_CHECK(workspace != NULL, return false, "failed get trace workspace");
     return SetKernelTraceEnabled(workspace, false);
 }
 
@@ -391,18 +390,18 @@ static void CheckKernelType(bool *isLinux)
 static bool SetKernelSpaceSettings(void)
 {
     TraceWorkspace *workspace = GetTraceWorkspace();
-    PLUGIN_CHECK(workspace != NULL, return false, "Failed to get trace workspace");
+    PLUGIN_CHECK(workspace != NULL, return false, "failed get trace workspace");
     bool ret = SetBufferSize(BUFFER_SIZE_KB);
-    PLUGIN_CHECK(ret, return false, "Failed to set buffer");
+    PLUGIN_CHECK(ret, return false, "failed set buffer");
     ret = SetClock(TRACE_DEF_CLOCK);
-    PLUGIN_CHECK(ret, return false, "Failed to set clock");
+    PLUGIN_CHECK(ret, return false, "failed set clock");
     bool isLinux = false;
     CheckKernelType(&isLinux);
     if (isLinux) {
         ret = SetOverWriteEnable(true);
-        PLUGIN_CHECK(ret, return false, "Failed to set write enable");
+        PLUGIN_CHECK(ret, return false, "failed set write enable");
         ret = SetTgidEnable(true);
-        PLUGIN_CHECK(ret, return false, "Failed to set tgid enable");
+        PLUGIN_CHECK(ret, return false, "failed set tgid enable");
     }
     ret = SetKernelTraceEnabled(workspace, false);
     PLUGIN_CHECK(ret, return false, "Pre-clear kernel tracers failed");
@@ -417,16 +416,16 @@ static bool ClearKernelSpaceSettings(void)
 static bool ClearTrace(void)
 {
     TraceWorkspace *workspace = GetTraceWorkspace();
-    PLUGIN_CHECK(workspace != NULL, return false, "Failed to get trace workspace");
+    PLUGIN_CHECK(workspace != NULL, return false, "failed get trace workspace");
 
     int len = sprintf_s((char *)workspace->buffer, sizeof(workspace->buffer),
         "%s%s", workspace->traceRootPath, TRACE_PATH);
-    PLUGIN_CHECK(len > 0, return false, "Failed to format path %s", TRACE_PATH);
+    PLUGIN_CHECK(len > 0, return false, "failed format path %s", TRACE_PATH);
     char realPath[PATH_MAX] = "";
     realpath(workspace->buffer, realPath);
     // clear old trace file
     int fd = open(realPath, O_RDWR);
-    PLUGIN_CHECK(fd >= 0, return false, "Failed to open file %s errno %d", workspace->buffer, errno);
+    PLUGIN_CHECK(fd >= 0, return false, "failed open file %s errno %d", workspace->buffer, errno);
     (void)ftruncate(fd, 0);
     close(fd);
     return true;
@@ -472,11 +471,11 @@ static void DumpCompressedTrace(int traceFd, int outFd)
 static void DumpTrace(const TraceWorkspace *workspace, int outFd, const char *path)
 {
     int len = sprintf_s((char *)workspace->buffer, sizeof(workspace->buffer), "%s%s", workspace->traceRootPath, path);
-    PLUGIN_CHECK(len > 0, return, "Failed to format path %s", path);
+    PLUGIN_CHECK(len > 0, return, "failed format path %s", path);
     char realPath[PATH_MAX] = "";
     realpath(workspace->buffer, realPath);
     int traceFd = open(realPath, O_RDWR);
-    PLUGIN_CHECK(traceFd >= 0, return, "Failed to open file %s errno %d", workspace->buffer, errno);
+    PLUGIN_CHECK(traceFd >= 0, return, "failed open file %s errno %d", workspace->buffer, errno);
 
     ssize_t bytesWritten;
     ssize_t bytesRead;
@@ -498,10 +497,10 @@ static void DumpTrace(const TraceWorkspace *workspace, int outFd, const char *pa
 static bool MarkOthersClockSync(void)
 {
     TraceWorkspace *workspace = GetTraceWorkspace();
-    PLUGIN_CHECK(workspace != NULL, return false, "Failed to get trace workspace");
+    PLUGIN_CHECK(workspace != NULL, return false, "failed get trace workspace");
     int len = sprintf_s((char *)workspace->buffer, sizeof(workspace->buffer), "%s%s",
         workspace->traceRootPath, TRACE_MARKER_PATH);
-    PLUGIN_CHECK(len > 0, return false, "Failed to format path %s", TRACE_MARKER_PATH);
+    PLUGIN_CHECK(len > 0, return false, "failed format path %s", TRACE_MARKER_PATH);
 
     struct timespec mts = {0, 0};
     struct timespec rts = {0, 0};
@@ -587,7 +586,7 @@ static void TryRunBootTraceByCount(void)
 static int InitStartTrace(void)
 {
     TraceWorkspace *workspace = GetTraceWorkspace();
-    PLUGIN_CHECK(workspace != NULL, return 0, "Failed to get trace workspace");
+    PLUGIN_CHECK(workspace != NULL, return 0, "failed get trace workspace");
     PLUGIN_CHECK(workspace->traceState == TRACE_STATE_IDLE, return 0,
         "Invalid state for trace %d", workspace->traceState);
 
@@ -599,14 +598,14 @@ static int InitStartTrace(void)
 
     // load json init_trace.cfg
     if (!SetKernelSpaceSettings() || !SetTraceEnabled(TRACING_ON_PATH, true)) {
-        PLUGIN_LOGE("Failed to enable kernel space setting");
+        PLUGIN_LOGE("failed enable kernel space setting");
         ClearKernelSpaceSettings();
         return -1;
     }
     ClearTrace();
     PLUGIN_LOGI("capturing trace...");
     if (!SetUserSpaceSettings()) {
-        PLUGIN_LOGE("Failed to enable user space setting");
+        PLUGIN_LOGE("failed enable user space setting");
         ClearKernelSpaceSettings();
         ClearUserSpaceSettings();
         return -1;
@@ -619,7 +618,7 @@ static int InitStopTrace(void)
 {
     PLUGIN_LOGI("Stop trace now ...");
     TraceWorkspace *workspace = GetTraceWorkspace();
-    PLUGIN_CHECK(workspace != NULL, return 0, "Failed to get trace workspace");
+    PLUGIN_CHECK(workspace != NULL, return 0, "failed get trace workspace");
     PLUGIN_CHECK(workspace->traceState == TRACE_STATE_STARTED, return 0, "Invalid state for trace %d",
         workspace->traceState);
     workspace->traceState = TRACE_STATE_STOPED;
@@ -636,7 +635,7 @@ static int InitStopTrace(void)
         DumpTrace(workspace, outFd, TRACE_PATH);
         close(outFd);
     } else {
-        PLUGIN_LOGE("Failed to open file '%s', err=%d", path, errno);
+        PLUGIN_LOGE("failed open file '%s', err=%d", path, errno);
     }
 
     ClearTrace();
@@ -652,7 +651,7 @@ static int InitInterruptTrace(void)
 {
     PLUGIN_LOGI("Interrupt trace now ...");
     TraceWorkspace *workspace = GetTraceWorkspace();
-    PLUGIN_CHECK(workspace != NULL, return 0, "Failed to get trace workspace");
+    PLUGIN_CHECK(workspace != NULL, return 0, "failed get trace workspace");
     PLUGIN_CHECK(workspace->traceState == TRACE_STATE_STARTED, return 0,
         "Invalid state for trace %d", workspace->traceState);
 

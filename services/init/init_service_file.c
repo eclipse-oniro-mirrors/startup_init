@@ -33,10 +33,12 @@
 static int CreateFile(ServiceFile *file)
 {
     INIT_CHECK(file != NULL && file->fileName != NULL, return -1);
+    ssize_t nameLen = strlen(file->fileName);
+    INIT_ERROR_CHECK(nameLen < PATH_MAX, return -1, "FileName too long");
     char path[PATH_MAX] = {0};
     if (realpath(file->fileName, path) == NULL) {
         INIT_LOGE("Failed realpath err=%d", errno);
-        INIT_ERROR_CHECK(strncpy_s(path, strlen(file->fileName) + 1, file->fileName, strlen(file->fileName)) >= 0,
+        INIT_ERROR_CHECK(strncpy_s(path, PATH_MAX, file->fileName, nameLen) >= 0,
             return -1, "Failed strncpy_s err=%d", errno);
     }
     INIT_LOGV("File path =%s . file flags =%d, file perm =%u ", path, file->flags, file->perm);
@@ -78,13 +80,13 @@ int CreateServiceFile(Service *service)
         int fd = CreateFile(tmpFile);
         if (fd < 0) {
             ret++;
-            INIT_LOGE("Service error %d %s, failed to create file", errno, service->name, tmpFile->fileName);
+            INIT_LOGE("Service error %d %s, failed create file", errno, service->name, tmpFile->fileName);
             tmpFile = tmpFile->next;
             continue;
         }
         if (SetFileEnv(fd, tmpFile->fileName) != 0) {
             ret++;
-            INIT_LOGE("Service error %d %s, failed to set env for file", errno, service->name, tmpFile->fileName);
+            INIT_LOGE("Service error %d %s, failed set env for file", errno, service->name, tmpFile->fileName);
         }
         tmpFile = tmpFile->next;
     }

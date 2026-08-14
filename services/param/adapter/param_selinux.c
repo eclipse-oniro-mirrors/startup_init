@@ -25,7 +25,7 @@
 #include "selinux_parameter.h"
 #endif
 
-#if defined (__aarch64__) || defined(__x86_64__) || (defined(__riscv) && __riscv_xlen == 64)
+#if defined (__aarch64__) || defined(__x86_64__)|| (defined(__riscv) && __riscv_xlen == 64)
 #define CHECKER_LIB_NAME "/system/lib64/libparaperm_checker.z.so"
 #define CHECKER_UPDATER_LIB "/lib64/libparaperm_checker.z.so"
 #else
@@ -46,23 +46,23 @@ static int InitSelinuxOpsForInit(SelinuxSpace *selinuxSpace)
     void *handle = selinuxSpace->selinuxHandle;
     if (selinuxSpace->setParamCheck == NULL) {
         selinuxSpace->setParamCheck = (SelinuxSetParamCheck)dlsym(handle, "SetParamCheck");
-        PARAM_CHECK(selinuxSpace->setParamCheck != NULL, return -1, "Failed to dlsym setParamCheck %s", dlerror());
+        PARAM_CHECK(selinuxSpace->setParamCheck != NULL, return -1, "failed dlsym setParamCheck %s", dlerror());
     }
     if (selinuxSpace->getParamList == NULL) {
         selinuxSpace->getParamList = (ParamContextsList *(*)()) dlsym(handle, "GetParamList");
-        PARAM_CHECK(selinuxSpace->getParamList != NULL, return -1, "Failed to dlsym getParamList %s", dlerror());
+        PARAM_CHECK(selinuxSpace->getParamList != NULL, return -1, "failed dlsym getParamList %s", dlerror());
     }
     if (selinuxSpace->getParamLabel == NULL) {
         selinuxSpace->getParamLabel = (const char *(*)(const char *))dlsym(handle, "GetParamLabel");
-        PARAM_CHECK(selinuxSpace->getParamLabel != NULL, return -1, "Failed to dlsym getParamLabel %s", dlerror());
+        PARAM_CHECK(selinuxSpace->getParamLabel != NULL, return -1, "failed dlsym getParamLabel %s", dlerror());
     }
     if (selinuxSpace->initParamSelinux == NULL) {
         selinuxSpace->initParamSelinux = (int (*)(int))dlsym(handle, "InitParamSelinux");
-        PARAM_CHECK(selinuxSpace->initParamSelinux != NULL, return -1, "Failed to dlsym initParamSelinux ");
+        PARAM_CHECK(selinuxSpace->initParamSelinux != NULL, return -1, "failed dlsym initParamSelinux ");
     }
     if (selinuxSpace->getParamLabelIndex == NULL) {
         selinuxSpace->getParamLabelIndex = (int (*)(const char *))dlsym(handle, "GetParamLabelIndex");
-        PARAM_CHECK(selinuxSpace->getParamLabelIndex != NULL, return -1, "Failed to dlsym getParamLabelIndex ");
+        PARAM_CHECK(selinuxSpace->getParamLabelIndex != NULL, return -1, "failed dlsym getParamLabelIndex ");
     }
     if (selinuxSpace->setSelinuxLogCallback == NULL) {
         selinuxSpace->setSelinuxLogCallback = (void (*)())dlsym(handle, "SetInitSelinuxLog");
@@ -96,7 +96,7 @@ static int InitLocalSecurityLabel(ParamSecurityLabel *security, int isInit)
 #if !(defined STARTUP_INIT_TEST || defined LOCAL_TEST)
     if ((bool)isInit) {
         int ret = InitSelinuxOpsForInit(&GetParamWorkSpace()->selinuxSpace);
-        PARAM_CHECK(ret == 0, return -1, "Failed to init selinux ops");
+        PARAM_CHECK(ret == 0, return -1, "failed init selinux ops");
     } else {
         SelinuxSpace *selinuxSpace = &GetParamWorkSpace()->selinuxSpace;
         selinuxSpace->initParamSelinux = InitParamSelinux;
@@ -127,7 +127,7 @@ static void SetSelinuxFileCon(const char *name, const char *context)
         buffer[len] = '\0';
         PARAM_LOGV("setfilecon name %s path: %s %s ", name, context, buffer);
         if (GetParamWorkSpace()->ops.setfilecon(buffer, context) < 0) {
-            PARAM_LOGE("Failed to setfilecon %s ", context);
+            PARAM_LOGE("failed setfilecon %s ", context);
         }
     }
 }
@@ -196,11 +196,11 @@ static void HandleSelinuxLabelForPermission(const ParameterNode *paramNode, int 
     ParamWorkSpace *paramWorkspace = GetParamWorkSpace();
     PARAM_CHECK(paramWorkspace != NULL && paramWorkspace->workSpace != NULL, return, "Invalid workspace");
     WorkSpace *space = paramWorkspace->workSpace[WORKSPACE_INDEX_DAC];
-    PARAM_CHECK(space != NULL && space->area != NULL, return, "Failed to get dac space %s", paramNode->paraName);
+    PARAM_CHECK(space != NULL && space->area != NULL, return, "failed get dac space %s", paramNode->paraName);
     uint32_t index = 0;
     (void)FindTrieNode(space, paramNode->paraName, strlen(paramNode->paraName), &index);
     ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(space, index);
-    PARAM_CHECK(node != NULL, return, "Can not get security label for %s", paramNode->paraName);
+    PARAM_CHECK(node != NULL, return, "cannot get security label for %s", paramNode->paraName);
     PARAM_LOGV("HandleSelinuxLabelForPermission %s selinuxIndex [ %u %u] dac %u %s ",
         paramNode->paraName, labelIndex, node->selinuxIndex, index, paramNode->paraContext);
     ParamAuditData auditData = {0};

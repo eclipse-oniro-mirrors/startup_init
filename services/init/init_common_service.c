@@ -331,7 +331,7 @@ static int WritePid(const Service *service)
                 "Failed to write %s pid:%d", service->writePidArgs.argv[i], childPid);
             (void)fclose(fd);
         } else {
-            INIT_LOGE("Failed to open realPath: %s  %s errno:%d.", realPath, service->writePidArgs.argv[i], errno);
+            INIT_LOGE("failed open realPath: %s  %s errno:%d.", realPath, service->writePidArgs.argv[i], errno);
         }
         if (realPath != NULL) {
             free(realPath);
@@ -380,7 +380,7 @@ static int PublishHoldFds(Service *service)
     for (size_t i = 0; i < service->fdCount; i++) {
         int fd = dup(service->fds[i]);
         if (fd < 0) {
-            INIT_LOGW("Service warning %d %s, failed to dup fd for publish", errno, service->name);
+            INIT_LOGW("Service warning %d %s, failed dup fd for publish", errno, service->name);
             continue;
         }
         ret = snprintf_s((char *)fdBuffer + pos, sizeof(fdBuffer) - pos, sizeof(fdBuffer) - 1, "%d ", fd);
@@ -437,9 +437,10 @@ static void SetServiceEnv(Service *service)
 static void SetServiceContent(Service *service)
 {
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
-    bool isSaspawn = ((service->attribute & SERVICE_ATTR_SASPAWN) == SERVICE_ATTR_SASPAWN);
+    bool isSaspawn = (service->attribute & SERVICE_ATTR_SASPAWN);
     if (isSaspawn) {
         INIT_LOGI("service %s isSaspawn = %d", service->name, isSaspawn);
+        PluginExecCmdByName("setServiceSaspawnContent", service->name);
     } else {
         PluginExecCmdByName("setServiceContent", service->name);
     }
@@ -453,12 +454,12 @@ static int InitServiceProperties(Service *service, const ServiceArgs *pathArgs)
     INIT_ERROR_CHECK(service != NULL, return -1, "Invalid parameter.");
     int ret = SetServiceEnterSandbox(service, pathArgs->argv[0]);
     if (ret != 0) {
-        INIT_LOGW("Service warning %d %s, failed to enter sandbox.", ret, service->name);
+        INIT_LOGW("Service warning %d %s, failed enter sandbox.", ret, service->name);
         service->lastErrno = INIT_ESANDBOX;
     }
     ret = SetAccessToken(service);
     if (ret != 0) {
-        INIT_LOGW("Service warning %d %s, failed to set access token.", ret, service->name);
+        INIT_LOGW("Service warning %d %s, failed set access token.", ret, service->name);
         service->lastErrno = INIT_EACCESSTOKEN;
     }
 
@@ -655,11 +656,6 @@ static void RunChildProcess(Service *service, ServiceArgs *pathArgs)
     CloseStdio();
 #endif
 
-#ifdef INIT_FEATURE_SUPPORT_SASPAWN
-    ResetSignalResource();
-    CloseFileResource();
-    INIT_LOGI("saspawn resource free.");
-#endif
     // fail must exit sub process
     int ret = InitServiceProperties(service, pathArgs);
     INIT_ERROR_CHECK(ret == 0,
@@ -690,11 +686,11 @@ static int IsServiceInvalid(Service *service, ServiceArgs *pathArgs)
     return SERVICE_SUCCESS;
 }
 
-static void ReportServiceStartInfor(Service *service, int64_t pid)
+static void ProcessServiceStartInfo(Service *service, int64_t pid)
 {
     bool isSaspawn = false;
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
-    isSaspawn = ((service->attribute & SERVICE_ATTR_SASPAWN) == SERVICE_ATTR_SASPAWN);
+    isSaspawn = (service->attribute & SERVICE_ATTR_SASPAWN);
 #endif
     if (isSaspawn) {
         ReportServiceStart(service->name, pid, SERVICES_EXIT_INFO_IS_SASPAWN);
@@ -731,7 +727,7 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
     if (pid == 0) {
         RunChildProcess(service, pathArgs);
     } else if (pid < 0) {
-        INIT_LOGE("ServiceStart error failed to fork %d, %s", errno, service->name);
+        INIT_LOGE("ServiceStart error failed fork %d, %s", errno, service->name);
         service->lastErrno = INIT_EFORK;
         return SERVICE_FAILURE;
     }
@@ -743,7 +739,7 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
         startingTime.tv_sec, startingTime.tv_nsec, preforkTime.tv_sec,
         preforkTime.tv_nsec, startedTime.tv_sec, startedTime.tv_nsec);
 #ifndef OHOS_LITE
-    ReportServiceStartInfor(service, pid);
+    ProcessServiceStartInfo(service, pid);
 #endif
     service->pid = pid;
 #ifndef OHOS_LITE
@@ -764,6 +760,7 @@ int ServiceStop(Service *service)
     if (service->serviceJobs.jobsName[JOB_ON_STOP] != NULL) {
         DoJobNow(service->serviceJobs.jobsName[JOB_ON_STOP]);
     }
+    INIT_LOGI("ServiceStop do job end");
     service->attribute &= ~SERVICE_ATTR_NEED_RESTART;
     service->attribute |= SERVICE_ATTR_NEED_STOP;
     if (service->pid <= 0) {
@@ -780,6 +777,7 @@ int ServiceStop(Service *service)
     if (IsServiceWithTimerEnabled(service)) {
         ServiceStopTimer(service);
     }
+    INIT_LOGI("ServiceStop start kill %s", service->name);
     INIT_ERROR_CHECK(kill(service->pid, GetKillServiceSig(service->name)) == 0, return SERVICE_FAILURE,
         "stop service %s pid %d failed! err %d.", service->name, service->pid, errno);
     INIT_LOGI("stop service %s, pid %d.", service->name, service->pid);
@@ -905,7 +903,7 @@ static void CheckOndemandService(Service *service)
     if (strcmp(service->name, "console") == 0 && IsDebugMode()) {
         INIT_LOGI("Watch console service in debug mode");
         if (WatchConsoleDevice(service) < 0) {
-            INIT_LOGE("Failed to watch console service after it exit, mark console service invalid");
+            INIT_LOGE("failed watch console service after it exit, mark console service invalid");
             service->attribute |= SERVICE_ATTR_INVALID;
         }
     }
@@ -985,7 +983,7 @@ void ServiceReap(Service *service)
     }
 
     int ret = ExecRestartCmd(service);
-    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "ServiceReap Failed to exec restartArg for %s", service->name);
+    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "ServiceReap failed exec restartArg for %s", service->name);
 
     if (service->serviceJobs.jobsName[JOB_ON_RESTART] != NULL) {
         DoJobNow(service->serviceJobs.jobsName[JOB_ON_RESTART]);
@@ -1021,7 +1019,7 @@ int UpdaterServiceFds(Service *service, int *fds, size_t fdCount)
         // case 2
         CloseServiceFds(service, false);
         if (memcpy_s(service->fds, sizeof(int) * (fdCount + 1), fds, sizeof(int) * fdCount) != 0) {
-            INIT_LOGE("Failed to copy fds to service");
+            INIT_LOGE("failed copy fds to service");
             // Something wrong happened, maybe service->fds is broken, clear it.
             free(service->fds);
             service->fds = NULL;
@@ -1038,11 +1036,11 @@ int UpdaterServiceFds(Service *service, int *fds, size_t fdCount)
         INIT_ERROR_CHECK(fdCount <= MAX_HOLD_FDS, return -1, "Invalid fdCount %d", fdCount);
         service->fds = calloc(fdCount + 1, sizeof(int));
         if (service->fds == NULL) {
-            INIT_LOGE("Service \' %s \' failed to allocate memory for fds", service->name);
+            INIT_LOGE("Service \' %s \' failed allocate memory for fds", service->name);
             ret = -1;
         } else {
             if (memcpy_s(service->fds, sizeof(int) * (fdCount + 1), fds, sizeof(int) * fdCount) != 0) {
-                INIT_LOGE("Failed to copy fds to service");
+                INIT_LOGE("failed copy fds to service");
                 // Something wrong happened, maybe service->fds is broken, clear it.
                 free(service->fds);
                 service->fds = NULL;

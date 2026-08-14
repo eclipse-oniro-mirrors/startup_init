@@ -106,15 +106,6 @@ static_library("param_init_lite") {
   if (defined(init_lite_memory_size)) {
     defines += [ "PARAM_WORKSPACE_MAX=${init_lite_memory_size}" ]
   }
-  if (defined(init_lite_param_const_value_len_max)) {
-    defines += [ "PARAM_CONST_VALUE_LEN_MAX=${init_lite_param_const_value_len_max}" ]
-  }
-  if (defined(init_lite_param_value_len_max)) {
-    defines += [ "PARAM_VALUE_LEN_MAX=${init_lite_param_value_len_max}" ]
-  }
-  if (defined(init_lite_param_name_len_max)) {
-    defines += [ "PARAM_NAME_LEN_MAX=${init_lite_param_name_len_max}" ]
-  }
 }
 
 static_library("param_client_lite") {
@@ -173,18 +164,6 @@ static_library("param_client_lite") {
 
     if (defined(init_lite_memory_size)) {
       defines += [ "PARAM_WORKSPACE_MAX=${init_lite_memory_size}" ]
-    }
-    if (defined(init_lite_param_const_value_len_max)) {
-      defines += [ "PARAM_CONST_VALUE_LEN_MAX=${init_lite_param_const_value_len_max}" ]
-    }
-    if (defined(init_lite_param_value_len_max)) {
-      defines += [ "PARAM_VALUE_LEN_MAX=${init_lite_param_value_len_max}" ]
-    }
-    if (defined(init_lite_param_name_len_max)) {
-      defines += [ "PARAM_NAME_LEN_MAX=${init_lite_param_name_len_max}" ]
-    }
-    if (init_lite_persist_all) {
-      defines += [ "LITE_PERSIST_ALL" ]
     }
   }
 }

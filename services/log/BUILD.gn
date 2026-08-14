@@ -47,9 +47,14 @@ if (defined(ohos_lite)) {
 } else {
   import("//build/ohos.gni")
   ohos_static_library("init_log") {
+    branch_protector_ret = "pac_ret"
     visibility = [
       ":*",
       "//base/startup/init/*",
+      "//vendor/huawei/base/startup/init/services/hdi:libinitslotinfo_static",
+      "//vendor/huawei/base/startup/init/services/hdi:libslot_static",
+      "//vendor/huawei/base/startup/init/services/vab_update:libinitfiemap",
+      "//vendor/huawei/base/startup/init/services/vab_update:libinitsnapshot_static",
       "//out/*",
     ]
     sources = base_sources
@@ -62,10 +67,12 @@ if (defined(ohos_lite)) {
   }
 
   ohos_static_library("agent_log") {
+    branch_protector_ret = "pac_ret"
     sources = base_sources
     defines = [ "INIT_AGENT" ]
     public_configs = [ ":exported_header_files" ]
     external_deps = [ "bounds_checking_function:libsec_static" ]
+    external_deps += [ "hilog:libhilog_base" ]
     part_name = "init"
     subsystem_name = "startup"
   }
