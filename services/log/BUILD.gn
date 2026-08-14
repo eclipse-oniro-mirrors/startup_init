@@ -51,10 +51,6 @@ if (defined(ohos_lite)) {
     visibility = [
       ":*",
       "//base/startup/init/*",
-      "//vendor/huawei/base/startup/init/services/hdi:libinitslotinfo_static",
-      "//vendor/huawei/base/startup/init/services/hdi:libslot_static",
-      "//vendor/huawei/base/startup/init/services/vab_update:libinitfiemap",
-      "//vendor/huawei/base/startup/init/services/vab_update:libinitsnapshot_static",
       "//out/*",
     ]
     sources = base_sources
