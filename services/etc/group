@@ -189,3 +189,4 @@ object_editor_service:x:7061:
 midi_server:x:1044:
 aimgr:x:3092:
 histogram_sa:x:3091:
+expert:x:1076:
