@@ -143,16 +143,6 @@ template("lib_parameterbase_template") {
         cflags_c = [ "-fno-lto" ]
       }
 
-      configs -= [
-        "//build/common/ubsan:ubsan_config",
-        "//build/common/ubsan:ubsan_minimal_so",
-        "//build/common/asan:asan_config",
-      ]
-      remove_configs += [
-        "//build/common/ubsan:ubsan_config",
-        "//build/common/asan:asan_config",
-      ]
-
       include_dirs = base_include_dirs
       public_configs = [ ":exported_header_files" ]
       defines = [ "_GNU_SOURCE" ]
@@ -213,15 +203,6 @@ if (!defined(ohos_lite)) {
       "//base/startup/init/services/param/linux/param_osadp.c",
     ]
     cflags = [ "-fPIC" ]
-    configs -= [
-      "//build/common/ubsan:ubsan_config",
-      "//build/common/ubsan:ubsan_minimal_so",
-     "//build/common/asan:asan_config",
-    ]
-    remove_configs += [
-      "//build/common/ubsan:ubsan_config",
-      "//build/common/asan:asan_config",
-    ]
     include_dirs = base_include_dirs
     public_configs = [ ":exported_header_files" ]
     defines = [ "_GNU_SOURCE" ]
@@ -257,9 +238,4 @@ group("param_base") {
       deps = [ ":parameterbase_ext" ]
     }
   }
-  
-  remove_configs += [
-    "//build/common/ubsan:ubsan_config",
-    "//build/common/asan:asan_config",
-  ]
 }
