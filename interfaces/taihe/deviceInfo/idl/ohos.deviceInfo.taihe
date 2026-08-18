@@ -54,6 +54,8 @@ loadLibraryWithPermissionCheck("deviceInfo_taihe_native.z", "@ohos.deviceInfo")
 @get function getdeviceColor(): String;
 
 @get function getsdkApiVersion(): i32;
+@get function getsdkMinorApiVersion(): i32;
+@get function getsdkPatchApiVersion(): i32;
 @get function getmajorVersion(): i32;
 @get function getseniorVersion(): i32;
 @get function getfeatureVersion(): i32;
@@ -61,6 +63,13 @@ loadLibraryWithPermissionCheck("deviceInfo_taihe_native.z", "@ohos.deviceInfo")
 @get function getfirstApiVersion(): i32;
 @get function getdistributionOSApiVersion(): i32;
 @get function getbootCount(): i32;
+
+union VersionParam {
+    strVersion: String;     // 映射 string 版本号
+    numVersion: i32;        // 映射 number 版本号
+}
+
+function apiAvailable(version: VersionParam): bool;
 
 enum PerformanceClassLevel: i32 {
     CLASS_LEVEL_HIGH,
