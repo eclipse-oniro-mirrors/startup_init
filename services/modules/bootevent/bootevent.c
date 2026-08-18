@@ -417,6 +417,7 @@ static int BootEventParaFireByName(const char *paramName)
     if (g_bootEventNum > 0) {
         return 0;
     }
+    HookMgrExecute(GetBootStageHookMgr(), INIT_PRE_BOOT_COMPLETE, NULL, NULL);
     // All parameters are fired, set boot completed now ...
     INIT_LOGI("All boot events are fired, boot complete now ...");
     UpdateBootCount();
