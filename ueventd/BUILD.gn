@@ -92,7 +92,6 @@ if (defined(ohos_lite)) {
     include_dirs = [ "./include" ]
   }
   ohos_static_library("libueventd_ramdisk_static") {
-    branch_protector_ret = "pac_ret"
     sources = service_ueventd_sources
     include_dirs = service_ueventd_include
     deps = service_ueventd_deps
@@ -114,10 +113,7 @@ if (defined(ohos_lite)) {
     sources = service_ueventd_sources
     include_dirs = service_ueventd_include
     deps = service_ueventd_ramdisk_deps
-    defines = [
-      "__RAMDISK__",
-      "SUPPORT_PATCH",
-    ]
+    defines = [ "__RAMDISK__" ]
     external_deps = []
     cflags = []
     if (build_selinux) {
@@ -132,7 +128,6 @@ if (defined(ohos_lite)) {
   }
 
   ohos_executable("ueventd") {
-    branch_protector_ret = "pac_ret"
     sources = service_ueventd_sources
     sources += [
       "//base/startup/init/ueventd/standard/ueventd_parameter.c",
