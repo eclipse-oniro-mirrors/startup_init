@@ -668,6 +668,7 @@ ohos_unittest("init_dmverify_unittest") {
     "c_utils:utils",
     "googletest:gtest",
     "hilog:libhilog",
+    "bounds_checking_function:libsec_shared"
   ]
 
   defines = []
@@ -720,6 +721,7 @@ ohos_unittest("init_fshvb_unittest") {
     "c_utils:utils",
     "googletest:gtest",
     "hilog:libhilog",
+    "bounds_checking_function:libsec_shared"
   ]
 
   if (defined(global_parts_info) && defined(global_parts_info.startup_hvb)) {
