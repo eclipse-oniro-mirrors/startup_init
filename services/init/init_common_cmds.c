@@ -604,7 +604,7 @@ bool IsOpenDebugInfo(void)
     return g_openDebugInfo;
 }
 
-static void VerboseDebugInfo(const struct CmdArgs *ctx)
+static void VerbosDebugInfo(const struct CmdArgs *ctx)
 {
     if (strcmp(ctx->argv[0], "open") == 0) {
         g_openDebugInfo = true;
