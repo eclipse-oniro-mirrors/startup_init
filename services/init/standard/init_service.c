@@ -162,7 +162,7 @@ static bool IsServicePrivateFd(Service *service, int curFd)
             INIT_LOGI("%d is service private socket, do not clear", curFd);
             return true;
         }
-        tempFile = tmpFile->next;
+        tmpFile = tmpFile->next;
     }
     return false;
 }
@@ -211,7 +211,7 @@ static void CloseFileResource(Service *service)
     closedir(dir);
 }
 
-static ResetSignalResource(void)
+static void ResetSignalResource(void)
 {
     for (size_t i = 0; i < sizeof(g_resetSignals) / sizeof(g_resetSignals[0]); i++) {
         int32_t sig = g_resetSignals[i].sigNo;

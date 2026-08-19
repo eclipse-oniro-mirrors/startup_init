@@ -604,7 +604,7 @@ bool IsOpenDebugInfo(void)
     return g_openDebugInfo;
 }
 
-static void VerbosDebugInfo(const struct CmdArgs *ctx)
+static void VerboseDebugInfo(const struct CmdArgs *ctx)
 {
     if (strcmp(ctx->argv[0], "open") == 0) {
         g_openDebugInfo = true;
@@ -633,7 +633,7 @@ static const struct CmdTable g_cmdTable[] = {
     { "wait ", 1, 2, 1, DoWait },
     { "hostname ", 1, 1, 1, DoSetHostname },
     { "domainname ", 1, 1, 1, DoSetDomainname },
-    { "verbosdebuginfo", 0, 1, 0, VerbosDebugInfo}
+    { "verbosdebuginfo", 0, 1, 0, VerbosDebugInfo }
 };
 
 static const struct CmdTable *GetCommCmdTable(int *number)
