@@ -165,14 +165,14 @@ int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remote
     WATCHER_CHECK(remoteWatcher != nullptr, return -1, "Can not find remote watcher %d", remoteWatcherId);
     WATCHER_CHECK(remoteWatcher->CheckAgent(GetCallingPid()), return 0,
         "Can not find watcher %u calling %u", remoteWatcher->GetAgentId(), static_cast<uint32_t>(GetCallingPid()));
-    auto group = GetWatcherGroup(keyPrefix);
-    if (group != nullptr) {
-        WatcherNodePtr existNode = group->GetNode(remoteWatcherId);
+    auto getGroup = GetWatcherGroup(keyPrefix);
+    if (getGroup != nullptr) {
+        WatcherNodePtr existNode = getGroup->GetNode(remoteWatcherId);
         if (existNode != nullptr) {
             WATCHER_LOGI("Add watcher %s remoteWatcherId: %u already exists", keyPrefix.c_str(), remoteWatcherId);
             return 0;
         }
-        WATCHER_LOGV("group node not exist");
+        WATCHER_LOGV("getGroup node not exist");
     }
     auto group = AddWatcherGroup(keyPrefix);
     WATCHER_CHECK(group != nullptr, return -1, "Failed to create group for %s", keyPrefix.c_str());
