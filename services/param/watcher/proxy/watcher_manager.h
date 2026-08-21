@@ -129,6 +129,7 @@ private:
     sptr<IRemoteObject::DeathRecipient> deathRecipient_ {};
     ParamWatcherListPtr watcherGroups_ {};
     ParamWatcherListPtr remoteWatchers_ {};
+    std::map<uint32_t, uint32_t> pidWatcherMap_ {};
 };
 
 class WatcherNode {
