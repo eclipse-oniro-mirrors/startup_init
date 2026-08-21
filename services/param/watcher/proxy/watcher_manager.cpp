@@ -506,7 +506,6 @@ void WatcherManager::OnRemoteDied(RemoteWatcherPtr remoteWatcher)
 {
     WATCHER_CHECK(remoteWatcher != nullptr, return, "Invalid remote obj");
     WATCHER_LOGI("Agent died %u %u", remoteWatcher->GetRemoteWatcherId(), remoteWatcher->GetAgentId());
-    pidWatcherMap_.erase(remoteWatcher->GetAgentId());
     remoteWatcher->TraversalNodeSafe(
         [this, remoteWatcher](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
             auto group = GetWatcherGroup(node->GetNodeId());
