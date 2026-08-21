@@ -64,11 +64,21 @@ int32_t WatcherManager::AddRemoteWatcher(uint32_t id, uint32_t &watcherId, const
         // check watcher id
         int ret = GetRemoteWatcherId(remoteWatcherId);
         WATCHER_CHECK(ret == 0, return ERR_FAIL, "Failed to get watcher id for %u", id);
+        uint32_t callingPid = static_cast<uint32_t>(GetCallingPid());
+        auto it = pidWatcherMap_.find(callingPid);
+        if (it != pidWatcherMap_.end()) {
+            WATCHER_LOGI("PID %u already has remoteWatcher %u, replacing", callingPid, it->second);
+            RemoteWatcher *oldWatcher = GetRemoteWatcher(it->second);
+            if (oldWatcher != nullptr) {
+                DelRemoteWatcher(oldWatcher);
+            }
+        }
         // create remote watcher
         RemoteWatcher *remoteWatcher = new RemoteWatcher(remoteWatcherId, watcher);
         WATCHER_CHECK(remoteWatcher != nullptr, return ERR_FAIL, "Failed to create watcher for %u", id);
-        remoteWatcher->SetAgentId(GetCallingPid());
+        remoteWatcher->SetAgentId(callingPid);
         AddRemoteWatcher(remoteWatcher);
+        pidWatcherMap_[callingPid] = remoteWatcherId;
     }
     WATCHER_LOGI("Add remote watcher remoteWatcherId %u %u success", remoteWatcherId, id);
     watcherId = remoteWatcherId;
@@ -87,6 +97,7 @@ int32_t WatcherManager::DelRemoteWatcher(uint32_t remoteWatcherId)
         WATCHER_LOGI("Del remote watcher remoteWatcherId %u", remoteWatcherId);
         watcher = remoteWatcher->GetWatcher();
         DelRemoteWatcher(remoteWatcher);
+        pidWatcherMap_.erase(remoteWatcher->GetAgentId());
     }
     sptr<IRemoteObject> object = watcher->AsObject();
     if (object != nullptr) {
@@ -495,6 +506,7 @@ void WatcherManager::OnRemoteDied(RemoteWatcherPtr remoteWatcher)
 {
     WATCHER_CHECK(remoteWatcher != nullptr, return, "Invalid remote obj");
     WATCHER_LOGI("Agent died %u %u", remoteWatcher->GetRemoteWatcherId(), remoteWatcher->GetAgentId());
+    pidWatcherMap_.erase(remoteWatcher->GetAgentId());
     remoteWatcher->TraversalNodeSafe(
         [this, remoteWatcher](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
             auto group = GetWatcherGroup(node->GetNodeId());
@@ -637,6 +649,7 @@ void WatcherManager::Clear(void)
     remoteWatchers_ = nullptr;
     delete watcherGroups_;
     watcherGroups_ = nullptr;
+    pidWatcherMap_.clear();
 }
 
 int WatcherManager::AddRemoteWatcher(RemoteWatcherPtr remoteWatcher)
