@@ -165,6 +165,7 @@ int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remote
     WATCHER_CHECK(remoteWatcher != nullptr, return -1, "Can not find remote watcher %d", remoteWatcherId);
     WATCHER_CHECK(remoteWatcher->CheckAgent(GetCallingPid()), return 0,
         "Can not find watcher %u calling %u", remoteWatcher->GetAgentId(), static_cast<uint32_t>(GetCallingPid()));
+    auto group = AddWatcherGroup(keyPrefix);
     if (group != nullptr) {
         WatcherNodePtr existNode = group->GetNode(remoteWatcherId);
         if (existNode != nullptr) {
@@ -173,7 +174,6 @@ int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remote
         }
         WATCHER_LOGV("group node not exist");
     }
-    auto group = AddWatcherGroup(keyPrefix);
     WATCHER_CHECK(group != nullptr, return -1, "Failed to create group for %s", keyPrefix.c_str());
     {
         // add watcher to agent and group
