@@ -863,7 +863,7 @@ WatcherNodePtr WatcherNode::GetNext(ListHead *list)
 int WatcherNode::CompareNode(ListNodePtr node, ListNodePtr newNode)
 {
     WatcherNodePtr watcher = WatcherNode::ConvertNodeToBase(node);
-    WatcherNodePtr newWatcher = WatcherNode::ConvertNodeToBase(node);
+    WatcherNodePtr newWatcher = WatcherNode::ConvertNodeToBase(newNode);
     return watcher->nodeId_ - newWatcher->nodeId_;
 }
 
