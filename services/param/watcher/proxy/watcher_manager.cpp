@@ -70,6 +70,19 @@ int32_t WatcherManager::AddRemoteWatcher(uint32_t id, uint32_t &watcherId, const
             WATCHER_LOGI("PID %u already has remoteWatcher %u, replacing", callingPid, it->second);
             RemoteWatcher *oldWatcher = GetRemoteWatcher(it->second);
             if (oldWatcher != nullptr) {
+                // 清理 WatcherGroup 中的 ParamWatcher 交叉引用
+                oldWatcher->TraversalNodeSafe(
+                    [this, oldWatcher](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+                        auto group = GetWatcherGroup(node->GetNodeId());
+                        if (group == nullptr) {
+                            return;
+                        }
+                        DelParamWatcher(group, oldWatcher);
+                        if (group->Empty()) {
+                            SendMessage(group, MSG_DEL_WATCHER);
+                            DelWatcherGroup(group);
+                        }
+                    });
                 DelRemoteWatcher(oldWatcher);
             }
         }
@@ -528,6 +541,7 @@ void WatcherManager::OnRemoteDied(RemoteWatcherPtr remoteWatcher)
                 DelWatcherGroup(group);
             }
         });
+    pidWatcherMap_.erase(remoteWatcher->GetAgentId());
     DelRemoteWatcher(remoteWatcher);
 }
 
