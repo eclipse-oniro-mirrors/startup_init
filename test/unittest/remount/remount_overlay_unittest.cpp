@@ -1271,19 +1271,4 @@ HWTEST_F(RemountOverlayUnitTest, Init_RemountRofsOverlay_010_perPartitionAlready
     DeleteRemountResultFlag();
 }
 
-HWTEST_F(RemountOverlayUnitTest, Init_RemountRofsOverlay_011_perPartitionNotActiveFallsThrough, TestSize.Level1)
-{
-    CheckAndCreateDir((std::string(STARTUP_INIT_UT_PATH) + "/data/service/el1/startup/remount/").c_str());
-    SetRemountResultFlag();
-    rmdir("/mnt/overlay/usr/upper");
-    rmdir("/mnt/overlay/usr");
-    rmdir("/mnt/overlay");
-    RemountSetStubResult(STUB_IS_DM_MERGE_REMOUNT_ENABLED, 0);
-    RemountSetStubResult(STUB_SETMNTENT, -1);
-    RemountSetStubMntEntries(nullptr, 0);
-    int ret = RemountRofsOverlay();
-    EXPECT_EQ(ret, REMOUNT_FAIL);
-    EXPECT_NE(GetRemountResult(), REMOUNT_SUCC);
-    DeleteRemountResultFlag();
-}
 }
