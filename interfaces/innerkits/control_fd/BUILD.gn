@@ -23,6 +23,7 @@ config("exported_header_files") {
 }
 
 ohos_static_library("libcontrolfd") {
+  branch_protector_ret = "pac_ret"
   sources = [
     "control_fd_client.c",
     "control_fd_service.c",

@@ -134,6 +134,7 @@ template("lib_parameterbase_template") {
     }
 
     ohos_static_library(target_name) {
+      branch_protector_ret = "pac_ret"
       visibility = [
         ":*",
         "//third_party/musl/*",
@@ -203,6 +204,7 @@ lib_parameterbase_template("parameterbase_noflto") {
 if (!defined(ohos_lite)) {
   # extend for base
   ohos_static_library("parameterbase_ext") {
+    branch_protector_ret = "pac_ret"
     sources = comm_sources
     sources += [
       "//base/startup/init/services/log/init_commlog.c",

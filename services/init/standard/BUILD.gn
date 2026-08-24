@@ -29,6 +29,7 @@ import("//build/ohos.gni")
 import("//build/ohos/native_stub/native_stub.gni")
 
 ohos_executable("init_early") {
+  branch_protector_ret = "pac_ret"
   sources = [
     "../bootstagehooker.c",
     "//base/startup/init/interfaces/innerkits/hookmgr/hookmgr.c",
@@ -73,6 +74,7 @@ ohos_executable("init_early") {
 }
 
 ohos_executable("init") {
+  branch_protector_ret = "pac_ret"
   sources = [
     "../adapter/init_adapter.c",
     "../bootstagehooker.c",

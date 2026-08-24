@@ -115,6 +115,7 @@ if (defined(ohos_lite)) {
   }
 } else {
   ohos_static_library("param_init") {
+    branch_protector_ret = "pac_ret"
     sources = param_service_sources
     sources += param_trigger_sources
     sources +=
@@ -171,6 +172,7 @@ if (defined(ohos_lite)) {
   }
 
   ohos_static_library("param_client") {
+    branch_protector_ret = "pac_ret"
     sources = param_client_sources
     include_dirs = param_include_dirs
     public_configs = [ ":exported_header_files" ]

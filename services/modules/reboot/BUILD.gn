@@ -15,6 +15,7 @@ import("//base/startup/init/begetd.gni")
 import("//build/ohos.gni")
 
 ohos_shared_library("rebootmodule") {
+  branch_protector_ret = "pac_ret"
   sources = [ "reboot.c" ]
   cflags = [ "-fstack-protector-all" ]
   include_dirs = [
@@ -78,6 +79,7 @@ ohos_source_set("libreboot_static") {
     cfi_cross_dso = true
     debug = false
   }
+  branch_protector_ret = "pac_ret"
   part_name = "init"
   subsystem_name = "startup"
   external_deps = [ "cJSON:cjson" ]

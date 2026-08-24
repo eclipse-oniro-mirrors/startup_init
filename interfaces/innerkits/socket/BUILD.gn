@@ -30,6 +30,7 @@ if (defined(ohos_lite)) {
   import("//build/ohos.gni")
 
   ohos_static_library("libsocket") {
+    branch_protector_ret = "pac_ret"
     sources = service_socket_sources
     include_dirs = service_socket_include
     external_deps = [ "bounds_checking_function:libsec_static" ]
