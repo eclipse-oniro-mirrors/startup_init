@@ -96,6 +96,7 @@ private:
     RemoteWatcherPtr GetRemoteWatcher(uint32_t remoteWatcherId);
     RemoteWatcherPtr GetRemoteWatcher(const wptr<IRemoteObject> &remote);
     void DelRemoteWatcher(RemoteWatcherPtr remoteWatcher);
+    void CleanupOldWatcher(RemoteWatcherPtr oldWatcher);
     // for group
     WatcherGroupPtr AddWatcherGroup(const std::string &keyPrefix);
     void AddRealWatcherGroup(const std::string &keyPrefix, int type);
