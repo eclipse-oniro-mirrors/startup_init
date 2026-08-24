@@ -260,7 +260,7 @@ static int HandleParamWaitAdd(const ParamTaskPtr worker, const ParamMessage *msg
     PARAM_CHECK(valueContent != NULL, return -1, "Invalid msg");
     PARAM_CHECK(valueContent->contentSize <= PARAM_CONST_VALUE_LEN_MAX, return -1, "Invalid msg");
     ParamMsgContent *timeoutContent = GetNextContent(msg, &offset);
-    if (timeoutContent != NULL) {
+    if (timeoutContent != NULL && timeoutContent->contentSize >= sizeof(uint32_t)) {
         timeout = *((uint32_t *)(timeoutContent->content));
     }
 
