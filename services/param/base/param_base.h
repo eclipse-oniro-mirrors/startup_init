@@ -40,8 +40,10 @@ extern "C" {
 #define PARAM_STRCPY(strDest, destMax, strSrc)   strcpy_s((strDest), (destMax), (strSrc))
 #else
 #define PARAM_SPRINTF(buffer, buffSize, format, ...) snprintf((buffer), (buffSize), (format), ##__VA_ARGS__)
-#define PARAM_MEMCPY(dest, destMax, src, count) (memcpy((dest), (src), (count)) != NULL) ? 0 : 1
-#define PARAM_STRCPY(strDest, destMax, strSrc) (strcpy((strDest), (strSrc)) != NULL) ? 0 : 1
+#define PARAM_MEMCPY(dest, destMax, src, count) (((count) > (destMax)) ? 1 : \
+    ((memcpy((dest), (src), (count)) != NULL) ? 0 : 1))
+#define PARAM_STRCPY(strDest, destMax, strSrc) ((strlen(strSrc) >= (destMax)) ? 1 : \
+    ((strcpy((strDest), (strSrc)) != NULL) ? 0 : 1))
 #endif
 
 static inline uint32_t ReadCommitId(ParamNode *entry)
@@ -61,9 +63,10 @@ static inline uint32_t ReadCommitId(ParamNode *entry)
 static inline int ReadParamValue_(ParamNode *entry, uint32_t *commitId, char *value, uint32_t *length)
 {
     uint32_t id = *commitId;
+    uint32_t containerLenth = *length;
     do {
         *commitId = id;
-        int ret = PARAM_MEMCPY(value, *length, entry->data + entry->keyLength + 1, entry->valueLength);
+        int ret = PARAM_MEMCPY(value, containerLenth, entry->data + entry->keyLength + 1, entry->valueLength);
         PARAM_ONLY_CHECK(ret == 0, return -1);
         value[entry->valueLength] = '\0';
         *length = entry->valueLength;

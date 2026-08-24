@@ -114,6 +114,7 @@ void DumpHyperHoldCloseResult(bool dmaEswapDeinitSucc, bool gpuEswapDeinitSucc);
 void DisableHyperholdTimeOut(int interval, long long totalWait);
 bool DeInitDmaEswapSpace();
 bool DeInitGpuEswapSpace();
+void DumpActiveAppInfoList();
 #endif
 
 void OpenHidebug(const char *name);
@@ -128,6 +129,7 @@ void PluginExecCmdByCmdIndex(int index, const char *cmdContent, const ConfigCont
 const char *PluginGetCmdIndex(const char *cmdStr, int *index);
 const char *GetPluginCmdNameByIndex(int index);
 int AddCareContextCmdExecutor(const char *cmdName, CmdExecutor executor);
+bool IsOpenDebugInfo(void);
 
 #ifdef __cplusplus
 #if __cplusplus

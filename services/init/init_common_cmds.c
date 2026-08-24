@@ -76,9 +76,9 @@ static char *AddOneArg(const char *param, size_t paramLen)
 
 char *BuildStringFromCmdArg(const struct CmdArgs *ctx, int startIndex)
 {
-    INIT_ERROR_CHECK(ctx != NULL, return NULL, "Failed to get cmd args ");
+    INIT_ERROR_CHECK(ctx != NULL, return NULL, "failed get cmd args ");
     char *options = (char *)calloc(1, OPTIONS_SIZE + 1);
-    INIT_ERROR_CHECK(options != NULL, return NULL, "Failed to get memory ");
+    INIT_ERROR_CHECK(options != NULL, return NULL, "failed get memory ");
     options[0] = '\0';
     int curr = 0;
     for (int i = startIndex; i < ctx->argc; i++) { // save opt
@@ -87,7 +87,7 @@ char *BuildStringFromCmdArg(const struct CmdArgs *ctx, int startIndex)
         }
         int len = snprintf_s(options + curr, OPTIONS_SIZE - curr, OPTIONS_SIZE - 1 - curr, "%s ", ctx->argv[i]);
         if (len <= 0) {
-            INIT_LOGE("Failed to format other opt");
+            INIT_LOGE("failed format other opt");
             options[0] = '\0';
             return options;
         }
@@ -106,7 +106,7 @@ const struct CmdArgs *GetCmdArg(const char *cmdContent, const char *delim, int a
     INIT_WARNING_CHECK(argsCount <= SPACES_CNT_IN_CMD_MAX, argsCount = SPACES_CNT_IN_CMD_MAX,
         "Too much arguments for command, max number is %d", SPACES_CNT_IN_CMD_MAX);
     struct CmdArgs *ctx = (struct CmdArgs *)calloc(1, sizeof(struct CmdArgs) + sizeof(char *) * (argsCount + 1));
-    INIT_ERROR_CHECK(ctx != NULL, return NULL, "Failed to calloc memory for arg");
+    INIT_ERROR_CHECK(ctx != NULL, return NULL, "failed calloc memory for arg");
     ctx->argc = 0;
     const char *p = cmdContent;
     const char *end = cmdContent + strlen(cmdContent);
@@ -168,12 +168,12 @@ void ExecCmd(const struct CmdTable *cmd, const char *cmdContent)
 static void SetProcName(const struct CmdArgs *ctx, const char *procFile)
 {
     int fd = open(procFile, O_WRONLY | O_CREAT | O_CLOEXEC | O_TRUNC, S_IRUSR | S_IWUSR);
-    INIT_ERROR_CHECK(fd >= 0, return, "Failed to set %s errno: %d", procFile, errno);
+    INIT_ERROR_CHECK(fd >= 0, return, "failed set %s errno: %d", procFile, errno);
 
     size_t size = strlen(ctx->argv[0]);
     ssize_t n = write(fd, ctx->argv[0], size);
     INIT_ERROR_CHECK(n == (ssize_t)size, close(fd);
-        return, "Failed to write domainname errno: %d", errno);
+        return, "failed write domainname errno: %d", errno);
     close(fd);
 }
 
@@ -273,19 +273,19 @@ static void DoCopy(const struct CmdArgs *ctx)
     do {
         realPath1 = GetRealPath(ctx->argv[0]);
         if (realPath1 == NULL) {
-            INIT_LOGE("Failed to get real path %s", ctx->argv[0]);
+            INIT_LOGE("failed get real path %s", ctx->argv[0]);
             break;
         }
 
         srcFd = open(realPath1, O_RDONLY);
         if (srcFd < 0) {
-            INIT_LOGE("Failed to open source path %s  %d", ctx->argv[0], errno);
+            INIT_LOGE("failed open source path %s  %d", ctx->argv[0], errno);
             break;
         }
 
         struct stat fileStat = { 0 };
         if (stat(ctx->argv[0], &fileStat) != 0) {
-            INIT_LOGE("Failed to state source path %s  %d", ctx->argv[0], errno);
+            INIT_LOGE("failed state source path %s  %d", ctx->argv[0], errno);
             break;
         }
         mode_t mode = fileStat.st_mode;
@@ -296,18 +296,18 @@ static void DoCopy(const struct CmdArgs *ctx)
             dstFd = open(ctx->argv[1], O_WRONLY | O_TRUNC | O_CREAT, mode);
         }
         if (dstFd < 0) {
-            INIT_LOGE("Failed to open dest path %s  %d", ctx->argv[1], errno);
+            INIT_LOGE("failed open dest path %s  %d", ctx->argv[1], errno);
             break;
         }
         int rdLen = 0;
         while ((rdLen = read(srcFd, buf, sizeof(buf) - 1)) > 0) {
             int rtLen = write(dstFd, buf, rdLen);
             if (rtLen != rdLen) {
-                INIT_LOGE("Failed to write to dest path %s  %d", ctx->argv[1], errno);
+                INIT_LOGE("failed write to dest path %s  %d", ctx->argv[1], errno);
                 break;
             }
         }
-        INIT_CHECK(fsync(dstFd) != -1, INIT_LOGE("Failed to fsync for target: %d", errno));
+        INIT_CHECK(fsync(dstFd) != -1, INIT_LOGE("failed fsync for target: %d", errno));
     } while (0);
     INIT_CHECK(srcFd < 0, close(srcFd));
     INIT_CHECK(dstFd < 0, close(dstFd));
@@ -334,7 +334,7 @@ static void DoChown(const struct CmdArgs *ctx)
     const int pathPos = 2;
     int ret = SetOwner(ctx->argv[pathPos], ctx->argv[0], ctx->argv[1]);
     if (ret != 0) {
-        INIT_LOGE("Failed to change owner for %s, err %d.", ctx->argv[pathPos], errno);
+        INIT_LOGE("failed change owner for %s, err %d.", ctx->argv[pathPos], errno);
     }
     return;
 }
@@ -351,6 +351,7 @@ static void DoMkDir(const struct CmdArgs *ctx)
         INIT_LOGE("DoMkDir invalid arguments.");
         return;
     }
+    INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Begin mkdir directory %s", ctx->argv[0]);
     mode_t mode = DEFAULT_DIR_MODE;
     if (mkdir(ctx->argv[0], mode) != 0 && errno != EEXIST) {
         if (strcmp(ctx->argv[0], "/data/service") != 0) {
@@ -368,31 +369,37 @@ static void DoMkDir(const struct CmdArgs *ctx)
     if ((errno != EEXIST) || ((strncmp(ctx->argv[0], "/dev", strlen("/dev")) != 0) &&
         (strncmp(ctx->argv[0], "/data/", strlen("/data/")) != 0)) ||
         (strncmp(ctx->argv[0], "/data/service/el1", strlen("/data/service/el1")) == 0)) {
+        INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Begin restoreCon directory %s", ctx->argv[0]);
         PluginExecCmdByName("restoreContentRecurse", ctx->argv[0]);
+        INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Finish restoreCon directory %s", ctx->argv[0]);
     }
 
     if (ctx->argc <= 1) {
         return;
     }
-
+    INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Begin chmod directory %s", ctx->argv[0]);
     mode = strtoul(ctx->argv[1], NULL, OCTAL_TYPE);
     INIT_CHECK_ONLY_ELOG(chmod(ctx->argv[0], mode) == 0, "DoMkDir failed for '%s', err %d.", ctx->argv[0], errno);
-
+    INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Finish chmod directory %s", ctx->argv[0]);
     if (ctx->argc <= ownerPos) {
         return;
     }
+    INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Begin SetOwner directory %s", ctx->argv[0]);
     int ret = SetOwner(ctx->argv[0], ctx->argv[ownerPos], ctx->argv[groupPos]);
     if (ret != 0) {
-        INIT_LOGE("Failed to change owner %s, err %d.", ctx->argv[0], errno);
+        INIT_LOGE("failed change owner %s, err %d.", ctx->argv[0], errno);
     }
+    INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Begin SetFileCryptPolicy directory %s", ctx->argv[0]);
     ret = SetFileCryptPolicy(ctx->argv[0]);
-    INIT_CHECK_ONLY_ELOG(ret == 0, "Failed to set file fscrypt, directory: %s", ctx->argv[0]);
+    INIT_CHECK_ONLY_ELOG(ret == 0, "failed set file fscrypt, directory: %s", ctx->argv[0]);
+    INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Finish mkdir directory %s", ctx->argv[0]);
     return;
 }
 
 static void DoChmod(const struct CmdArgs *ctx)
 {
     // format: chmod xxxx /xxx/xxx/xxx
+    INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Begin chmod directory %s", ctx->argv[1]);
     mode_t mode = strtoul(ctx->argv[0], NULL, OCTAL_TYPE);
     if (mode == 0) {
         INIT_LOGE("DoChmod, strtoul failed for %s, er %d.", ctx->argv[1], errno);
@@ -400,8 +407,9 @@ static void DoChmod(const struct CmdArgs *ctx)
     }
 
     if (chmod(ctx->argv[1], mode) != 0) {
-        INIT_LOGE("Failed to change mode \" %s \" to %04o, err=%d", ctx->argv[1], mode, errno);
+        INIT_LOGE("failed change mode \" %s \" to %04o, err=%d", ctx->argv[1], mode, errno);
     }
+    INIT_CHECK_ONLY_ELOG(!IsOpenDebugInfo(), "Begin chmod %s", ctx->argv[1]);
 }
 
 static int GetMountFlag(unsigned long *mountflag, const char *targetStr, const char *source)
@@ -449,16 +457,16 @@ static void DoMount(const struct CmdArgs *ctx)
     // format: fileSystemType source target mountFlag1 mountFlag2... data
     int index = 0;
     char *fileSysType = (ctx->argc > index) ? ctx->argv[index] : NULL;
-    INIT_ERROR_CHECK(fileSysType != NULL, return, "Failed to get fileSysType.");
+    INIT_ERROR_CHECK(fileSysType != NULL, return, "failed get fileSysType.");
     index++;
 
     char *source = (ctx->argc > index) ? ctx->argv[index] : NULL;
-    INIT_ERROR_CHECK(source != NULL, return, "Failed to get source.");
+    INIT_ERROR_CHECK(source != NULL, return, "failed get source.");
     index++;
 
     // maybe only has "filesystype source target", 2 spaces
     char *target = (ctx->argc > index) ? ctx->argv[index] : NULL;
-    INIT_ERROR_CHECK(target != NULL, return, "Failed to get target.");
+    INIT_ERROR_CHECK(target != NULL, return, "failed get target.");
     ++index;
 
     int ret = 0;
@@ -474,12 +482,12 @@ static void DoMount(const struct CmdArgs *ctx)
         ret = mount(source, target, fileSysType, mountflags, NULL);
     } else {
         char *data = BuildStringFromCmdArg(ctx, index);
-        INIT_ERROR_CHECK(data != NULL, return, "Failed to get data.");
+        INIT_ERROR_CHECK(data != NULL, return, "failed get data.");
         ret = mount(source, target, fileSysType, mountflags, data);
         free(data);
     }
     if (ret != 0) {
-        INIT_LOGE("Failed to mount for %s, err %d.", target, errno);
+        INIT_LOGE("failed mount for %s, err %d.", target, errno);
     }
 }
 
@@ -489,11 +497,11 @@ static int DoWriteWithMultiArgs(const struct CmdArgs *ctx, int fd)
 
     /* Write to proc files should be done at once */
     buf[0] = '\0';
-    INIT_ERROR_CHECK(strcat_s(buf, sizeof(buf), ctx->argv[1]) == 0, return -1, "Failed to format buf");
+    INIT_ERROR_CHECK(strcat_s(buf, sizeof(buf), ctx->argv[1]) == 0, return -1, "failed format buf");
     int idx = 2;
     while (idx < ctx->argc) {
-        INIT_ERROR_CHECK(strcat_s(buf, sizeof(buf), " ") == 0, return -1, "Failed to format buf");
-        INIT_ERROR_CHECK(strcat_s(buf, sizeof(buf), ctx->argv[idx]) == 0, return -1, "Failed to format buf");
+        INIT_ERROR_CHECK(strcat_s(buf, sizeof(buf), " ") == 0, return -1, "failed format buf");
+        INIT_ERROR_CHECK(strcat_s(buf, sizeof(buf), ctx->argv[idx]) == 0, return -1, "failed format buf");
         idx++;
     }
     return write(fd, buf, strlen(buf));
@@ -590,6 +598,21 @@ static void DoExport(const struct CmdArgs *ctx)
     return;
 }
 
+static bool g_openDebugInfo = false;
+bool IsOpenDebugInfo(void)
+{
+    return g_openDebugInfo;
+}
+
+static void VerbosDebugInfo(const struct CmdArgs *ctx)
+{
+    if (strcmp(ctx->argv[0], "open") == 0) {
+        g_openDebugInfo = true;
+    } else {
+        g_openDebugInfo = false;
+    }
+}
+
 static const struct CmdTable g_cmdTable[] = {
     { "start ", 0, 1, 0, DoStart },
     { "mkdir ", 1, 4, 1, DoMkDir },
@@ -609,7 +632,8 @@ static const struct CmdTable g_cmdTable[] = {
     { "sleep ", 1, 1, 0, DoSleep },
     { "wait ", 1, 2, 1, DoWait },
     { "hostname ", 1, 1, 1, DoSetHostname },
-    { "domainname ", 1, 1, 1, DoSetDomainname }
+    { "domainname ", 1, 1, 1, DoSetDomainname },
+    { "verbosdebuginfo", 0, 1, 0, VerbosDebugInfo }
 };
 
 static const struct CmdTable *GetCommCmdTable(int *number)

@@ -18,7 +18,6 @@
 #include "init_service_manager.h"
 #include "init_utils.h"
 #include "init_param.h"
-#include "init_group_manager.h"
 
 static void ParseAllImports(const cJSON *root, int depth);
 
@@ -76,7 +75,7 @@ static void ParseAllImports(const cJSON *root, int depth)
     INIT_ERROR_CHECK(depth < IMPORT_MAX_LEVEL, return,
         "Import level too deep, max level is %d", IMPORT_MAX_LEVEL);
     char *tmpParamValue = calloc(PARAM_VALUE_LEN_MAX + 1, sizeof(char));
-    INIT_ERROR_CHECK(tmpParamValue != NULL, return, "Failed to alloc memory for param");
+    INIT_ERROR_CHECK(tmpParamValue != NULL, return, "failed alloc memory for param");
 
     cJSON *importAttr = cJSON_GetObjectItemCaseSensitive(root, "import");
     if (!cJSON_IsArray(importAttr)) {
@@ -116,7 +115,7 @@ void ReadConfig(void)
     SystemReadParam("ohos.boot.mode", buffer, &len);
     INIT_LOGI("ohos.boot.mode %s", buffer);
     int maintenance = InRepairMode();
-    if ((strcmp(buffer, "charger_mode") == 0) || (GetBootModeFromMisc() == GROUP_CHARGE)) {
+    if (strcmp(buffer, "charger_mode") == 0) {
         ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
         ReadFileInDir(OTHER_CHARGE_PATH, ".cfg", ParseInitCfg, NULL);
         ParseCfgByPriority(INIT_CFG_FIEL_PATH);

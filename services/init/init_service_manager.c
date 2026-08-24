@@ -98,7 +98,7 @@ Service *AddService(const char *name)
     }
     InitGroupNode *node = AddGroupNode(NODE_TYPE_SERVICES, name);
     if (node == NULL) {
-        INIT_LOGE("Failed to create service name %s", name);
+        INIT_LOGE("failed create service name %s", name);
         return NULL;
     }
     if (node->data.service != NULL) {
@@ -106,7 +106,7 @@ Service *AddService(const char *name)
         node->data.service = NULL;
     }
     Service *service = (Service *)calloc(1, sizeof(Service));
-    INIT_ERROR_CHECK(service != NULL, return NULL, "Failed to malloc for service");
+    INIT_ERROR_CHECK(service != NULL, return NULL, "failed malloc for service");
     node->data.service = service;
     service->name = node->name;
     service->status = SERVICE_IDLE;
@@ -242,7 +242,7 @@ static int GetServiceArgs(const cJSON *argJson, const char *name, int maxCount, 
         FreeServiceArg(args);
     }
     args->argv = (char **)malloc((count + 1) * sizeof(char *));
-    INIT_ERROR_CHECK(args->argv != NULL, return SERVICE_FAILURE, "Failed to malloc for argv");
+    INIT_ERROR_CHECK(args->argv != NULL, return SERVICE_FAILURE, "failed malloc for argv");
     for (int i = 0; i < count + 1; ++i) {
         args->argv[i] = NULL;
     }
@@ -258,7 +258,7 @@ static int GetServiceArgs(const cJSON *argJson, const char *name, int maxCount, 
         INIT_ERROR_CHECK(curParam != NULL, return SERVICE_FAILURE, "Invalid arg %d", i);
         INIT_ERROR_CHECK(strlen(curParam) <= MAX_ONE_ARG_LEN, return SERVICE_FAILURE, "Arg %s is tool long", curParam);
         args->argv[i] = strdup(curParam);
-        INIT_ERROR_CHECK(args->argv[i] != NULL, return SERVICE_FAILURE, "Failed to duplicate argument %s", curParam);
+        INIT_ERROR_CHECK(args->argv[i] != NULL, return SERVICE_FAILURE, "failed duplicate argument %s", curParam);
     }
     return SERVICE_SUCCESS;
 }
@@ -284,7 +284,7 @@ static int GetGid(cJSON *json, gid_t *gid, Service *curServ)
     INIT_CHECK_RETURN_VALUE(json != NULL, SERVICE_SUCCESS);
     if (cJSON_IsString(json)) {
         char *str = cJSON_GetStringValue(json);
-        INIT_ERROR_CHECK(str != NULL, return SERVICE_FAILURE, "Failed to get gid for %s", curServ->name);
+        INIT_ERROR_CHECK(str != NULL, return SERVICE_FAILURE, "failed get gid for %s", curServ->name);
         *gid = DecodeGid(str);
     } else if (cJSON_IsNumber(json)) {
         *gid = (gid_t)cJSON_GetNumberValue(json);
@@ -313,7 +313,7 @@ static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
         free(curServ->servPerm.gIDArray);
     }
     curServ->servPerm.gIDArray = (gid_t *)malloc(sizeof(gid_t) * (gidCount + 1));
-    INIT_ERROR_CHECK(curServ->servPerm.gIDArray != NULL, return SERVICE_FAILURE, "Failed to malloc err=%d", errno);
+    INIT_ERROR_CHECK(curServ->servPerm.gIDArray != NULL, return SERVICE_FAILURE, "failed malloc err=%d", errno);
     curServ->servPerm.gIDCnt = gidCount;
 
     gid_t gid;
@@ -329,7 +329,7 @@ static int GetServiceGids(const cJSON *curArrItem, Service *curServ)
         cJSON *item = cJSON_GetArrayItem(arrItem, i);
         int ret = GetGid(item, &gid, curServ);
         if (ret != 0) {
-            INIT_LOGW("Service warning %s, failed to get gid.", curServ->name);
+            INIT_LOGW("Service warning %s, failed get gid.", curServ->name);
             continue;
         }
         curServ->servPerm.gIDArray[gidArrayIndex++] = gid;
@@ -425,7 +425,7 @@ static int ParseSocketOption(cJSON *json, ServiceSocket *sockopt)
         typeItem = cJSON_GetArrayItem(typeArray, i);
         INIT_CHECK_RETURN_VALUE(cJSON_IsString(typeItem), SERVICE_FAILURE);
         stringValue = cJSON_GetStringValue(typeItem);
-        INIT_ERROR_CHECK(stringValue != NULL, return SERVICE_FAILURE, "Failed to get string for type");
+        INIT_ERROR_CHECK(stringValue != NULL, return SERVICE_FAILURE, "failed get string for type");
         if (strncmp(stringValue, "SOCKET_OPTION_PASSCRED", strlen(stringValue)) == 0) {
             sockopt->option |= SOCKET_OPTION_PASSCRED;
         } else if (strncmp(stringValue, "SOCKET_OPTION_RCVBUFFORCE", strlen(stringValue)) == 0) {
@@ -446,7 +446,7 @@ static int AddServiceSocket(cJSON *json, Service *service)
 {
     size_t strLen = 0;
     char* fieldStr = GetStringValue(json, "name", &strLen);
-    INIT_ERROR_CHECK(fieldStr != NULL, return SERVICE_FAILURE, "Failed to get socket name");
+    INIT_ERROR_CHECK(fieldStr != NULL, return SERVICE_FAILURE, "failed get socket name");
     INIT_ERROR_CHECK(strLen <= MAX_SERVICE_NAME, return SERVICE_FAILURE, "socket name exceeds length limit");
     ServiceSocket *sockopt = (ServiceSocket *)calloc(1, sizeof(ServiceSocket) + strLen + 1);
     INIT_INFO_CHECK(sockopt != NULL, return SERVICE_FAILURE, "Failed to malloc for service %s", service->name);
@@ -760,7 +760,7 @@ static int GetCpuArgs(const cJSON *argJson, const char *name, Service *service)
     int cpuNumMax = sysconf(_SC_NPROCESSORS_CONF);
     if (count > 0 && service->cpuSet == NULL) {
         service->cpuSet = malloc(sizeof(cpu_set_t));
-        INIT_ERROR_CHECK(service->cpuSet != NULL, return SERVICE_FAILURE, "Failed to malloc for cpuset");
+        INIT_ERROR_CHECK(service->cpuSet != NULL, return SERVICE_FAILURE, "failed malloc for cpuset");
     }
     CPU_ZERO(service->cpuSet);
     for (int i = 0; i < count; ++i) {
@@ -768,7 +768,7 @@ static int GetCpuArgs(const cJSON *argJson, const char *name, Service *service)
         INIT_ERROR_CHECK(item != NULL, return SERVICE_FAILURE, "prase invalid");
         cpus = (int)cJSON_GetNumberValue(item);
         if (cpuNumMax <= cpus) {
-            INIT_LOGW("%s core number %d of CPU cores does not exist", service->name, cpus);
+            INIT_LOGW("%s core number %d of CPU cores doesn't exist", service->name, cpus);
             continue;
         }
         if (CPU_ISSET(cpus, service->cpuSet)) {
@@ -805,7 +805,6 @@ static int GetServiceSaspawn(const cJSON *curItem, Service *service)
         return SERVICE_SUCCESS;
     }
     if (strcmp(SERVICES_SYSTEM_BIN_SA_MAIN, service->pathArgs.argv[0]) != 0) {
-        INIT_LOGI("Service not is sa_main not support saspawn: %s ", service->name);
         return SERVICE_SUCCESS;
     }
 
@@ -823,7 +822,7 @@ static int GetServiceSaspawn(const cJSON *curItem, Service *service)
     if (cJSON_IsTrue(item)) {
         ServiceSupportSaSpawn(service);
     } else {
-        INIT_LOGI("Service : %s saspawn value is false, not set support saSpawn", service->name);
+        INIT_LOGI("Service : %s saspawn value is false, not set support saspawn", service->name);
     }
 
     return SERVICE_SUCCESS;
@@ -881,7 +880,7 @@ void SetServicePathWithAsan(Service *service)
     }
 
     int ret = strcpy_s(tmpPathName, MAX_ONE_ARG_LEN, service->pathArgs.argv[0]);
-    INIT_ERROR_CHECK(ret == 0, return, "Asan: failed to copy service path %s", service->pathArgs.argv[0]);
+    INIT_ERROR_CHECK(ret == 0, return, "Asan: failed copy service path %s", service->pathArgs.argv[0]);
 
     if (strstr(tmpPathName, "/system/bin") != NULL) {
         anchorPos = strlen("/system") + 1;
@@ -893,7 +892,7 @@ void SetServicePathWithAsan(Service *service)
     }
 
     ret = WrapPath(tmpPathName, MAX_ONE_ARG_LEN, "/asan", anchorPos);
-    INIT_ERROR_CHECK(ret == 0, return, "Asan: failed to add asan path.");
+    INIT_ERROR_CHECK(ret == 0, return, "Asan: failed add asan path.");
     free(service->pathArgs.argv[0]);
     service->pathArgs.argv[0] = strdup(tmpPathName);
     INIT_ERROR_CHECK(service->pathArgs.argv[0] != NULL, return, "Asan: failed dup path.");
@@ -929,7 +928,7 @@ static bool MakeKernelPerm(const cJSON *cJsonKernelPerms, int count, cJSON *root
                         return false, "MakeKernelPerm: failed to add kernelPerm count");
     for (int i = 0; i < count; i++) {
         cJSON *permission = cJSON_GetArrayItem(cJsonKernelPerms, i);
-        INIT_ERROR_CHECK(permission != NULL, return false, "MakeKernelPerm: failed to get permission");
+        INIT_ERROR_CHECK(permission != NULL, return false, "MakeKernelPerm: failed get permission");
         INIT_ERROR_CHECK(AddPermissionItemToKernelPerm(kernelPerm, permission), return false, \
                             "MakeKernelPerm: failed to add permission");
     }
@@ -948,17 +947,17 @@ static void GetKernelPerm(const cJSON *curItem, Service *service)
     INIT_INFO_CHECK(count > 0, return, "GetKernelPerm: count is zero");
     INIT_ERROR_CHECK(count < KERNEL_PERM_MAX_COUNT, return, "GetKernelPerm: too many kernelPerm");
     cJSON *root = cJSON_CreateObject();
-    INIT_ERROR_CHECK(root != NULL, return, "GetKernelPerm: failed to create root");
+    INIT_ERROR_CHECK(root != NULL, return, "GetKernelPerm: failed create root");
     cJSON *kernelPerm = cJSON_CreateObject();
     if (kernelPerm == NULL) {
         cJSON_Delete(root);
-        INIT_LOGE("GetKernelPerm: failed to create kernelPerm");
+        INIT_LOGE("GetKernelPerm: failed create kernelPerm");
         return;
     }
     if (MakeKernelPerm(cJsonKernelPerms, count, root, kernelPerm)) {
         service->kernelPerms = cJSON_PrintUnformatted(root);
         if (service->kernelPerms == NULL) {
-            INIT_LOGE("GetKernelPerm: failed to get kernelPerm str");
+            INIT_LOGE("GetKernelPerm: failed get kernelPerm str");
         }
         cJSON_Delete(root);
     } else {
@@ -1014,12 +1013,12 @@ static int GetServiceEnv(Service *service, const cJSON *json)
         cJSON *envItem = cJSON_GetArrayItem(envArray, i);
         size_t strLen = 0;
         char *name = GetStringValue(envItem, "name", &strLen);
-        INIT_ERROR_CHECK(name != NULL && strLen > 0, return SERVICE_FAILURE, "Failed to get env name failed!");
+        INIT_ERROR_CHECK(name != NULL && strLen > 0, return SERVICE_FAILURE, "failed get env name failed!");
         int ret = strcpy_s(service->env[i].name, strLen + 1, name);
         INIT_INFO_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to copy env name %s", name);
 
         char *value = GetStringValue(envItem, "value", &strLen);
-        INIT_ERROR_CHECK(value != NULL && strLen > 0, return SERVICE_FAILURE, "Failed to get value failed!");
+        INIT_ERROR_CHECK(value != NULL && strLen > 0, return SERVICE_FAILURE, "failed get value failed!");
         ret = strcpy_s(service->env[i].value, strLen + 1, value);
         INIT_INFO_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to copy env value %s", value);
     }
@@ -1060,26 +1059,26 @@ static int ParseOneServiceOther(const cJSON *curItem, Service *service)
 
     ParseOneServiceArgs(curItem, service);
     ret = GetServiceEnv(service, curItem);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get env for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get env for service %s", service->name);
     ret = GetServicePeriod(curItem, service, PERIOD_STR_IN_CFG, SERVICE_ATTR_PERIOD);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get period for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get period for service %s", service->name);
     ret = GetServiceSandbox(curItem, service);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get sandbox for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get sandbox for service %s", service->name);
     ret = InitServiceCaps(curItem, service);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get caps for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get caps for service %s", service->name);
     ret = GetServiceOnDemand(curItem, service);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get ondemand flag for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get ondemand flag for service %s", service->name);
     ret = GetServiceSetuid(curItem, service);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get setuid flag for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get setuid flag for service %s", service->name);
     ret = GetServiceMode(service, curItem);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get start/end mode for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get start/end mode for service %s", service->name);
     ret = GetServiceJobs(service, cJSON_GetObjectItem(curItem, "jobs"));
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get jobs for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get jobs for service %s", service->name);
     ret = GetServiceCgroup(curItem, service);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get cgroup for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get cgroup for service %s", service->name);
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
     ret = GetServiceSaspawn(curItem, service);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get saspawn for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get saspawn for service %s", service->name);
 #endif
 
     return ret;
@@ -1089,7 +1088,7 @@ int ParseOneService(const cJSON *curItem, Service *service)
 {
     INIT_CHECK_RETURN_VALUE(curItem != NULL && service != NULL, SERVICE_FAILURE);
     int ret = GetServiceArgs(curItem, "path", MAX_PATH_ARGS_CNT, &service->pathArgs);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get path for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get path for service %s", service->name);
     if ((service->pathArgs.count > 0) && IsForbidden(service->pathArgs.argv[0])) {
         INIT_LOGE("Service %s is forbidden.", service->name);
         return SERVICE_FAILURE;
@@ -1098,24 +1097,24 @@ int ParseOneService(const cJSON *curItem, Service *service)
     SetServicePathWithAsan(service);
 #endif
     ret = GetUid(cJSON_GetObjectItem(curItem, UID_STR_IN_CFG), &service->servPerm.uID);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get uid for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get uid for service %s", service->name);
     ret = GetServiceGids(curItem, service);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get gid for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get gid for service %s", service->name);
 
     ret = GetServiceAttr(curItem, service, ONCE_STR_IN_CFG, SERVICE_ATTR_ONCE, NULL);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get once flag for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get once flag for service %s", service->name);
     ret = GetServiceAttr(curItem, service, IMPORTANT_STR_IN_CFG, SERVICE_ATTR_IMPORTANT, SetImportantValue);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get import flag for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get import flag for service %s", service->name);
     ret = GetCritical(curItem, service, CRITICAL_STR_IN_CFG, SERVICE_ATTR_CRITICAL);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get critical flag for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get critical flag for service %s", service->name);
     ret = GetServiceAttr(curItem, service, DISABLED_STR_IN_CFG, SERVICE_ATTR_DISABLED, NULL);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get disabled flag for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get disabled flag for service %s", service->name);
     ret = GetServiceAttr(curItem, service, CONSOLE_STR_IN_CFG, SERVICE_ATTR_CONSOLE, SetConsoleValue);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get console for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get console for service %s", service->name);
     ret = GetServiceAttr(curItem, service, "notify-state", SERVICE_ATTR_NOTIFY_STATE, NULL);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get notify-state for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get notify-state for service %s", service->name);
     ret = GetServiceAttr(curItem, service, MODULE_UPDATE_STR_IN_CFG, SERVICE_ATTR_MODULE_UPDATE, NULL);
-    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "Failed to get module-update for service %s", service->name);
+    INIT_ERROR_CHECK(ret == 0, return SERVICE_FAILURE, "failed get module-update for service %s", service->name);
 
     ret = ParseOneServiceOther(curItem, service);
     
@@ -1194,7 +1193,7 @@ static int AddFileDescriptorToWatcher(int fd, Service *service)
     info.processEvent = ProcessConsoleEvent;
     int ret = LE_StartWatcher(LE_GetDefaultLoop(), &watcher, &info, service);
     if (ret != LE_SUCCESS) {
-        INIT_LOGE("Failed to watch console device for service \' %s \'", service->name);
+        INIT_LOGE("failed watch console device for service \' %s \'", service->name);
         return -1;
     }
     return 0;
@@ -1212,12 +1211,12 @@ int WatchConsoleDevice(Service *service)
             INIT_LOGW("/dev/console is not exist, wait for it...");
             WaitForFile("/dev/console", WAIT_MAX_SECOND);
         } else {
-            INIT_LOGE("Failed to open /dev/console, err = %d", errno);
+            INIT_LOGE("failed open /dev/console, err = %d", errno);
             return -1;
         }
         fd = open("/dev/console", O_RDWR | O_NOCTTY | O_CLOEXEC);
         if (fd < 0) {
-            INIT_LOGW("Failed to open /dev/console after try 1 time, err = %d", errno);
+            INIT_LOGW("failed open /dev/console after try 1 time, err = %d", errno);
             return -1;
         }
     }
@@ -1240,14 +1239,14 @@ void ParseAllServices(const cJSON *fileRoot, const ConfigContext *context)
         cJSON *curItem = cJSON_GetArrayItem(serviceArr, i);
         char *fieldStr = GetStringValue(curItem, "name", &strLen);
         if (fieldStr == NULL) {
-            INIT_LOGE("Failed to get service name");
+            INIT_LOGE("failed get service name");
             continue;
         }
         Service *service = GetServiceByName(fieldStr);
         if (service == NULL) {
             service = AddService(fieldStr);
             if (service == NULL) {
-                INIT_LOGE("Failed to add service name %s", fieldStr);
+                INIT_LOGE("failed add service name %s", fieldStr);
                 continue;
             }
         } else {
@@ -1263,7 +1262,7 @@ void ParseAllServices(const cJSON *fileRoot, const ConfigContext *context)
         int ret = ParseOneService(curItem, service);
         if (ret != SERVICE_SUCCESS) {
             INIT_LOGE("Service error %s parse config error.", service->name);
-            ReleaseService(service);
+            service->lastErrno = INIT_ECFG;
             continue;
         }
         ret = ParseServiceSocket(curItem, service);
@@ -1273,7 +1272,7 @@ void ParseAllServices(const cJSON *fileRoot, const ConfigContext *context)
         // Watch "/dev/console" node for starting console service ondemand.
         if ((strcmp(service->name, "console") == 0) && IsOnDemandService(service)) {
             if (WatchConsoleDevice(service) < 0) {
-                INIT_LOGW("Failed to watch \'/dev/console\' device");
+                INIT_LOGW("failed watch \'/dev/console\' device");
             }
         }
 #if defined(ENABLE_HOOK_MGR)
@@ -1400,7 +1399,7 @@ static void MoveFrozenToThawed()
         char pidName[PATH_MAX] = {0};
         int ret = snprintf_s(pidName, sizeof(pidName), sizeof(pidName) - 1, "%d", pid);
         if (ret <= 0) {
-            INIT_LOGE("Failed to snprintf_s for pid %d, errno: %d", pid, errno);
+            INIT_LOGE("failed snprintf_s for pid %d, errno: %d", pid, errno);
             failCount++;
             continue;
         }
@@ -1458,7 +1457,7 @@ void StopAllServices(int flags, const char **exclude, int size,
     INIT_LOGI("stop appspawn end");
     MoveFrozenToThawed();
     StopWorkingset("/dev/workingset/monitor0/workingset.state");
-    StopWorkingset("/dev/workingset/monitor1/workongset.state");
+    StopWorkingset("/dev/workingset/monitor1/workingset.state");
     InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
     while (node != NULL) {
         Service *service = node->data.service;

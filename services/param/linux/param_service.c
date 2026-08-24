@@ -60,9 +60,9 @@ static void TimerCallback(const ParamTaskPtr timer, void *context)
 static void CheckAndSendTrigger(uint32_t dataIndex, const char *name, const char *value)
 {
     WorkSpace *workspace = GetWorkSpaceByName(name);
-    PARAM_CHECK(workspace != NULL, return, "Failed to get workspace %s ", name);
+    PARAM_CHECK(workspace != NULL, return, "failed get workspace %s ", name);
     ParamNode *entry = (ParamNode *)GetTrieNode(workspace, dataIndex);
-    PARAM_CHECK(entry != NULL, return, "Failed to get data %s ", name);
+    PARAM_CHECK(entry != NULL, return, "failed get data %s ", name);
     uint32_t trigger = 1;
     if ((ATOMIC_LOAD_EXPLICIT(&entry->commitId, MEMORY_ORDER_RELAXED) & PARAM_FLAGS_TRIGGED) != PARAM_FLAGS_TRIGGED) {
         trigger = (CheckAndMarkTrigger(TRIGGER_PARAM, name) != 0) ? 1 : 0;
@@ -88,7 +88,7 @@ static int SendResponseMsg(ParamTaskPtr worker, const ParamMessage *msg, int res
 {
     ParamResponseMessage *response = NULL;
     response = (ParamResponseMessage *)CreateParamMessage(msg->type, msg->key, sizeof(ParamResponseMessage));
-    PARAM_CHECK(response != NULL, return PARAM_CODE_ERROR, "Failed to alloc memory for response");
+    PARAM_CHECK(response != NULL, return PARAM_CODE_ERROR, "failed alloc memory for response");
     response->msg.id.msgId = msg->id.msgId;
     response->result = result;
     response->msg.msgSize = sizeof(ParamResponseMessage);
@@ -103,7 +103,7 @@ static int SendWatcherNotifyMessage(const TriggerExtInfo *extData, const char *c
     PARAM_CHECK(extData != NULL && extData->stream != NULL, return -1, "Invalid extData");
     uint32_t msgSize = sizeof(ParamMessage) + PARAM_ALIGN(strlen(content) + 1);
     ParamMessage *msg = (ParamMessage *)CreateParamMessage(MSG_NOTIFY_PARAM, "*", msgSize);
-    PARAM_CHECK(msg != NULL, return -1, "Failed to create msg ");
+    PARAM_CHECK(msg != NULL, return -1, "failed create msg ");
 
     uint32_t offset = 0;
     int ret;
@@ -150,9 +150,9 @@ static int SystemSetParam(const char *name, const char *value, const ParamSecuri
     if ((ctrlService & PARAM_CTRL_SERVICE) != PARAM_CTRL_SERVICE) { // ctrl param
         uint32_t dataIndex = 0;
         ret = WriteParam(name, value, &dataIndex, mode);
-        PARAM_CHECK(ret == 0, return ret, "Failed to set param %d name %s %s", ret, name, value);
+        PARAM_CHECK(ret == 0, return ret, "failed set param %d name %s %s", ret, name, value);
         ret = WritePersistParam(name, value);
-        PARAM_CHECK(ret == 0, return ret, "Failed to set persist param name %s", name);
+        PARAM_CHECK(ret == 0, return ret, "failed set persist param name %s", name);
         CheckAndSendTrigger(dataIndex, name, value);
     }
     return ret;
@@ -168,7 +168,7 @@ static int SystemUpdateConstParamter(const char *name, const char *value, const 
     if ((ctrlService & PARAM_CTRL_SERVICE) != PARAM_CTRL_SERVICE) { // ctrl param
         uint32_t dataIndex = 0;
         ret = WriteParam(name, value, &dataIndex, LOAD_PARAM_UPDATE_CONST);
-        PARAM_CHECK(ret == 0, return ret, "Failed to update const param %d name %s %s", ret, name, value);
+        PARAM_CHECK(ret == 0, return ret, "failed update const param %d name %s %s", ret, name, value);
         CheckAndSendTrigger(dataIndex, name, value);
     }
     return ret;
@@ -183,7 +183,7 @@ static int HandleParamSet(const ParamTaskPtr worker, const ParamMessage *msg)
     struct ucred cr = {-1, -1, -1};
     socklen_t crSize = sizeof(cr);
     if (getsockopt(LE_GetSocketFd(worker), SOL_SOCKET, SO_PEERCRED, &cr, &crSize) < 0) {
-        PARAM_LOGE("Failed to get opt %d", errno);
+        PARAM_LOGE("failed get opt %d", errno);
 #ifndef STARTUP_INIT_TEST
         return SendResponseMsg(worker, msg, -1);
 #endif
@@ -203,7 +203,7 @@ static int32_t AddWatchNode(struct tagTriggerNode_ *trigger, const struct Trigge
     if (extInfo != NULL && extInfo->stream != NULL) {
         watcher = (ParamWatcher *)ParamGetTaskUserData(extInfo->stream);
     }
-    PARAM_CHECK(watcher != NULL, return -1, "Failed to get param watcher data");
+    PARAM_CHECK(watcher != NULL, return -1, "failed get param watcher data");
     if (extInfo->type == TRIGGER_PARAM_WAIT) {
         WaitNode *node = (WaitNode *)trigger;
         OH_ListInit(&node->item);
@@ -250,6 +250,7 @@ static int32_t ExecuteWatchTrigger_(const struct tagTriggerNode_ *trigger, const
 static int HandleParamWaitAdd(const ParamTaskPtr worker, const ParamMessage *msg)
 {
     PARAM_CHECK(msg != NULL, return -1, "Invalid message");
+    PARAM_CHECK(CheckParamName(msg->key, 1) == 0, return -1, "Invalid param name");
     uint32_t offset = 0;
 #ifndef STARTUP_INIT_TEST
     uint32_t timeout = DEFAULT_PARAM_WAIT_TIMEOUT;
@@ -280,7 +281,7 @@ static int HandleParamWaitAdd(const ParamTaskPtr worker, const ParamMessage *msg
 
     uint32_t buffSize = strlen(msg->key) + valueContent->contentSize + 1 + 1;
     char *condition = calloc(1, buffSize);
-    PARAM_CHECK(condition != NULL, return -1, "Failed to create condition for %s", msg->key);
+    PARAM_CHECK(condition != NULL, return -1, "failed create condition for %s", msg->key);
     int ret = sprintf_s(condition, buffSize - 1, "%s=%s", msg->key, valueContent->content);
     PARAM_CHECK(ret > EOK, free(condition);
         return -1, "Failed to copy name for %s", msg->key);
@@ -290,7 +291,7 @@ static int HandleParamWaitAdd(const ParamTaskPtr worker, const ParamMessage *msg
     free(condition);
     if (g_paramService.timer == NULL) {
         ret = ParamTimerCreate(&g_paramService.timer, TimerCallback, &g_paramService);
-        PARAM_CHECK(ret == 0, return 0, "Failed to create timer %s", msg->key);
+        PARAM_CHECK(ret == 0, return 0, "failed create timer %s", msg->key);
         ret = ParamTimerStart(g_paramService.timer, MS_UNIT, (uint64_t)-1);
         PARAM_CHECK(ret == 0,
             ParamTaskClose(g_paramService.timer);
@@ -303,6 +304,7 @@ static int HandleParamWaitAdd(const ParamTaskPtr worker, const ParamMessage *msg
 static int HandleParamWatcherAdd(const ParamTaskPtr worker, const ParamMessage *msg)
 {
     PARAM_CHECK(msg != NULL, return -1, "Invalid message");
+    PARAM_CHECK(CheckParamName(msg->key, 1) == 0, return -1, "Invalid param name");
     PARAM_CHECK((g_paramService.watcherTask == NULL) ||
         (g_paramService.watcherTask == worker), return -1, "Invalid watcher worker");
     g_paramService.watcherTask = worker;
@@ -313,7 +315,7 @@ static int HandleParamWatcherAdd(const ParamTaskPtr worker, const ParamMessage *
     extData.info.watchInfo.watchId = msg->id.watcherId;
     TriggerNode *trigger = AddWatcherTrigger(TRIGGER_PARAM_WATCH, msg->key, &extData);
     if (trigger == NULL) {
-        PARAM_LOGE("Failed to add trigger for %s", msg->key);
+        PARAM_LOGE("failed add trigger for %s", msg->key);
         return SendResponseMsg(worker, msg, -1);
     }
     PARAM_LOGI("HandleParamWatcherAdd name %s watcher: %u", msg->key, msg->id.watcherId);
@@ -334,14 +336,14 @@ static int HandleParamSave(const ParamTaskPtr worker, const ParamMessage *msg)
     struct ucred cr = {-1, -1, -1};
     socklen_t crSize = sizeof(cr);
     if (getsockopt(LE_GetSocketFd(worker), SOL_SOCKET, SO_PEERCRED, &cr, &crSize) < 0) {
-        PARAM_LOGE("Failed to get opt %d", errno);
+        PARAM_LOGE("failed get opt %d", errno);
 #ifndef STARTUP_INIT_TEST
         return SendResponseMsg(worker, msg, -1);
 #endif
     }
     PARAM_LOGI("process info:pid = %d, uid = %d, gid = %d", cr.pid, cr.uid, cr.gid);
     int ret = CheckIfUidInGroup(cr.uid, "servicectrl");
-    PARAM_CHECK(ret == 0, return SendResponseMsg(worker, msg, -1), "Failed to process save parameters : ret %d", ret);
+    PARAM_CHECK(ret == 0, return SendResponseMsg(worker, msg, -1), "failed process save parameters : ret %d", ret);
     CheckAndSavePersistParam();
     return SendResponseMsg(worker, msg, 0);
 }
@@ -370,7 +372,7 @@ PARAM_STATIC int ProcessMessage(const ParamTaskPtr worker, const ParamMessage *m
         default:
             break;
     }
-    PARAM_CHECK(ret == 0, return -1, "Failed to process message ret %d", ret);
+    PARAM_CHECK(ret == 0, return -1, "failed process message ret %d", ret);
     return 0;
 }
 
@@ -386,10 +388,10 @@ PARAM_STATIC int OnIncomingConnect(LoopHandle loop, TaskHandle server)
     info.incomingConnect = NULL;
     ParamTaskPtr client = NULL;
     int ret = ParamStreamCreate(&client, server, &info, sizeof(ParamWatcher));
-    PARAM_CHECK(ret == 0, return -1, "Failed to create client");
+    PARAM_CHECK(ret == 0, return -1, "failed create client");
 
     ParamWatcher *watcher = (ParamWatcher *)ParamGetTaskUserData(client);
-    PARAM_CHECK(watcher != NULL, return -1, "Failed to get watcher");
+    PARAM_CHECK(watcher != NULL, return -1, "failed get watcher");
     OH_ListInit(&watcher->triggerHead);
     watcher->stream = client;
 #ifdef STARTUP_INIT_TEST
@@ -443,12 +445,12 @@ int InitParamService(void)
         info.recvMessage = NULL;
         info.incomingConnect = OnIncomingConnect;
         ret = ParamServerCreate(&g_paramService.serverTask, &info);
-        PARAM_CHECK(ret == 0, return ret, "Failed to create server");
+        PARAM_CHECK(ret == 0, return ret, "failed create server");
     }
 
     // init trigger space
     ret = InitTriggerWorkSpace();
-    PARAM_CHECK(ret == 0, return ret, "Failed to init trigger");
+    PARAM_CHECK(ret == 0, return ret, "failed init trigger");
     RegisterTriggerExec(TRIGGER_PARAM_WAIT, ExecuteWatchTrigger_);
     RegisterTriggerExec(TRIGGER_PARAM_WATCH, ExecuteWatchTrigger_);
 

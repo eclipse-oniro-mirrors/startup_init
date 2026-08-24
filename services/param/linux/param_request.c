@@ -132,7 +132,7 @@ static int GetClientSocket(int timeout)
     time.tv_sec = timeout;
     time.tv_usec = 0;
     int clientFd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
-    PARAM_CHECK(clientFd >= 0, return INVALID_SOCKET, "Failed to create socket");
+    PARAM_CHECK(clientFd >= 0, return INVALID_SOCKET, "failed create socket");
     int ret = ConnectServer(clientFd, CLIENT_PIPE_NAME);
     if (ret == 0) {
         setsockopt(clientFd, SOL_SOCKET, SO_SNDTIMEO, (char *)&time, sizeof(struct timeval));
@@ -152,7 +152,7 @@ static int StartRequest(int clientFd, ParamMessage *request, int timeout)
         PARAM_LOGE("send Message failed!");
         return PARAM_CODE_IPC_ERROR;
     }
-    PARAM_CHECK(sendLen >= 0, return PARAM_CODE_IPC_ERROR, "Failed to send message err: %d", errno);
+    PARAM_CHECK(sendLen >= 0, return PARAM_CODE_IPC_ERROR, "failed send message err: %d", errno);
     PARAM_LOGV("sendMessage sendLen fd %d %zd", clientFd, sendLen);
     if (timeout <= 0) {
         return 0;
@@ -176,7 +176,7 @@ static int SystemSetParameter_(const char *name, const char *value, int timeout)
     msgSize = (msgSize < RECV_BUFFER_MAX) ? RECV_BUFFER_MAX : msgSize;
 
     ParamMessage *request = (ParamMessage *)CreateParamMessage(MSG_SET_PARAM, name, msgSize);
-    PARAM_CHECK(request != NULL, return PARAM_CODE_ERROR, "Failed to create Param Message");
+    PARAM_CHECK(request != NULL, return PARAM_CODE_ERROR, "failed create Param Message");
     uint32_t offset = 0;
     ret = FillParamMsgContent(request, &offset, PARAM_VALUE, value, strlen(value));
     PARAM_CHECK(ret == 0, free(request);
@@ -323,7 +323,7 @@ void ResetParamSecurityLabel(void)
     paramSpace->flags |= WORKSPACE_FLAGS_NEED_ACCESS;
 #endif
 #endif
-    PARAM_DUMPI("ResetParamSecurityLabel Fd:%d", g_clientFd);
+    PARAM_LOGV("ResetParamSecurityLabel Fd:%d", g_clientFd);
     pthread_mutex_lock(&g_clientMutex);
     if (g_clientFd != INVALID_SOCKET) {
         close(g_clientFd);

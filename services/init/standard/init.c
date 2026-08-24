@@ -31,8 +31,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <linux/major.h>
-#include <sched.h>
-#include <sys/resource.h>
 
 #include "config_policy_utils.h"
 #include "device.h"
@@ -192,7 +190,7 @@ static int FdHolderSockInit(void)
     int fdHolderBufferSize = FD_HOLDER_BUFFER_SIZE; // 4KiB
     sock = socket(AF_UNIX, SOCK_DGRAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
     if (sock < 0) {
-        INIT_LOGE("Failed to create fd holder socket, err = %d", errno);
+        INIT_LOGE("failed create fd holder socket, err = %d", errno);
         return -1;
     }
 
@@ -207,24 +205,24 @@ static int FdHolderSockInit(void)
     addr.sun_family = AF_UNIX;
     if (strncpy_s(addr.sun_path, sizeof(addr.sun_path),
         INIT_HOLDER_SOCKET_PATH, strlen(INIT_HOLDER_SOCKET_PATH)) != 0) {
-        INIT_LOGE("Failed to copy fd hoder socket path");
+        INIT_LOGE("failed copy fd hoder socket path");
         close(sock);
         return -1;
     }
     socklen_t len = (socklen_t)(offsetof(struct sockaddr_un, sun_path) + strlen(addr.sun_path) + 1);
     if (bind(sock, (struct sockaddr *)&addr, len) < 0) {
-        INIT_LOGE("Failed to binder fd folder socket %d", errno);
+        INIT_LOGE("failed binder fd folder socket %d", errno);
         close(sock);
         return -1;
     }
 
     // Owned by root
     if (lchown(addr.sun_path, 0, 0)) {
-        INIT_LOGW("Failed to change owner of fd holder socket, err = %d", errno);
+        INIT_LOGW("failed change owner of fd holder socket, err = %d", errno);
     }
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
     if (fchmodat(AT_FDCWD, addr.sun_path, mode, AT_SYMLINK_NOFOLLOW)) {
-        INIT_LOGW("Failed to change mode of fd holder socket, err = %d", errno);
+        INIT_LOGW("failed change mode of fd holder socket, err = %d", errno);
     }
     INIT_LOGI("Init fd holder socket done");
     return sock;
@@ -314,6 +312,9 @@ static void InitLoadParamFiles(void)
 
     // Load developer mode param
     LoadDefaultParams("/proc/dsmm/developer", LOAD_PARAM_NORMAL);
+
+    // Load dsl param
+    LoadDefaultParams("/proc/dsmm/dsl", LOAD_PARAM_NORMAL);
 
     // Load const params, these can't be override!
     LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
@@ -410,10 +411,6 @@ int ParseCfgByPriority(const char *filePath)
         return -1;
     }
     CfgFiles *files = GetCfgFiles(filePath);
-    if (files == NULL) {
-        INIT_LOGE("get etc/init cfg failed");
-        return -1;
-    }
 
     INIT_ERROR_CHECK(files != NULL, return -1,
         "get etc/init cfg failed");
@@ -429,12 +426,6 @@ int ParseCfgByPriority(const char *filePath)
     }
     FreeCfgFiles(files);
     return 0;
-}
-
-static void SetInitPriority()
-{
-    int ret = setpriority(PRIO_PROCESS, 0, INIT_PRIORITY_NICE);
-    INIT_CHECK_ONLY_ELOG(ret == 0, "set init priority failed");
 }
 
 static void PostInitTriggers(void)
@@ -497,8 +488,6 @@ void SystemConfig(const char *uptime)
     // Write kernel uptime into system parameter
     WriteUptimeSysParam("ohos.boot.time.kernel", uptime);
 
-    SetInitPriority();
-
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
     if (IsEnableSaspawn()) {
         DlopenSoLibrary(INIT_LOAD_OS_LIBRARY_PATH);
@@ -548,7 +537,7 @@ static void ParseAllSoLibrary(const cJSON *root)
 {
     cJSON *importAttr = cJSON_GetObjectItemCaseSensitive(root, "preload");
     if (!cJSON_IsArray(importAttr)) {
-        free(tmpParamValue);
+        INIT_LOGE("import Not an array");
         return;
     }
 
@@ -556,22 +545,22 @@ static void ParseAllSoLibrary(const cJSON *root)
     for (int i = 0; i < importAttrSize; i++) {
         cJSON *importItem = cJSON_GetArrayItem(importAttr, i);
         if (!cJSON_IsString(importItem)) {
-            INIT_LOGE("Invalid ytpe of import item. should be string");
+            INIT_LOGE("Invalid type of import item. should be string");
             break;
         }
         char *importContent = cJSON_GetStringValue(importItem);
         if (importContent == NULL) {
-            INIT_LOGE("Cannot get import config file");
+            INIT_LOGE("cannot get import config file");
             break;
         }
 
         INIT_LOGI("Import %s ...", importContent);
         void* handle = dlopen(importContent, RTLD_LAZY);
-        INIT_ERROR_CHECK(handle != NULL, continue, "Failed to dlopen load library errno:%{public}s", dlerror());
+        INIT_ERROR_CHECK(handle != NULL, continue, "failed dlopen load library errno:%{public}s", dlerror());
     }
 }
 
-int DlopenSoLibrary(const char *configFile)
+static int DlopenSoLibrary(const char *configFile)
 {
     INIT_LOGV("Parse init configs form %s", configFile);
     char *fileBuf = ReadFileToBuf(configFile);

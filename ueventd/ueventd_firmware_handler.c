@@ -20,23 +20,36 @@
 #include <unistd.h>
 #include <limits.h>
 #include "ueventd.h"
+#include "ueventd_utils.h"
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
 #include "securec.h"
 
 void HandleFimwareDeviceEvent(const struct Uevent *uevent)
 {
+    if (uevent == NULL || uevent->syspath == NULL) {
+        INIT_LOGW("FirmwareEvent: uevent or syspath is NULL");
+        return;
+    }
+    INIT_LOGI("FirmwareEvent: syspath=%s", uevent->syspath);
     char fwLoadingPath[PATH_MAX] = {};
 
     if (snprintf_s(fwLoadingPath, PATH_MAX, PATH_MAX - 1, "/sys%s/loading", uevent->syspath) == -1) {
-        INIT_LOGE("Failed to build firmware loading path");
+        INIT_LOGE("failed build firmware loading path");
         return;
     }
     char realPath[PATH_MAX] = { 0 };
-    realpath(fwLoadingPath, realPath);
+    if (realpath(fwLoadingPath, realPath) == NULL) {
+        INIT_LOGE("Failed to resolve path %s, err = %d", fwLoadingPath, errno);
+        return;
+    }
+    if (!STARTSWITH(realPath, "/sys/")) {
+        INIT_LOGE("Resolved path outside /sys boundary: %s", realPath);
+        return;
+    }
     int fd = open(realPath, O_WRONLY | O_CLOEXEC);
     if (fd < 0) {
-        INIT_LOGE("Failed to open %s, err = %d", fwLoadingPath, errno);
+        INIT_LOGE("failed open %s, err = %d", fwLoadingPath, errno);
         return;
     }
 

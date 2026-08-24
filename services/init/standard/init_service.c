@@ -27,8 +27,10 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <signal.h>
+#include "selinux/selinux.h"
 #include "crash_handler.h"
 #include "param_manager.h"
+#include "hilog/log.h"
 #endif
 
 #include "init_group_manager.h"
@@ -102,19 +104,19 @@ void NotifyServiceChange(Service *service, int status)
     char paramName[PARAM_NAME_LEN_MAX] = { 0 };
     int ret = snprintf_s(paramName, sizeof(paramName), sizeof(paramName) - 1,
         "%s.%s", STARTUP_SERVICE_CTL, service->name);
-    INIT_ERROR_CHECK(ret > 0, return, "Failed to format service name %s.", service->name);
+    INIT_ERROR_CHECK(ret > 0, return, "failed format service name %s.", service->name);
     char statusStr[MAX_INT_LEN] = {0};
     ret = snprintf_s(statusStr, sizeof(statusStr), sizeof(statusStr) - 1, "%d", status);
-    INIT_ERROR_CHECK(ret > 0, return, "Failed to format service status %s.", service->name);
+    INIT_ERROR_CHECK(ret > 0, return, "failed format service status %s.", service->name);
     SystemWriteParam(paramName, statusStr);
 
     // write pid
     ret = snprintf_s(paramName, sizeof(paramName), sizeof(paramName) - 1,
         "%s.%s.pid", STARTUP_SERVICE_CTL, service->name);
-    INIT_ERROR_CHECK(ret > 0, return, "Failed to format service pid name %s.", service->name);
+    INIT_ERROR_CHECK(ret > 0, return, "failed format service pid name %s.", service->name);
     ret = snprintf_s(statusStr, sizeof(statusStr), sizeof(statusStr) - 1,
         "%d", (service->pid == -1) ? 0 : service->pid);
-    INIT_ERROR_CHECK(ret > 0, return, "Failed to format service pid %s.", service->name);
+    INIT_ERROR_CHECK(ret > 0, return, "failed format service pid %s.", service->name);
     if (status == SERVICE_STARTED) {
         WriteOomScoreAdjToService(service);
     }
@@ -143,6 +145,83 @@ int SetImportantValue(Service *service, const char *attrName, int value, int fla
 }
 
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
+static bool IsServicePrivateFd(Service *service, int curFd)
+{
+    ServiceSocket *tmpSock = service->socketCfg;
+    while (tmpSock != NULL) {
+        if (curFd == tmpSock->sockFd) {
+            INIT_LOGI("%d is service private socket, do not clear", curFd);
+            return true;
+        }
+        tmpSock = tmpSock->next;
+    }
+
+    ServiceFile *tmpFile = service->fileCfg;
+    while (tmpFile != NULL) {
+        if (curFd == tmpFile->fd) {
+            INIT_LOGI("%d is service private socket, do not clear", curFd);
+            return true;
+        }
+        tmpFile = tmpFile->next;
+    }
+    return false;
+}
+
+static void CloseFileResource(Service *service)
+{
+    DIR *dir = opendir(SERVICES_PROC_SELF_FD);
+    if (!dir) {
+        INIT_LOGE("Open fd directory failed.");
+        return;
+    }
+    struct dirent *entry;
+    int hilogFd = HilogGetSocketFd();
+    INIT_LOGI("Saspawn free file descriptors, HilogFd : %d, hilogFd")
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        int fd = atoi(entry->d_name);
+        if (fd == SERVICES_STANDARD_INPUT || fd == SERVICES_STANDARD_OUTPUT || fd == SERVICES_STANDARD_ERROR) {
+            continue;
+        }
+        char path[SERVICES_STR_LEN_MAX] = { 0 };
+        int ret = snprintf_s(path, sizeof(path), sizeof(path) - 1, "%s/%s", SERVICES_PROC_SELF_FD, entry->d_name);
+        INIT_ERROR_CHECK(ret > 0, continue, "Path too long for fd: %s.", entry->d_name);
+
+        char link[SERVICES_STR_LEN_MAX] = { 0 };
+        int len = readlink(path, link, sizeof(link) - 1);
+        if (len < 0) {
+            INIT_LOGE("failed read symbolic link for path: %s", path);
+            continue;
+        }
+        if (strcmp(link, SERVICES_FILE_PATH_KMSG) == 0) {
+            INIT_LOGI("Failed path is kmsg: %s", link);
+            continue;
+        }
+        if (fd == hilogFd) {
+            INIT_LOGE("saspawn skip HilogFd: %d", hilogFd);
+            continue;
+        }
+        if (!IsServicePrivateFd(service, fd)) {
+            colse(fd);
+        }
+    }
+    closedir(dir);
+}
+
+static void ResetSignalResource(void)
+{
+    for (size_t i = 0; i < sizeof(g_resetSignals) / sizeof(g_resetSignals[0]); i++) {
+        int32_t sig = g_resetSignals[i].sigNo;
+        if (signal(sig, SIG_DFL) == SIG_ERR) {
+            INIT_LOGE("Resetting handler signal(%d) failed: %s", sig, strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
 int InitServiceBySaspawn(Service *service, const ServiceArgs *pathArgs)
 {
     int ret = 0;
@@ -165,18 +244,19 @@ int InitServiceBySaspawn(Service *service, const ServiceArgs *pathArgs)
         INIT_LOGE("saspawn strncpy_s failed %d", errno);
         return SERVICE_FAILURE;
     }
-    void* handle = dlopen(SERVICES_SASPAWN_LIBRARY_NAME, RTLD_LAZY);
+    selinux_check_reset();
+    void* handle = dlopen(SERVICES_SASPAWN_LTBRARY_NAME, RTLD_LAZY);
     if (handle != NULL) {
-        FuncType startSA = (FuncType)dlsym(handle, SERVICES_SASPAWN_FUNCTION_NAME);
+        FuncType startSA = (FuncType)dlsym(handle, SERVICES_SASPAWN_LTBRARY_NAME);
         if (startSA == NULL) {
             INIT_LOGE("saspawn dlsym error: %s", dlerror());
             return SERVICE_FAILURE;
         }
-
-        UnmapResource();
         int argvValue = pathArgs->count - 1;
-        PluginExecCmdByName("setServiceSaspawnContent", service->name);
-        ret = startSA(argvValue, pathArgs->argv);
+        ResetSignalResource();
+        CloseFileResource(service);
+        UnmapResource();
+        ret = startSa(argvValue, pathArgs->argv);
         INIT_LOGI("saspawn complete, ret = %d", ret);
         return SERVICE_SUCCESS;
     } else {
@@ -184,70 +264,11 @@ int InitServiceBySaspawn(Service *service, const ServiceArgs *pathArgs)
         return SERVICE_FAILURE;
     }
 }
-
-void CloseFileResource(void)
-{
-    DIR *dir = opendir(SERVICES_PROC_SELF_FD);
-    if (!dir) {
-        INIT_LOGE("Open fd directory failed.");
-        return;
-    }
-    INIT_LOGI("Saspawn free file descriptors.");
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL) {
-        if (entry->d_name[0] == '.') {
-            continue;
-        }
-
-        char *endptr = NULL;
-        long fd_val = strtol(entry->d_name, &endptr, STRTOL_BASE);
-        if (*endptr != '\0' || fd_val < 0 || fd_val > INT_MAX) {
-            INIT_LOGE("Invalid fd entry: %s", entry->d_name);
-            continue;
-        }
-        int fd = (int)fd_val;
-        if (fd == SERVICES_STANDARD_INPUT || fd == SERVICES_STANDARD_OUTPUT || fd == SERVICES_STANDARD_ERROR) {
-            continue;
-        }
-
-        char path[SERVICES_STR_LEN_MAX] = { 0 };
-        int ret = snprintf_s(path, sizeof(path), sizeof(path) - 1, "%s/%s", SERVICES_PROC_SELF_FD, entry->d_name);
-        INIT_ERROR_CHECK(ret > 0, continue, "Path too long for fd: %s.", entry->d_name);
-
-        char link[SERVICES_STR_LEN_MAX] = { 0 };
-        int len = readlink(path, link, sizeof(link) - 1);
-        if (len < 0) {
-            INIT_LOGE("Failed to read symbolic link for path: %s", path);
-            continue;
-        }
-        if (strcmp(link, SERVICES_FILE_PATH_KMSG) == 0) {
-            INIT_LOGI("Failed path is kmsg: %s", link);
-            continue;
-        }
-        if ((strstr(link, SERVICES_FILE_PATH_SOCKET) != NULL) ||
-            (strstr(link, SERVICES_FILE_PATH_ANON) != NULL)) {
-            close(fd);
-        }
-    }
-    closedir(dir);
-}
-
-void ResetSignalResource(void)
-{
-    for (size_t i = 0; i < sizeof(g_resetSignals) / sizeof(g_resetSignals[0]); i++) {
-        int32_t sig = g_resetSignals[i].sigNo;
-        if (signal(sig, SIG_DFL) == SIG_ERR) {
-            INIT_LOGE("Resetting handler signal(%d) failed: %s", sig, strerror(errno));
-            exit(EXIT_FAILURE);
-        }
-    }
-}
 #endif
 
 int ServiceExec(Service *service, const ServiceArgs *pathArgs)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "Exec service failed! null ptr.");
-    INIT_LOGI("ServiceExec %s", service->name);
     INIT_ERROR_CHECK(pathArgs != NULL && pathArgs->count > 0,
         return SERVICE_FAILURE, "Exec service failed! null ptr.");
 
@@ -259,7 +280,7 @@ int ServiceExec(Service *service, const ServiceArgs *pathArgs)
     }
     OpenHidebug(service->name);
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
-    int isSaspawn = ((service->attribute & SERVICE_ATTR_SASPAWN) == SERVICE_ATTR_SASPAWN);
+    bool isSaspawn = (service->attribute & SERVICE_ATTR_SASPAWN);
     if (isSaspawn) {
         int ret = InitServiceBySaspawn(service, pathArgs);
         service->lastErrno = INIT_SASPAWN;
@@ -267,6 +288,7 @@ int ServiceExec(Service *service, const ServiceArgs *pathArgs)
         return SERVICE_FAILURE;
     }
 #endif
+    INIT_LOGI("ServiceExec %s", service->name);
     int isCritical = (service->attribute & SERVICE_ATTR_CRITICAL);
     PrelinkService(service->name);
     INIT_ERROR_CHECK(execv(pathArgs->argv[0], pathArgs->argv) == 0,

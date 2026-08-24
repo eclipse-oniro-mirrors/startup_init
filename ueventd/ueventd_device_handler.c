@@ -44,11 +44,11 @@ static inline void AdjustDeviceNodePermissions(const char *deviceNode, uid_t uid
         return;
     }
     if (chown(deviceNode, uid, gid) != 0) {
-        INIT_LOGW("Failed to change \" %s \" owner, errno %d", deviceNode, errno);
+        INIT_LOGW("failed change \" %s \" owner, errno %d", deviceNode, errno);
     }
 
     if (chmod(deviceNode, mode) != 0) {
-        INIT_LOGW("Failed to change \" %s \" mode, errno %d", deviceNode, errno);
+        INIT_LOGW("failed change \" %s \" mode, errno %d", deviceNode, errno);
     }
 }
 
@@ -72,12 +72,12 @@ static void CreateSymbolLinks(const char *deviceNode, char **symLinks)
         }
 
         if (strncpy_s(linkBuf, DEVICE_FILE_SIZE - 1, linkName, strlen(linkName)) != EOK) {
-            INIT_LOGE("Failed to copy link name");
+            INIT_LOGE("failed copy link name");
             return;
         }
         const char *linkDir = dirname(linkBuf);
         if (MakeDirRecursive(linkDir, DIRMODE) < 0) {
-            INIT_LOGE("[uevent] Failed to create dir \" %s \", err = %d", linkDir, errno);
+            INIT_LOGE("[uevent] failed create dir \" %s \", err = %d", linkDir, errno);
             return;
         }
 
@@ -86,7 +86,7 @@ static void CreateSymbolLinks(const char *deviceNode, char **symLinks)
         int rc = symlink(deviceNode, linkName);
         if (rc != 0) {
             if (errno != EEXIST) {
-                INIT_LOGE("Failed to link \" %s \" to \" %s \", err = %d", deviceNode, linkName, errno);
+                INIT_LOGE("failed link \" %s \" to \" %s \", err = %d", deviceNode, linkName, errno);
             }
         }
     }
@@ -114,7 +114,7 @@ static void SetDeviceLable(const char *path, char **symLinks)
         }
 
         if (memcpy_s(buffer, PATH_MAX, path, p - path - 1) != EOK) {
-            INIT_LOGE("[uevent] Failed to memcpy path %s", path);
+            INIT_LOGE("[uevent] failed memcpy path %s", path);
             return;
         }
         rc += Restorecon(buffer);
@@ -123,7 +123,7 @@ static void SetDeviceLable(const char *path, char **symLinks)
 
     rc += Restorecon(path);
     if (rc != 0) {
-        INIT_LOGE("[uevent] Failed to Restorecon \" %s \"", path);
+        INIT_LOGE("[uevent] failed Restorecon \" %s \"", path);
     }
 
     INIT_CHECK_ONLY_RETURN(symLinks != NULL);
@@ -166,7 +166,7 @@ static int CreateDeviceNodeWithPermissions(const struct Uevent *uevent, const ch
         return rc;
     }
     if (strncmp(deviceNode, "/dev/input", strlen("/dev/input")) == 0) {
-        INIT_LOGI("HandleOtherDeviceEvent, deviceNode = %s", deviceNode);
+        INIT_LOGI("Create device node %s", deviceNode);
     }
     AdjustDeviceNodePermissions(deviceNode, uid, gid, mode);
     (void)setegid(0);
@@ -184,7 +184,7 @@ static int CreateDeviceNode(const struct Uevent *uevent, const char *deviceNode,
 
     char deviceNodeBuffer[DEVICE_FILE_SIZE] = {};
     if (strncpy_s(deviceNodeBuffer, DEVICE_FILE_SIZE - 1, deviceNode, strlen(deviceNode)) != EOK) {
-        INIT_LOGE("Failed to copy device node");
+        INIT_LOGE("failed copy device node");
         return rc;
     }
     const char *devicePath = dirname(deviceNodeBuffer);
@@ -281,7 +281,7 @@ static int BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent,
     int num = linkNum;
     links[num] = calloc(DEVICE_FILE_SIZE, sizeof(char));
     if (links[num] == NULL) {
-        INIT_LOGE("Failed to allocate memory for link, err = %d", errno);
+        INIT_LOGE("failed allocate memory for link, err = %d", errno);
         return num;
     }
 
@@ -290,18 +290,18 @@ static int BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent,
     if (!INVALIDSTRING(partitionName)) {
         if (snprintf_s(links[num], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
             "/dev/block/platform/%s/by-name/%s", parent, partitionName) == -1) {
-            INIT_LOGE("Failed to build link");
+            INIT_LOGE("failed build link");
         }
         if (BootDeviceIsMatched(parent)) {
             num = linkNum + 1;
             links[num] = calloc(DEVICE_FILE_SIZE, sizeof(char));
             if (links[num] == NULL) {
-                INIT_LOGE("Failed to allocate memory for link, err = %d", errno);
+                INIT_LOGE("failed allocate memory for link, err = %d", errno);
                 return linkNum;
             }
             if (snprintf_s(links[num], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
                 "/dev/block/by-name/%s", partitionName) == -1) {
-                INIT_LOGE("Failed to build link");
+                INIT_LOGE("failed build link");
             }
         } else {
             INIT_LOGI("%s and %s is not match", parent, bootDevice);
@@ -309,7 +309,7 @@ static int BuildDeviceSymbolLinks(char **links, int linkNum, const char *parent,
     } else if (!INVALIDSTRING(deviceName)) {
         if (snprintf_s(links[num], DEVICE_FILE_SIZE, DEVICE_FILE_SIZE - 1,
             "/dev/block/platform/%s/%s", parent, deviceName) == -1) {
-            INIT_LOGE("Failed to build link");
+            INIT_LOGE("failed build link");
         }
     }
 
@@ -344,13 +344,13 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
     // For now, only support platform device.
     char sysPath[SYSPATH_SIZE] = {};
     if (snprintf_s(sysPath, SYSPATH_SIZE, SYSPATH_SIZE - 1, "/sys%s", uevent->syspath) == -1) {
-        INIT_LOGE("Failed to build sys path for device %s", uevent->syspath);
+        INIT_LOGE("failed build sys path for device %s", uevent->syspath);
         return NULL;
     }
     char **links = calloc(BLOCKDEVICE_LINKS, sizeof(char *));
     int linkNum = 0;
     if (links == NULL) {
-        INIT_LOGE("Failed to allocate memory for links, err = %d", errno);
+        INIT_LOGE("failed allocate memory for links, err = %d", errno);
         return NULL;
     }
 
@@ -359,7 +359,7 @@ static char **GetBlockDeviceSymbolLinks(const struct Uevent *uevent)
     while (parent != NULL && !STRINGEQUAL(parent, "/") && !STRINGEQUAL(parent, ".")) {
         char subsystem[SYSPATH_SIZE];
         if (snprintf_s(subsystem, SYSPATH_SIZE, SYSPATH_SIZE - 1, "%s/subsystem", parent) == -1) {
-            INIT_LOGE("Failed to build subsystem path for device \" %s \"", uevent->syspath);
+            INIT_LOGE("failed build subsystem path for device \" %s \"", uevent->syspath);
             FreeSymbolLinks(links, BLOCKDEVICE_LINKS);
             return NULL;
         }
@@ -508,7 +508,7 @@ void HandleBlockDeviceEvent(const struct Uevent *uevent)
         return;
     }
     if (strncpy_s(sysPath, SYSPATH_SIZE - 1, uevent->syspath, strlen(uevent->syspath)) != EOK) {
-        INIT_LOGE("Failed to copy sys path");
+        INIT_LOGE("failed copy sys path");
         return;
     }
     const char *devName = GetDeviceName(sysPath, uevent->deviceName);
@@ -538,7 +538,7 @@ void HandleOtherDeviceEvent(const struct Uevent *uevent)
     char deviceNode[DEVICE_FILE_SIZE] = {};
     char sysPath[SYSPATH_SIZE] = {};
     if (strncpy_s(sysPath, SYSPATH_SIZE - 1, uevent->syspath, strlen(uevent->syspath)) != EOK) {
-        INIT_LOGE("Failed to copy sys path");
+        INIT_LOGE("failed copy sys path");
         return;
     }
     const char *devName = GetDeviceName(sysPath, uevent->deviceName);
