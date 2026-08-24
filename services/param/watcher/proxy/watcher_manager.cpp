@@ -113,8 +113,8 @@ int32_t WatcherManager::DelRemoteWatcher(uint32_t remoteWatcherId)
             "Can not find watcher %u calling %u", remoteWatcher->GetAgentId(), static_cast<uint32_t>(GetCallingPid()));
         WATCHER_LOGI("Del remote watcher remoteWatcherId %u", remoteWatcherId);
         watcher = remoteWatcher->GetWatcher();
-        DelRemoteWatcher(remoteWatcher);
         pidWatcherMap_.erase(remoteWatcher->GetAgentId());
+        DelRemoteWatcher(remoteWatcher);
     }
     sptr<IRemoteObject> object = watcher->AsObject();
     if (object != nullptr) {
