@@ -81,6 +81,7 @@ fchownat;all
 fchown;arm64
 fchown;riscv64
 openat;all
+openat2;all
 close;all
 pipe2;all
 quotactl;all
