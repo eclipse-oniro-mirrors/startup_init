@@ -724,7 +724,7 @@ HWTEST_F(ParamUnitTest, Init_TestParamCache_001, TestSize.Level0)
     CachedParameterDestroy(cacheHandle3);
 }
 
-HWTEST_F(ParamUnitTest, Init_TestUpdataPersistCommitIdNullArea_001, TestSize.Level0)
+HWTEST_F(ParamUnitTest, Init_TestUpdatePersistCommitIdNullArea_001, TestSize.Level0)
 {
     ParamUnitTest test;
     WorkSpace *space = GetWorkSpace(WORKSPACE_INDEX_DAC);
@@ -732,15 +732,14 @@ HWTEST_F(ParamUnitTest, Init_TestUpdataPersistCommitIdNullArea_001, TestSize.Lev
     ASSERT_NE(space->area, nullptr);
     ParamTrieHeader *savedArea = space->area;
     space->area = nullptr;
-
-    WritePersistParam("persist.test.nullarea.check", "tesy_value");
+    WritePersistParam("persist.test.nullarea.check", "test_value");
     EXPECT_EQ(space->area, nullptr);
     space->area = savedArea;
 
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     ASSERT_NE(paramSpace, nullptr);
     WorkSpace *savedWorkSpace = paramSpace->workSpace[WORKSPACE_INDEX_DAC];
-    paramSpacee->workSpace[WORKSPACE_INDEX_DAC] = nullptr;
+    paramSpace->workSpace[WORKSPACE_INDEX_DAC] = nullptr;
     int ret = WritePersistParam("persist.test.nullarea.check2", "test_value2");
     EXPECT_EQ(ret, 0);
     EXPECT_EQ(paramSpace->workSpace[WORKSPACE_INDEX_DAC], nullptr);
