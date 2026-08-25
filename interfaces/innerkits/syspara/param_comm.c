@@ -178,26 +178,6 @@ INIT_LOCAL_API const char *GetManufacture_(void)
     return GetProperty("const.product.manufacturer", &productManufacture);
 }
 
-#ifdef INIT_FEATURE_WHITE_BOX
-INIT_LOCAL_API const char *GetWhiteboxModel_(void)
-{
-    static const char *whiteboxModel = NULL;
-    return GetProperty("const.product.whitebox_model", &whiteboxModel);
-}
-
-INIT_LOCAL_API const char *GetWhiteboxManufacture_(void)
-{
-    static const char *whiteboxManufacture = NULL;
-    return GetProperty("const.product.whitebox_manufacture", &whiteboxManufacture);
-}
-
-INIT_LOCAL_API const char *GetWhiteboxBrand_(void)
-{
-    static const char *whiteboxBrand = NULL;
-    return GetProperty("const.product.whitebox_brand", &whiteboxBrand);
-}
-#endif
-
 INIT_LOCAL_API const char *GetFullName_(void)
 {
     static const char *fillname = NULL;
