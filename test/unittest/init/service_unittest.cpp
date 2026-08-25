@@ -355,6 +355,28 @@ HWTEST_F(ServiceUnitTest, TestServiceManagerGetService, TestSize.Level1)
     cJSON_Delete(jobItem);
 }
 
+HWTEST_F(ServiceUnitTest, TestServiceRejectsCriticalAndOnDemand, TestSize.Level1)
+{
+    const char *jsonStr = "{\"services\":{\"name\":\"test_critical_ondemand\","
+        "\"path\":[\"/data/init_ut/test_service\"],\"uid\":\"root\",\"gid\":[\"system\"],"
+        "\"critical\":[1,4,240],\"ondemand\":true}}";
+    cJSON *jobItem = cJSON_Parse(jsonStr);
+    ASSERT_NE(nullptr, jobItem);
+    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
+    ASSERT_NE(nullptr, serviceItem);
+    Service *service = AddService("test_critical_ondemand");
+    ASSERT_NE(nullptr, service);
+
+    EXPECT_NE(ParseOneService(serviceItem, service), 0);
+    EXPECT_NE(service->attribute & SERVICE_ATTR_CRITICAL, 0);
+    EXPECT_EQ(service->attribute & SERVICE_ATTR_ONDEMAND, 0);
+    EXPECT_EQ(service->crashCount, 4);
+    EXPECT_EQ(service->crashTime, 240);
+
+    ReleaseService(service);
+    cJSON_Delete(jobItem);
+}
+
 /**
 * @tc.name: TestServiceBootEventHook
 * @tc.desc: test bootevent module exec correct

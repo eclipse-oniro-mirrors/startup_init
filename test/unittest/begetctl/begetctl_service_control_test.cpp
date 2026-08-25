@@ -30,6 +30,8 @@
  */
 
 #include "begetctl.h"
+#include "init/service_control_test.h"
+#include "init_param.h"
 #include "param_stub.h"
 #include "securec.h"
 #include "shell.h"
@@ -38,6 +40,33 @@ using namespace std;
 using namespace testing::ext;
 
 namespace init_ut {
+
+namespace {
+#ifdef SUPPORT_SA_MULTI_USER
+char g_serviceCtrlParamName[PARAM_NAME_LEN_MAX] = {0};
+char g_serviceCtrlParamValue[PARAM_VALUE_LEN_MAX] = {0};
+
+int RecordServiceCtrlParam(const char *name, const char *value)
+{
+    if (name == nullptr || value == nullptr) {
+        return -1;
+    }
+    if (strncpy_s(g_serviceCtrlParamName, sizeof(g_serviceCtrlParamName), name,
+        sizeof(g_serviceCtrlParamName) - 1) != EOK ||
+        strncpy_s(g_serviceCtrlParamValue, sizeof(g_serviceCtrlParamValue), value,
+        sizeof(g_serviceCtrlParamValue) - 1) != EOK) {
+        return -1;
+    }
+    return 0;
+}
+
+void ResetServiceCtrlParam()
+{
+    (void)memset_s(g_serviceCtrlParamName, sizeof(g_serviceCtrlParamName), 0, sizeof(g_serviceCtrlParamName));
+    (void)memset_s(g_serviceCtrlParamValue, sizeof(g_serviceCtrlParamValue), 0, sizeof(g_serviceCtrlParamValue));
+}
+#endif
+} // namespace
 
 /**
  * @brief service_control 命令测试Fixture
@@ -53,11 +82,18 @@ protected:
     {
         // Arrange: 每个测试前初始化Shell环境
         BShellParamCmdRegister(GetShellHandle(), 0);
+#ifdef SUPPORT_SA_MULTI_USER
+        TestSetByUserSetParamFunc(nullptr);
+        ResetServiceCtrlParam();
+#endif
     }
 
     void TearDown() override
     {
         // Cleanup: 清理测试状态
+#ifdef SUPPORT_SA_MULTI_USER
+        TestSetByUserSetParamFunc(nullptr);
+#endif
     }
 };
 
@@ -158,6 +194,77 @@ HWTEST_F(BegetctlServiceControlTest, StartService_WithServiceName_ExecutesSucces
     // Assert
     EXPECT_EQ(ret, 0) << "start_service [服务名] 命令应该成功执行";
 }
+
+#ifdef SUPPORT_SA_MULTI_USER
+HWTEST_F(BegetctlServiceControlTest, StartWithUserId_WritesByUserStartParameter, TestSize.Level1)
+{
+    char arg0[] = "startwithuserid";
+    char arg1[] = "init_by_user_ut";
+    char arg2[] = "401";
+    char arg3[] = "boot_event";
+    char *args[] = {arg0, arg1, arg2, arg3, nullptr};
+
+    TestSetByUserSetParamFunc(RecordServiceCtrlParam);
+    int ret = BShellEnvDirectExecute(GetShellHandle(), 4, args);
+
+    EXPECT_EQ(ret, 0);
+    EXPECT_STREQ(g_serviceCtrlParamName, "ohos.ctl.start.userid");
+    EXPECT_STREQ(g_serviceCtrlParamValue, "init_by_user_ut|401|boot_event");
+}
+
+/*
+ * @tc.name: StartWithUserId_001
+ * @tc.desc: Verify that missing and malformed user IDs are rejected without writing the control parameter.
+ * @tc.type: FUNC
+ */
+HWTEST_F(BegetctlServiceControlTest, StartWithUserId_001, TestSize.Level2)
+{
+    char command[] = "startwithuserid";
+    char service[] = "init_by_user_ut";
+    char emptyUser[] = "";
+    char trailingUser[] = "401x";
+    char negativeUser[] = "-1";
+    char overflowUser[] = "999999999999999999999999999999999999";
+    char aboveMaxUser[] = "2147483648";
+
+    TestSetByUserSetParamFunc(RecordServiceCtrlParam);
+    char *missingArgs[] = {command, service, nullptr};
+    EXPECT_EQ(BShellEnvDirectExecute(GetShellHandle(), 2, missingArgs), 0);
+
+    char *emptyArgs[] = {command, service, emptyUser, nullptr};
+    EXPECT_EQ(BShellEnvDirectExecute(GetShellHandle(), 3, emptyArgs), 0);
+    char *trailingArgs[] = {command, service, trailingUser, nullptr};
+    EXPECT_EQ(BShellEnvDirectExecute(GetShellHandle(), 3, trailingArgs), 0);
+    char *negativeArgs[] = {command, service, negativeUser, nullptr};
+    EXPECT_EQ(BShellEnvDirectExecute(GetShellHandle(), 3, negativeArgs), 0);
+    char *overflowArgs[] = {command, service, overflowUser, nullptr};
+    EXPECT_EQ(BShellEnvDirectExecute(GetShellHandle(), 3, overflowArgs), 0);
+    char *aboveMaxArgs[] = {command, service, aboveMaxUser, nullptr};
+    EXPECT_EQ(BShellEnvDirectExecute(GetShellHandle(), 3, aboveMaxArgs), 0);
+    EXPECT_STREQ(g_serviceCtrlParamName, "");
+    EXPECT_STREQ(g_serviceCtrlParamValue, "");
+}
+
+/*
+ * @tc.name: StartWithUserId_002
+ * @tc.desc: Verify that INT32_MAX and multiple extension arguments are forwarded unchanged.
+ * @tc.type: FUNC
+ */
+HWTEST_F(BegetctlServiceControlTest, StartWithUserId_002, TestSize.Level2)
+{
+    char command[] = "startwithuserid";
+    char service[] = "init_by_user_ut";
+    char maxUser[] = "2147483647";
+    char firstExt[] = "first";
+    char secondExt[] = "second";
+    char *args[] = {command, service, maxUser, firstExt, secondExt, nullptr};
+
+    TestSetByUserSetParamFunc(RecordServiceCtrlParam);
+    EXPECT_EQ(BShellEnvDirectExecute(GetShellHandle(), 5, args), 0);
+    EXPECT_STREQ(g_serviceCtrlParamName, "ohos.ctl.start.userid");
+    EXPECT_STREQ(g_serviceCtrlParamValue, "init_by_user_ut|2147483647|first|second");
+}
+#endif
 
 // ============================================================================
 // timer_stop 命令测试

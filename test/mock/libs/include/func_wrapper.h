@@ -67,7 +67,7 @@ typedef size_t (*SnprintfSFunc)(char *strDest, size_t destMax, size_t count, con
 void UpdateSnprintfSFunc(SnprintfSFunc func);
 
 // for wrapper open;
-int __real_open(const char *pathname, int flag);
+int RealOpen(const char *pathname, int flag, ...) __asm__("__real_open");
 typedef int (*OpenFunc)(const char *pathname, int flag);
 void UpdateOpenFunc(OpenFunc func);
 

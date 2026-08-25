@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <net/if.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,6 +35,9 @@
 #include "init_jobs_internal.h"
 #include "init_log.h"
 #include "init_cmdexecutor.h"
+#if defined(SUPPORT_SA_MULTI_USER) && !defined(OHOS_LITE)
+#include "init_service_by_userid.h"
+#endif
 #include "init_service_manager.h"
 #include "init_utils.h"
 #include "securec.h"
@@ -236,6 +240,43 @@ static void DoTermService(const struct CmdArgs *ctx)
     TermServiceByName(ctx->argv[0]);
     return;
 }
+
+#if defined(SUPPORT_SA_MULTI_USER) && !defined(OHOS_LITE)
+static void DoStartByUserId(const struct CmdArgs *ctx)
+{
+    INIT_ERROR_CHECK(ctx != NULL && ctx->argc >= 1 && ctx->argv[0] != NULL,
+        return, "Invalid start_by_userid arguments");
+    if (ctx->argc == 1) {
+        INIT_LOGV("DoStartByUserId encoded value %s", ctx->argv[0]);
+        StartServiceByUserId(ctx->argv[0]);
+        return;
+    }
+
+    INIT_ERROR_CHECK(ctx->argc == 2 && ctx->argv[1] != NULL,
+        return, "Invalid start_by_userid arguments");
+    errno = 0;
+    char *end = NULL;
+    long userId = strtol(ctx->argv[1], &end, 10);
+    INIT_ERROR_CHECK(errno == 0 && end != ctx->argv[1] && *end == '\0' && userId >= 0 && userId <= INT32_MAX,
+        return, "Invalid start_by_userid user id %s", ctx->argv[1]);
+
+    char encodedValue[PARAM_VALUE_LEN_MAX] = {0};
+    int ret = snprintf_s(encodedValue, sizeof(encodedValue), sizeof(encodedValue) - 1,
+        "%s|%ld", ctx->argv[0], userId);
+    if (ret <= 0) {
+        INIT_LOGE("Failed to build start_by_userid value");
+        return;
+    }
+    INIT_LOGV("DoStartByUserId service %s user %ld", ctx->argv[0], userId);
+    StartServiceByUserId(encodedValue);
+}
+
+static void DoStopByUserId(const struct CmdArgs *ctx)
+{
+    INIT_LOGV("DoStopByUserId %s", ctx->argv[0]);
+    StopServiceByUserId(ctx->argv[0]);
+}
+#endif
 
 static void DoReset(const struct CmdArgs *ctx)
 {
@@ -602,6 +643,10 @@ static const struct CmdTable g_cmdTable[] = {
     { "write ", 2, 10, 1, DoWrite },
     { "stop ", 1, 1, 0, DoStop },
     { "termservice ", 1, 1, 0, DoTermService },
+#if defined(SUPPORT_SA_MULTI_USER) && !defined(OHOS_LITE)
+    { "start_by_userid ", 1, 2, 0, DoStartByUserId },
+    { "stop_by_userid ", 1, 1, 0, DoStopByUserId },
+#endif
     { "reset ", 1, 1, 0, DoReset },
     { "copy ", 2, 2, 1, DoCopy },
     { "reboot ", 0, 1, 0, DoRebootCmd },

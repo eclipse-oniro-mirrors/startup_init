@@ -145,13 +145,21 @@ void UpdateOpenFunc(OpenFunc func)
     g_open = func;
 }
 
-int __wrap_open(const char *pathname, int flag)
+int WrapOpen(const char *pathname, int flag, ...) __asm__("__wrap_open");
+
+int WrapOpen(const char *pathname, int flag, ...)
 {
     if (g_open) {
         return g_open(pathname, flag);
-    } else {
-        return __real_open(pathname, flag);
     }
+    if ((flag & O_CREAT) == 0) {
+        return RealOpen(pathname, flag);
+    }
+    va_list args;
+    va_start(args, flag);
+    mode_t mode = va_arg(args, mode_t);
+    va_end(args);
+    return RealOpen(pathname, flag, mode);
 }
 
 // start wrap close
@@ -200,8 +208,11 @@ int __wrap_ioctl(int fd, int req, ...)
     int rc;
     if (g_ioctl) {
         rc = g_ioctl(fd, req, args);
+    } else if (_IOC_DIR(req) == _IOC_NONE && _IOC_SIZE(req) == 0) {
+        rc = __real_ioctl(fd, req);
     } else {
-        rc = __real_ioctl(fd, req, args);
+        void *arg = va_arg(args, void *);
+        rc = __real_ioctl(fd, req, arg);
     }
     va_end(args);
     return rc;

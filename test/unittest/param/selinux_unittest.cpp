@@ -18,12 +18,17 @@
 #include "param_security.h"
 #include "param_stub.h"
 #include "param_utils.h"
+#include "selinux_adp.h"
 #include "securec.h"
 
 using namespace testing::ext;
 using namespace std;
 
 namespace init_ut {
+#ifdef SUPPORT_SA_MULTI_USER
+extern "C" int BuildServiceContext(const char *label, const char *mcs, char *buffer, size_t size);
+#endif
+
 class SelinuxUnitTest : public ::testing::Test {
 public:
     SelinuxUnitTest() {}
@@ -188,4 +193,24 @@ HWTEST_F(SelinuxUnitTest, Init_TestClientDacCheckParaPermission_001, TestSize.Le
     test.TestClientSelinuxCheckParaPermissionWrite("aaa.bbb.bbb.ccc", "user:group1:r");
     test.TestClientSelinuxCheckParaPermissionRead("aaa.bbb.bbb.ccc", "user:group1:r");
 }
+
+#ifdef SUPPORT_SA_MULTI_USER
+HWTEST_F(SelinuxUnitTest, Init_TestBuildServiceContextWithMcs_001, TestSize.Level0)
+{
+    char buffer[MAX_SECON_LEN] = {};
+    EXPECT_EQ(BuildServiceContext("u:r:su:s0", "s0:c869", buffer, sizeof(buffer)), 0);
+    EXPECT_STREQ(buffer, "u:r:su:s0:c869");
+}
+
+HWTEST_F(SelinuxUnitTest, Init_TestBuildServiceContextBoundary_001, TestSize.Level0)
+{
+    char buffer[MAX_SECON_LEN] = {};
+    EXPECT_EQ(BuildServiceContext("u:r:su:s0", nullptr, buffer, sizeof(buffer)), 0);
+    EXPECT_STREQ(buffer, "u:r:su:s0");
+    char tinyBuffer[4] = {};
+    EXPECT_NE(BuildServiceContext(nullptr, "s0:c869", buffer, sizeof(buffer)), 0);
+    EXPECT_NE(BuildServiceContext("u:r:su:s0", "s0:c869", nullptr, sizeof(buffer)), 0);
+    EXPECT_NE(BuildServiceContext("u:r:su:s0", "s0:c869", tinyBuffer, sizeof(tinyBuffer)), 0);
+}
+#endif
 }

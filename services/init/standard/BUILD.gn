@@ -12,6 +12,13 @@
 # limitations under the License.
 import("//base/startup/init/begetd.gni")
 
+config("support_sa_multi_user_config") {
+  defines = []
+  if (init_extra_static_modules != "") {
+    defines += [ "SUPPORT_SA_MULTI_USER" ]
+  }
+}
+
 init_common_sources = [
   "../init_capability.c",
   "../init_cgroup.c",
@@ -24,6 +31,9 @@ init_common_sources = [
   "../init_service_socket.c",
   "../main.c",
 ]
+if (init_extra_static_modules != "") {
+  init_common_sources += [ "../init_service_by_userid.c" ]
+}
 
 import("//build/ohos.gni")
 import("//build/ohos/native_stub/native_stub.gni")
@@ -75,6 +85,7 @@ ohos_executable("init_early") {
 
 ohos_executable("init") {
   branch_protector_ret = "pac_ret"
+  configs = [ ":support_sa_multi_user_config" ]
   sources = [
     "../adapter/init_adapter.c",
     "../bootstagehooker.c",

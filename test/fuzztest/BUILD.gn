@@ -18,6 +18,14 @@ import("//base/startup/init/begetd.gni")
 import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
+
+config("support_sa_multi_user_config") {
+  defines = []
+  if (init_extra_static_modules != "") {
+    defines += [ "SUPPORT_SA_MULTI_USER" ]
+  }
+}
+
 ohos_static_library("libfuzz_utils") {
   sources = [ "utils/fuzz_utils.cpp" ]
 
@@ -1709,6 +1717,62 @@ ohos_fuzztest("ServiceControlWithExtraFuzzTest") {
   sources =
       [ "servicecontrolwithextra_fuzzer/servicecontrolwithextra_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
+}
+
+if (init_extra_static_modules != "") {
+  ohos_fuzztest("ServiceControlWithExtraByUserIdFuzzTest") {
+    configs = [ ":support_sa_multi_user_config" ]
+    module_out_path = module_output_path
+    fuzz_config_file =
+        "//base/startup/init/test/fuzztest/servicecontrolwithextrabyuserid_fuzzer"
+
+    include_dirs = [
+      "//base/startup/init/interfaces/innerkits/include",
+      "//base/startup/init/test/fuzztest/servicecontrolwithextrabyuserid_fuzzer",
+    ]
+    deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
+    external_deps = [
+      "bounds_checking_function:libsec_static",
+      "hilog:libhilog",
+    ]
+    cflags = [
+      "-g",
+      "-O0",
+      "-Wno-unused-variable",
+      "-fno-omit-frame-pointer",
+    ]
+    sources = [
+      "servicecontrolwithextrabyuserid_fuzzer/servicecontrolwithextrabyuserid_fuzzer.cpp",
+    ]
+    defines = [ "STARTUP_INIT_TEST" ]
+  }
+
+  ohos_fuzztest("ServiceWaitForStatusByUserIdFuzzTest") {
+    configs = [ ":support_sa_multi_user_config" ]
+    module_out_path = module_output_path
+    fuzz_config_file =
+        "//base/startup/init/test/fuzztest/servicewaitforstatusbyuserid_fuzzer"
+
+    include_dirs = [
+      "//base/startup/init/interfaces/innerkits/include",
+      "//base/startup/init/test/fuzztest/servicewaitforstatusbyuserid_fuzzer",
+    ]
+    deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
+    external_deps = [
+      "bounds_checking_function:libsec_static",
+      "hilog:libhilog",
+    ]
+    cflags = [
+      "-g",
+      "-O0",
+      "-Wno-unused-variable",
+      "-fno-omit-frame-pointer",
+    ]
+    sources = [
+      "servicewaitforstatusbyuserid_fuzzer/servicewaitforstatusbyuserid_fuzzer.cpp",
+    ]
+    defines = [ "STARTUP_INIT_TEST" ]
+  }
 }
 
 ohos_fuzztest("ServiceControlFuzzTest") {
@@ -4482,5 +4546,11 @@ group("fuzztest") {
     ":OnStopFuzzTest",
     ":ParamFuzzTest"
   ]
+  if (init_extra_static_modules != "") {
+    deps += [
+      ":ServiceControlWithExtraByUserIdFuzzTest",
+      ":ServiceWaitForStatusByUserIdFuzzTest",
+    ]
+  }
 }
 ###############################################################################

@@ -140,8 +140,10 @@
     *GetBoolParameter*;
     ServiceControl;
     ServiceControlWithExtra;
+    ServiceControlWithExtraByUserId;
     ServiceSetReady;
     ServiceWaitForStatus;
+    ServiceWaitForStatusByUserId;
     StartServiceByTimer;
     StopServiceTimer;
     HasSystemCapability;
