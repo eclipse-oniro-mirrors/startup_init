@@ -629,3 +629,14 @@ HWTEST_F(TriggerUnitTest, Init_TestExecuteParamTrigger_006, TestSize.Level0)
     int ret = test.TestDumpTrigger();
     EXPECT_EQ(ret, 0);
 }
+
+HWTEST_F(TriggerUnitTest, Init_TestTriggerNameNullCondition_001, TestSize.Level0)
+{
+    TriggerUnitTest test;
+    TriggerNode trigger = {};
+    trigger.type = -1;
+    trigger.condition = nullptr;
+    const char *name = GetTriggerName(&trigger);
+    EXPECT_NE(name, nullptr);
+    EXPECT_STREQ(name, "");
+}
