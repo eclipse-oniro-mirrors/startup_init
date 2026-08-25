@@ -46,6 +46,9 @@ ohos_shared_library("selinuxadp") {
   if (!is_asan && init_feature_support_saspawn) {
     defines += [ "INIT_FEATURE_SUPPORT_SASPAWN" ]
   }
+  if (init_extra_static_modules != "") {
+    defines += [ "SUPPORT_SA_MULTI_USER" ]
+  }
   install_images = [
     "system",
     "updater",

@@ -15,7 +15,9 @@
 
 #include "service_control.h"
 
+#include <ctype.h>
 #include <errno.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,6 +27,94 @@
 #include "init_param.h"
 #include "parameter.h"
 #include "securec.h"
+
+#ifdef SUPPORT_SA_MULTI_USER
+#define SERVICE_CTRL_BY_USER_START "ohos.ctl.start.userid"
+#define SERVICE_CTRL_BY_USER_STOP "ohos.ctl.stop.userid"
+#define SERVICE_CTRL_BY_USER_VALUE_MAX PARAM_VALUE_LEN_MAX
+#define SERVICE_CTRL_BY_USER_NAME_MAX 54
+#define SERVICE_CTRL_BY_USER_EXT_ARG_MAX 4
+#define SERVICE_CTRL_BY_USER_ID_LEN_MAX 12
+
+typedef struct {
+    const char *serviceName;
+    int32_t userId;
+    const char **extArgv;
+    int extArgc;
+} ByUserCtrlValueArgs;
+
+static int HasByUserCtrlBlankChar(const char *value)
+{
+    if (value == NULL) {
+        return -1;
+    }
+    for (const unsigned char *p = (const unsigned char *)value; *p != '\0'; p++) {
+        if (isspace(*p)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int ValidateByUserServiceName(const char *serviceName)
+{
+    BEGET_ERROR_CHECK(serviceName != NULL && serviceName[0] != '\0',
+        return -1, "Invalid by-user service name.");
+    BEGET_ERROR_CHECK(strlen(serviceName) < SERVICE_CTRL_BY_USER_NAME_MAX,
+        return -1, "By-user service name too long.");
+    BEGET_ERROR_CHECK(strchr(serviceName, '|') == NULL && HasByUserCtrlBlankChar(serviceName) == 0,
+        return -1, "Invalid by-user service name.");
+    return 0;
+}
+
+static int BuildByUserCtrlValue(char *buffer, size_t size, const ByUserCtrlValueArgs *args)
+{
+    BEGET_ERROR_CHECK(buffer != NULL && size > 0, return -1, "Invalid buffer.");
+    BEGET_ERROR_CHECK(args != NULL && args->userId >= 0, return -1, "Invalid by-user args.");
+    BEGET_ERROR_CHECK(ValidateByUserServiceName(args->serviceName) == 0,
+        return -1, "Invalid by-user service name.");
+    BEGET_ERROR_CHECK(args->extArgc >= 0 && args->extArgc <= SERVICE_CTRL_BY_USER_EXT_ARG_MAX,
+        return -1, "Invalid by-user ext argc.");
+    BEGET_ERROR_CHECK(args->extArgc == 0 || args->extArgv != NULL, return -1, "Invalid by-user ext argv.");
+
+    char userId[SERVICE_CTRL_BY_USER_ID_LEN_MAX] = {0};
+    int ret = snprintf_s(userId, sizeof(userId), sizeof(userId) - 1, "%d", args->userId);
+    if (ret <= 0) {
+        BEGET_LOGE("Failed to format by-user userId.");
+        return -1;
+    }
+    size_t valueLen = strlen(args->serviceName) + 1 + (size_t)ret;
+    for (int i = 0; i < args->extArgc; i++) {
+        BEGET_ERROR_CHECK(args->extArgv[i] != NULL && strchr(args->extArgv[i], '|') == NULL &&
+            HasByUserCtrlBlankChar(args->extArgv[i]) == 0,
+            return -1, "Invalid by-user ext arg.");
+        size_t extArgLen = strlen(args->extArgv[i]);
+        BEGET_ERROR_CHECK(extArgLen < SIZE_MAX && valueLen <= SIZE_MAX - extArgLen - 1,
+            return -1, "By-user control value length overflow.");
+        valueLen += extArgLen + 1;
+    }
+    if (valueLen >= size) {
+        BEGET_LOGE("By-user control value too long: %zu, max %zu.", valueLen, size - 1);
+        return -1;
+    }
+
+    ret = snprintf_s(buffer, size, size - 1, "%s|%s", args->serviceName, userId);
+    if (ret <= 0) {
+        BEGET_LOGE("Failed to format by-user control value.");
+        return -1;
+    }
+    size_t used = strlen(buffer);
+    for (int i = 0; i < args->extArgc; i++) {
+        ret = snprintf_s(buffer + used, size - used, size - used - 1, "|%s", args->extArgv[i]);
+        if (ret < 0 || (size_t)ret >= size - used) {
+            BEGET_LOGE("Failed to append by-user ext arg within max length %zu.", size - 1);
+            return -1;
+        }
+        used = strlen(buffer);
+    }
+    return 0;
+}
+#endif
 
 static int StartProcess(const char *name, const char *extArgv[], int extArgc)
 {
@@ -81,6 +171,45 @@ static int TermProcess(const char *serviceName)
     return SystemSetParameter("ohos.ctl.term", serviceName);
 }
 
+#ifdef SUPPORT_SA_MULTI_USER
+static int SetByUserProcessParam(const char *paramName, const ByUserCtrlValueArgs *args)
+{
+    BEGET_ERROR_CHECK(paramName != NULL, return -1, "By-user control param name is null.");
+    char value[SERVICE_CTRL_BY_USER_VALUE_MAX] = {0};
+    int ret = BuildByUserCtrlValue(value, sizeof(value), args);
+    BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to build by-user control value.");
+    return SystemSetParameter(paramName, value);
+}
+
+static int StartProcessByUserId(const char *serviceName, int32_t userId, const char *extArgv[], int extArgc)
+{
+#ifdef OHOS_LITE
+    (void)serviceName;
+    (void)userId;
+    (void)extArgv;
+    (void)extArgc;
+    BEGET_LOGE("Service start by userId is unsupported on Lite.");
+    return -1;
+#else
+    ByUserCtrlValueArgs args = {serviceName, userId, extArgv, extArgc};
+    return SetByUserProcessParam(SERVICE_CTRL_BY_USER_START, &args);
+#endif
+}
+
+static int StopProcessByUserId(const char *serviceName, int32_t userId)
+{
+#ifdef OHOS_LITE
+    (void)serviceName;
+    (void)userId;
+    BEGET_LOGE("Service stop by userId is unsupported on Lite.");
+    return -1;
+#else
+    ByUserCtrlValueArgs args = {serviceName, userId, NULL, 0};
+    return SetByUserProcessParam(SERVICE_CTRL_BY_USER_STOP, &args);
+#endif
+}
+#endif
+
 static int GetCurrentServiceStatus(const char *serviceName, ServiceStatus *status)
 {
     char paramName[PARAM_NAME_LEN_MAX] = {0};
@@ -93,6 +222,44 @@ static int GetCurrentServiceStatus(const char *serviceName, ServiceStatus *statu
     *status = (ServiceStatus)value;
     return 0;
 }
+
+#ifdef SUPPORT_SA_MULTI_USER
+static int GetByUserProcessInfo(const char *serviceName, int32_t userId, char *nameBuffer,
+    char *valueBuffer, ServiceStatus status)
+{
+    if (snprintf_s(nameBuffer, PARAM_NAME_LEN_MAX, PARAM_NAME_LEN_MAX - 1, "%s.%s.userid.%d",
+        STARTUP_SERVICE_CTL, serviceName, userId) == -1) {
+        BEGET_LOGE("Failed snprintf_s err=%d", errno);
+        return -1;
+    }
+    if (snprintf_s(valueBuffer, MAX_INT_LEN, MAX_INT_LEN - 1, "%d", (int)status) == -1) {
+        BEGET_LOGE("Failed snprintf_s err=%d", errno);
+        return -1;
+    }
+    return 0;
+}
+
+int ServiceWaitForStatusByUserId(const char *serviceName, int32_t userId, ServiceStatus status,
+    int waitTimeout)
+{
+#ifdef OHOS_LITE
+    (void)serviceName;
+    (void)userId;
+    (void)status;
+    (void)waitTimeout;
+    BEGET_LOGE("Service wait by userId is unsupported on Lite.");
+    return -1;
+#else
+    BEGET_ERROR_CHECK(ValidateByUserServiceName(serviceName) == 0, return -1, "Invalid by-user service name.");
+    BEGET_ERROR_CHECK(userId >= 0 && waitTimeout >= 0, return -1, "Invalid by-user wait args.");
+    char paramName[PARAM_NAME_LEN_MAX] = {0};
+    char value[MAX_INT_LEN] = {0};
+    int ret = GetByUserProcessInfo(serviceName, userId, paramName, value, status);
+    BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to get by-user param info.");
+    return (SystemWaitParameter(paramName, value, waitTimeout) != 0) ? -1 : 0;
+#endif
+}
+#endif
 
 static int RestartProcess(const char *serviceName, const char *extArgv[], int extArgc)
 {
@@ -149,6 +316,29 @@ int ServiceControlWithExtra(const char *serviceName, int action, const char *ext
     }
     return ret;
 }
+
+#ifdef SUPPORT_SA_MULTI_USER
+int ServiceControlWithExtraByUserId(const char *serviceName, int action, int32_t userId,
+    const char *extArgv[], int extArgc)
+{
+    BEGET_ERROR_CHECK(serviceName != NULL, return -1, "Service name is null.");
+    BEGET_ERROR_CHECK(userId >= 0, return -1, "Invalid by-user control userId.");
+    int ret = 0;
+    switch (action) {
+        case START:
+            ret = StartProcessByUserId(serviceName, userId, extArgv, extArgc);
+            break;
+        case STOP:
+            ret = StopProcessByUserId(serviceName, userId);
+            break;
+        default:
+            BEGET_LOGE("Set service %s user %d action %d unsupported", serviceName, userId, action);
+            ret = -1;
+            break;
+    }
+    return ret;
+}
+#endif
 
 int ServiceControl(const char *serviceName, int action)
 {

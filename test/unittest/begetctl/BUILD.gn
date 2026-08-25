@@ -43,6 +43,10 @@ config("begetctl_utest_config") {
 
 ohos_unittest("init_begetctl_unittest") {
   module_out_path = "init/init"
+  ldflags = [
+    "-Wl,--wrap=SystemSetParameter",
+    "-Wl,--wrap=SystemWaitParameter",
+  ]
 
   # 测试源文件
   sources = [
@@ -150,7 +154,7 @@ ohos_unittest("init_begetctl_unittest") {
     "//base/startup/init/interfaces/innerkits/init_module_engine/init_modulemgr.c",
     "//base/startup/init/interfaces/innerkits/modulemgr/modulemgr.c",
     "//base/startup/init/services/init/bootstagehooker.c",
-    "//base/startup/init/interfaces/innerkits/service_control/service_control.c",
+    "//base/startup/init/test/unittest/init/service_control_test_wrapper.c",
 
     # control_fd模块
     "//base/startup/init/interfaces/innerkits/control_fd/control_fd_client.c",
@@ -245,6 +249,7 @@ ohos_unittest("init_begetctl_unittest") {
     # 测试头文件
     "//base/startup/init/test/unittest/begetctl",
     "//base/startup/init/test/unittest/begetctl/mock",
+    "//base/startup/init/test/unittest",
     "//base/startup/init/test/unittest/param",
 
     # 公共头文件
@@ -322,6 +327,12 @@ ohos_unittest("init_begetctl_unittest") {
     "INIT_DMESG",
     "ENABLE_HOOK_MGR",
   ]
+  if (init_extra_static_modules != "") {
+    sources += [
+      "//base/startup/init/services/init/init_service_by_userid.c",
+    ]
+    defines += [ "SUPPORT_SA_MULTI_USER" ]
+  }
 
   # 外部依赖
   external_deps = [

@@ -76,6 +76,15 @@
 
 #define SEC_TO_MSEC 1000
 
+#ifdef SUPPORT_SA_MULTI_USER
+#define INVALID_USER_ID (-1)
+#define BY_USER_INIT_FAILURE_EXIT_CODE 125
+#define ACCESS_TOKENID_DEV "/dev/access_token_id"
+#define ACCESS_TOKENID_IOCTL_BASE 'A'
+#define ACCESS_TOKENID_SET_USERID _IOW(ACCESS_TOKENID_IOCTL_BASE, 12, uint32_t)
+#define ACCESS_TOKENID_GET_USERID _IOR(ACCESS_TOKENID_IOCTL_BASE, 13, uint32_t)
+#endif
+
 static int SetAllAmbientCapability(void)
 {
     for (int i = 0; i <= CAP_LAST_CAP; ++i) {
@@ -434,34 +443,80 @@ static void SetServiceEnv(Service *service)
     }
 }
 
-static void SetServiceContent(Service *service)
+#ifdef SUPPORT_SA_MULTI_USER
+static int SetServiceContentWithMcs(const Service *service)
+{
+#ifdef WITH_SELINUX
+    if (service->mcs == NULL || service->mcs[0] == '\0') {
+        PluginExecCmdByName("setServiceContent", service->name);
+        return 0;
+    }
+    const char *argv[] = { service->name, service->mcs };
+    int ret = PluginExecCmd("setServiceContent", ARRAY_LENGTH(argv), argv);
+    INIT_ERROR_CHECK(ret == 0, return ret, "Failed to set MCS %s for service %s", service->mcs, service->name);
+    return 0;
+#else
+    PluginExecCmdByName("setServiceContent", service->name);
+    return 0;
+#endif
+}
+#endif
+
+static int SetServiceContent(Service *service)
 {
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
     bool isSaspawn = ((service->attribute & SERVICE_ATTR_SASPAWN) == SERVICE_ATTR_SASPAWN);
     if (isSaspawn) {
         INIT_LOGI("service %s isSaspawn = %d", service->name, isSaspawn);
-    } else {
-        PluginExecCmdByName("setServiceContent", service->name);
+        return 0;
     }
+#endif
+#ifdef SUPPORT_SA_MULTI_USER
+    return SetServiceContentWithMcs(service);
 #else
     PluginExecCmdByName("setServiceContent", service->name);
+    return 0;
 #endif
 }
 
-static int InitServiceProperties(Service *service, const ServiceArgs *pathArgs)
+#ifdef SUPPORT_SA_MULTI_USER
+INIT_STATIC int SetUserIdToAccessToken(const Service *service, int32_t userId)
 {
-    INIT_ERROR_CHECK(service != NULL, return -1, "Invalid parameter.");
-    int ret = SetServiceEnterSandbox(service, pathArgs->argv[0]);
-    if (ret != 0) {
-        INIT_LOGW("Service warning %d %s, failed enter sandbox.", ret, service->name);
-        service->lastErrno = INIT_ESANDBOX;
-    }
-    ret = SetAccessToken(service);
-    if (ret != 0) {
-        INIT_LOGW("Service warning %d %s, failed set access token.", ret, service->name);
-        service->lastErrno = INIT_EACCESSTOKEN;
+    INIT_ERROR_CHECK(service != NULL && service->name != NULL && userId >= 0,
+        return -1, "Invalid service or user id");
+
+    int fd = open(ACCESS_TOKENID_DEV, O_RDWR | O_CLOEXEC);
+    if (fd < 0) {
+        INIT_LOGE("Open %s failed for service %s user %d, errno %d",
+            ACCESS_TOKENID_DEV, service->name, userId, errno);
+        return -1;
     }
 
+    uint32_t expectedUserId = (uint32_t)userId;
+    int ret = ioctl(fd, ACCESS_TOKENID_SET_USERID, &expectedUserId);
+    if (ret < 0) {
+        INIT_LOGE("Set access token user id failed for service %s user %d, ret %d errno %d",
+            service->name, userId, ret, errno);
+        (void)close(fd);
+        return -1;
+    }
+
+    uint32_t actualUserId = 0;
+    ret = ioctl(fd, ACCESS_TOKENID_GET_USERID, &actualUserId);
+    if (ret < 0 || actualUserId != expectedUserId) {
+        INIT_LOGE("Verify access token user id failed for service %s user %d, actual %u ret %d errno %d",
+            service->name, userId, actualUserId, ret, errno);
+        (void)close(fd);
+        return -1;
+    }
+    (void)close(fd);
+    INIT_LOGI("Set access token user id for service %s user %d", service->name, userId);
+    return 0;
+}
+#endif
+
+static int InitServiceResources(Service *service)
+{
     SetServiceEnv(service);
 
     // deal start job
@@ -497,17 +552,56 @@ static int InitServiceProperties(Service *service, const ServiceArgs *pathArgs)
         return INIT_EWRITEPID, "Service error %d %s, failed to write pid.", errno, service->name);
 
     // permissions
-    ret = SetPerms(service);
+    int ret = SetPerms(service);
     INIT_ERROR_CHECK(ret == SERVICE_SUCCESS, service->lastErrno = ret;
         return ret, "Service error %d %s, failed to set permissions.", ret, service->name);
 
-    SetServiceContent(service);
+    ret = SetServiceContent(service);
+    INIT_ERROR_CHECK(ret == 0, service->lastErrno = INIT_EEXEC_CONTENT;
+        return INIT_EEXEC_CONTENT, "Service error %d %s, failed to set security context.", ret, service->name);
     return 0;
+}
+
+#ifdef SUPPORT_SA_MULTI_USER
+static int InitServiceProperties(Service *service, const ServiceArgs *pathArgs, int32_t userId)
+#else
+static int InitServiceProperties(Service *service, const ServiceArgs *pathArgs)
+#endif
+{
+    INIT_ERROR_CHECK(service != NULL, return -1, "Invalid parameter.");
+    int ret = SetServiceEnterSandbox(service, pathArgs->argv[0]);
+    if (ret != 0) {
+        INIT_LOGW("Service warning %d %s, failed enter sandbox.", ret, service->name);
+        service->lastErrno = INIT_ESANDBOX;
+    }
+    ret = SetAccessToken(service);
+    if (ret != 0) {
+        INIT_LOGW("Service warning %d %s, failed to set access token.", ret, service->name);
+        service->lastErrno = INIT_EACCESSTOKEN;
+    }
+
+#ifdef SUPPORT_SA_MULTI_USER
+    if (userId >= 0) {
+        INIT_ERROR_CHECK(ret == 0, return INIT_EACCESSTOKEN,
+            "Service error %d %s, access token must be set before user id", ret, service->name);
+        ret = SetUserIdToAccessToken(service, userId);
+        INIT_ERROR_CHECK(ret == 0, service->lastErrno = (InitErrno)BY_USER_INIT_FAILURE_EXIT_CODE;
+            return BY_USER_INIT_FAILURE_EXIT_CODE,
+            "Service error %d %s, failed to set user id %d", ret, service->name, userId);
+    }
+#endif
+
+    return InitServiceResources(service);
 }
 
 void EnterServiceSandbox(Service *service)
 {
+#ifdef SUPPORT_SA_MULTI_USER
+    INIT_ERROR_CHECK(InitServiceProperties(service, &service->pathArgs, INVALID_USER_ID) == 0,
+        return, "Failed init service property");
+#else
     INIT_ERROR_CHECK(InitServiceProperties(service, &service->pathArgs) == 0, return, "Failed init service property");
+#endif
     if (service->importance != 0) {
         if (setpriority(PRIO_PROCESS, 0, service->importance) != 0) {
             INIT_LOGE("setpriority failed for %s, importance = %d, err=%d",
@@ -636,7 +730,11 @@ static void CloseOnDemandServiceFdForOtherService(Service *service)
     }
 }
 
-static void RunChildProcess(Service *service, ServiceArgs *pathArgs)
+#ifdef SUPPORT_SA_MULTI_USER
+static void RunChildProcessInternal(Service *service, ServiceArgs *pathArgs, int32_t userId)
+#else
+static void RunChildProcessInternal(Service *service, ServiceArgs *pathArgs)
+#endif
 {
     // set selinux label by context
     if (service->context.type != INIT_CONTEXT_MAIN && SetSubInitContext(&service->context, service->name) != 0) {
@@ -661,13 +759,33 @@ static void RunChildProcess(Service *service, ServiceArgs *pathArgs)
     INIT_LOGI("saspawn resource free.");
 #endif
     // fail must exit sub process
+#ifdef SUPPORT_SA_MULTI_USER
+    int ret = InitServiceProperties(service, pathArgs, userId);
+#else
     int ret = InitServiceProperties(service, pathArgs);
+#endif
     INIT_ERROR_CHECK(ret == 0,
         _exit(service->lastErrno), "Service error %d %s, failed to set properties", ret, service->name);
 
     (void)ServiceExec(service, pathArgs);
     _exit(service->lastErrno);
 }
+
+void RunChildProcess(Service *service, ServiceArgs *pathArgs)
+{
+#ifdef SUPPORT_SA_MULTI_USER
+    RunChildProcessInternal(service, pathArgs, INVALID_USER_ID);
+#else
+    RunChildProcessInternal(service, pathArgs);
+#endif
+}
+
+#ifdef SUPPORT_SA_MULTI_USER
+void RunChildProcessByUserId(Service *service, ServiceArgs *pathArgs, int32_t userId)
+{
+    RunChildProcessInternal(service, pathArgs, userId);
+}
+#endif
 
 #define PATH_MAY_BE_NOT_EXISTS  "/data/"
 

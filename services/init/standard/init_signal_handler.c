@@ -26,6 +26,9 @@
 #include "crash_handler.h"
 #include "init_hisysevent.h"
 #include "init_service.h"
+#ifdef SUPPORT_SA_MULTI_USER
+#include "init_service_by_userid.h"
+#endif
 
 static SignalHandle g_sigHandle = NULL;
 
@@ -39,6 +42,54 @@ static void SetSaSpawnFailedTag(Service *service)
     ServiceResetSupportSaSpawn(service);
 }
 #endif
+
+#ifdef SUPPORT_SA_MULTI_USER
+static bool ReapByUserChild(pid_t pid, int procStat, const struct signalfd_siginfo *siginfo)
+{
+    ServiceByUserId *instance = GetServiceByUserPid(pid);
+    if (instance == NULL) {
+        return false;
+    }
+    CmdServiceProcessDelClient(pid);
+    StopSubInit(pid);
+    ReportServiceByUserExit(instance, pid, procStat);
+    INIT_LOGW("By-user service SIGCHLD received, pid:%d uid:%d status:%d.",
+        pid, siginfo->ssi_uid, procStat);
+    CheckWaitPid(pid);
+    (void)ReapServiceByUserId(pid, procStat);
+    return true;
+}
+#endif
+
+INIT_STATIC void ReportChildExitStatus(Service *service, const char *serviceName, pid_t pid,
+    int procStat, bool isSaspawn)
+{
+    if (WIFSIGNALED(procStat)) {
+        INIT_LOGW("Child process %s(pid %d) exit with signal : %d", serviceName, pid, WTERMSIG(procStat));
+        ReportChildProcessExit(serviceName, pid, WTERMSIG(procStat),
+            isSaspawn ? SERVICES_EXIT_INFO_IS_SASPAWN : SERVICES_EXIT_INFO_NOT_SASPAWN);
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+        SetSaSpawnFailedTag(service);
+#endif
+        return;
+    }
+    if (!WIFEXITED(procStat)) {
+        return;
+    }
+    INIT_LOGW("Child process %s(pid %d) exit with code : %d", serviceName, pid, WEXITSTATUS(procStat));
+#ifdef INIT_FEATURE_SUPPORT_SASPAWN
+    if (WEXITSTATUS(procStat) == INIT_SASPAWN) {
+        SetSaSpawnFailedTag(service);
+    }
+#endif
+    if (service != NULL) {
+        service->lastErrno = WEXITSTATUS(procStat);
+    }
+    if (isSaspawn) {
+        ReportChildProcessExit(serviceName, pid, WEXITSTATUS(procStat), SERVICES_EXIT_INFO_IS_SASPAWN);
+    }
+}
+
 static pid_t HandleSigChild(const struct signalfd_siginfo *siginfo)
 {
     int procStat = 0;
@@ -47,6 +98,11 @@ static pid_t HandleSigChild(const struct signalfd_siginfo *siginfo)
     if (sigPID <= 0) {
         return sigPID;
     }
+#ifdef SUPPORT_SA_MULTI_USER
+    if (ReapByUserChild(sigPID, procStat, siginfo)) {
+        return sigPID;
+    }
+#endif
     Service* service = GetServiceByPid(sigPID);
     const char *serviceName = (service == NULL) ? "Unknown" : service->name;
     (void)ProcessServiceDied(service);
@@ -58,32 +114,7 @@ static pid_t HandleSigChild(const struct signalfd_siginfo *siginfo)
     }
 #endif
 
-    // check child process exit status
-    if (WIFSIGNALED(procStat)) {
-        INIT_LOGW("Child process %s(pid %d) exit with signal : %d", serviceName, sigPID, WTERMSIG(procStat));
-        if (isSaspawn) {
-            ReportChildProcessExit(serviceName, sigPID, WTERMSIG(procStat), SERVICES_EXIT_INFO_IS_SASPAWN);
-        } else {
-            ReportChildProcessExit(serviceName, sigPID, WTERMSIG(procStat), SERVICES_EXIT_INFO_NOT_SASPAWN);
-        }
-#ifdef INIT_FEATURE_SUPPORT_SASPAWN
-        SetSaSpawnFailedTag(service);
-#endif
-    } else if (WIFEXITED(procStat)) {
-        INIT_LOGW("Child process %s(pid %d) exit with code : %d", serviceName, sigPID, WEXITSTATUS(procStat));
-#ifdef INIT_FEATURE_SUPPORT_SASPAWN
-        if (WEXITSTATUS(procStat) == INIT_SASPAWN) {
-            SetSaSpawnFailedTag(service);
-        }
-#endif
-        if (service != NULL) {
-            service->lastErrno = WEXITSTATUS(procStat);
-        }
-
-        if (isSaspawn) {
-            ReportChildProcessExit(serviceName, sigPID, WEXITSTATUS(procStat), SERVICES_EXIT_INFO_IS_SASPAWN);
-        }
-    }
+    ReportChildExitStatus(service, serviceName, sigPID, procStat, isSaspawn);
     CmdServiceProcessDelClient(sigPID);
     StopSubInit(sigPID);
     INIT_LOGW("Service warning %s, SIGCHLD received, pid:%d uid:%d status:%d.",

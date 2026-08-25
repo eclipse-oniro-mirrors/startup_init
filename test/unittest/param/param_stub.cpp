@@ -14,6 +14,7 @@
  */
 
 #include "param_stub.h"
+#include <cerrno>
 #include <dirent.h>
 #include <sys/prctl.h>
 #include <unistd.h>
@@ -664,9 +665,23 @@ int LchownStub(const char *pathname, uid_t owner, gid_t group)
     return 0;
 }
 
+static int g_killStubResult = 0;
+static int g_killStubErrno = 0;
+
+void TestSetKillStubResult(int result, int err)
+{
+    g_killStubResult = result;
+    g_killStubErrno = err;
+}
+
 int KillStub(pid_t pid, int signal)
 {
-    return 0;
+    (void)pid;
+    (void)signal;
+    if (g_killStubResult != 0) {
+        errno = g_killStubErrno;
+    }
+    return g_killStubResult;
 }
 
 int ExecveStub(const char *pathname, char *const argv[], char *const envp[])

@@ -12,6 +12,13 @@
 # limitations under the License.
 import("//base/startup/init/begetd.gni")
 
+config("support_sa_multi_user_config") {
+  defines = []
+  if (init_extra_static_modules != "") {
+    defines += [ "SUPPORT_SA_MULTI_USER" ]
+  }
+}
+
 common_include_dirs = [
   "//base/startup/init/services/begetctl",
   "//base/startup/init/services/begetctl/shell",
@@ -66,6 +73,7 @@ if (defined(ohos_lite)) {
   import("//build/ohos.gni")
 
   ohos_executable("begetctl") {
+    configs = [ ":support_sa_multi_user_config" ]
     sources = [
       "appspawntime_cmd.c",
       "begetctl_cmd.c",

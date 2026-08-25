@@ -52,7 +52,13 @@ ohos_unittest("init_unittest") {
       "-Wl,--wrap=waitpid",
       "-Wl,--wrap=pread",
       "-Wl,--wrap=getuid",
+      "-Wl,--wrap=open",
       "-Wl,--wrap=close",
+      "-Wl,--wrap=ioctl",
+      "-Wl,--wrap=calloc",
+      "-Wl,--wrap=strdup",
+      "-Wl,--wrap=SystemSetParameter",
+      "-Wl,--wrap=SystemWaitParameter",
   ]
   module_out_path = "init/init"
   sources = [
@@ -289,7 +295,7 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/interfaces/innerkits/hookmgr/hookmgr.c",
     "//base/startup/init/interfaces/innerkits/init_module_engine/init_modulemgr.c",
     "//base/startup/init/interfaces/innerkits/modulemgr/modulemgr.c",
-    "//base/startup/init/interfaces/innerkits/service_control/service_control.c",
+    "init/service_control_test_wrapper.c",
     "//base/startup/init/interfaces/innerkits/service_watcher/service_watcher.c",
     "//base/startup/init/interfaces/innerkits/syscap/init_syscap.c",
     "//base/startup/init/interfaces/innerkits/syspara/param_wrapper.cpp",
@@ -366,6 +372,13 @@ ohos_unittest("init_unittest") {
     "DISABLE_INIT_TWO_STAGES",
     "INIT_SUPPORT_CHIPSET_INIT",
   ]
+  if (init_extra_static_modules != "") {
+    sources += [
+      "init/init_service_by_userid_test_wrapper.c",
+      "init/service_by_userid_unittest.cpp",
+    ]
+    defines += [ "SUPPORT_SA_MULTI_USER" ]
+  }
   defines += [ "_GNU_SOURCE" ]
 
   if (target_cpu == "arm64" || target_cpu == "x86_64" ||

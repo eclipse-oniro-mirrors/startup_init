@@ -16,6 +16,8 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "begetctl.h"
@@ -32,6 +34,24 @@ static void ServiceControlUsage(BShellHandle shell, int argc, char **argv)
     return;
 }
 
+#if defined(SUPPORT_SA_MULTI_USER) && !defined(OHOS_LITE)
+static int HandleStartWithUserId(BShellHandle shell, int argc, char **argv)
+{
+    if (argc < SERVICE_CONTROL_NUMBER) {
+        ServiceControlUsage(shell, argc, argv);
+        return 0;
+    }
+    errno = 0;
+    char *end = NULL;
+    long userId = strtol(argv[CONTROL_SERVICE_POS], &end, DECIMAL_BASE);
+    if (errno != 0 || end == argv[CONTROL_SERVICE_POS] || *end != '\0' || userId < 0 || userId > INT32_MAX) {
+        return BSH_INVALID_PARAM;
+    }
+    return ServiceControlWithExtraByUserId(argv[1], START,
+        (int32_t)userId, (const char **)argv + SERVICE_CONTROL_NUMBER, argc - SERVICE_CONTROL_NUMBER);
+}
+#endif
+
 static int main_cmd(BShellHandle shell, int argc, char **argv)
 {
     if (argc < SERVICE_START_NUMBER) {
@@ -46,6 +66,10 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
         ServiceControlWithExtra(argv[1], 0, (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
     } else if (strcmp(argv[0], "stop") == 0) {
         ServiceControlWithExtra(argv[1], 1, (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
+#if defined(SUPPORT_SA_MULTI_USER) && !defined(OHOS_LITE)
+    } else if (strcmp(argv[0], "startwithuserid") == 0) {
+        return HandleStartWithUserId(shell, argc, argv);
+#endif
     } else if (strcmp(argv[0], "timer_start") == 0) {
         if (argc <= SERVICE_START_NUMBER) {
             ServiceControlUsage(shell, argc, argv);
@@ -73,6 +97,10 @@ MODULE_CONSTRUCTOR(void)
         {"service_control", main_cmd, "start service", "service_control start servicename", "service_control start"},
         {"stop_service", main_cmd, "stop service", "stop_service servicename", ""},
         {"start_service", main_cmd, "start service", "start_service servicename", ""},
+#if defined(SUPPORT_SA_MULTI_USER) && !defined(OHOS_LITE)
+        {"startwithuserid", main_cmd, "start service with user id",
+            "startwithuserid servicename userid [ext...]", ""},
+#endif
         {"timer_start", main_cmd, "start service by timer", "timer_start servicename timeout", ""},
         {"timer_stop", main_cmd, "stop service timer", "timer_stop servicename", ""},
     };

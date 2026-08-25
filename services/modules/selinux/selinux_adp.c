@@ -23,8 +23,12 @@
 #include "securec.h"
 
 #include <policycoreutils.h>
+#ifdef SUPPORT_SA_MULTI_USER
+#include <selinux/context.h>
+#endif
 #include <selinux/label.h>
 #include <selinux/restorecon.h>
+#include <selinux/selinux.h>
 
 enum {
     CMD_LOAD_POLICY = 0,
@@ -40,6 +44,35 @@ enum {
 };
 
 extern char *__progname;
+
+#ifdef SUPPORT_SA_MULTI_USER
+PLUGIN_STATIC int BuildServiceContext(const char *label, const char *mcs, char *buffer, size_t size)
+{
+    PLUGIN_CHECK(label != NULL && buffer != NULL && size > 0, return -1, "Invalid service context input");
+    context_t context = NULL;
+    const char *target = label;
+    if (mcs != NULL && mcs[0] != '\0') {
+        context = context_new(label);
+        if (context == NULL || context_range_set(context, mcs) != 0) {
+            PLUGIN_LOGE("Failed to append MCS %s to context %s", mcs, label);
+            context_free(context);
+            return -1;
+        }
+        target = context_str(context);
+        if (target == NULL) {
+            PLUGIN_LOGE("Failed to build service context from %s and %s", label, mcs);
+            context_free(context);
+            return -1;
+        }
+    }
+
+    int ret = strcpy_s(buffer, size, target);
+    context_free(context);
+    PLUGIN_CHECK(ret == EOK, return -1, "Service context is too long");
+    return 0;
+}
+
+#endif
 
 static int LoadSelinuxPolicy(int id, const char *name, int argc, const char **argv)
 {
@@ -79,6 +112,18 @@ static int SetServiceContent(int id, const char *name, int argc, const char **ar
         PLUGIN_LOGE("Please set secon field in service %s's cfg file, limit_domain will be blocked", argv[0]);
     }
 
+#ifdef SUPPORT_SA_MULTI_USER
+    const char *mcs = (argc >= 2) ? argv[1] : NULL;
+    char target[MAX_SECON_LEN] = {0};
+    if (BuildServiceContext(label, mcs, target, sizeof(target)) != 0 || setexeccon(target) != 0) {
+        PLUGIN_LOGE("Service error %d %s, failed to set secon %s mcs %s.",
+            errno, argv[0], label, mcs == NULL ? "none" : mcs);
+#ifndef STARTUP_INIT_TEST
+        _exit(INIT_EEXEC_CONTENT);
+#endif
+        return -1;
+    }
+#else
     if (setexeccon(label) < 0) {
         PLUGIN_LOGE("Service error %d %s, failed set secon %s.", errno, argv[0], label);
 #ifndef STARTUP_INIT_TEST
@@ -87,6 +132,7 @@ static int SetServiceContent(int id, const char *name, int argc, const char **ar
     } else {
         PLUGIN_LOGV("Service info %s, set secon %s.", argv[0], label);
     }
+#endif
     return 0;
 }
 

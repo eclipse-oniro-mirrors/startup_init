@@ -11,7 +11,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//base/startup/init/begetd.gni")
 import("//build/ohos.gni")
+
+config("support_sa_multi_user_config") {
+  defines = []
+  if (init_extra_static_modules != "") {
+    defines += [ "SUPPORT_SA_MULTI_USER" ]
+  }
+}
 
 config("inithook_config") {
   include_dirs = [ "//base/startup/init/services/modules/init_hook" ]
@@ -44,6 +52,7 @@ if (defined(ohos_lite)) {
 } else {
   ohos_source_set("inithook") {
     branch_protector_ret = "pac_ret"
+    configs = [ ":support_sa_multi_user_config" ]
     defines = [
       "_GNU_SOURCE",
       "PARAM_SUPPORT_TRIGGER",

@@ -206,11 +206,18 @@ typedef struct Service {
     struct ListNode extDataNode;
     ConfigContext context;
     InitErrno lastErrno;
+#ifdef SUPPORT_SA_MULTI_USER
+    const char *mcs; // optional runtime MCS range, not owned
+#endif
 } Service;
 #pragma pack()
 
 Service *GetServiceByPid(pid_t pid);
 Service *GetServiceByName(const char *servName);
+void RunChildProcess(Service *service, ServiceArgs *pathArgs);
+#ifdef SUPPORT_SA_MULTI_USER
+void RunChildProcessByUserId(Service *service, ServiceArgs *pathArgs, int32_t userId);
+#endif
 int ServiceStart(Service *service, ServiceArgs *pathArgs);
 int ServiceStop(Service *service);
 int ServiceTerm(Service *service);

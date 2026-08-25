@@ -26,6 +26,9 @@
 #include "init_group_manager.h"
 #include "init_jobs_internal.h"
 #include "init_log.h"
+#if defined(SUPPORT_SA_MULTI_USER) && !defined(OHOS_LITE)
+#include "init_service_by_userid.h"
+#endif
 #include "init_service_file.h"
 #include "init_service_socket.h"
 #include "init_utils.h"
@@ -1444,8 +1447,7 @@ static void StopWorkingset(const char *workingsetPath)
     close(workingsetFd);
 }
 
-void StopAllServices(int flags, const char **exclude, int size,
-    int (*filter)(const Service *service, const char **exclude, int size))
+static void StopAppSpawnBeforeReboot(void)
 {
     Service *service = GetServiceByName("appspawn");
     if (service != NULL && service->pid > 0) { // notify appspawn stop
@@ -1459,6 +1461,11 @@ void StopAllServices(int flags, const char **exclude, int size,
     MoveFrozenToThawed();
     StopWorkingset("/dev/workingset/monitor0/workingset.state");
     StopWorkingset("/dev/workingset/monitor1/workongset.state");
+}
+
+static void StopConfiguredServices(int flags, const char **exclude, int size,
+    int (*filter)(const Service *service, const char **exclude, int size))
+{
     InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
     while (node != NULL) {
         Service *service = node->data.service;
@@ -1478,7 +1485,10 @@ void StopAllServices(int flags, const char **exclude, int size,
         }
         node = GetNextGroupNode(NODE_TYPE_SERVICES, node);
     }
+}
 
+static void WaitForAllServicesStopped(void)
+{
     INIT_TIMING_STAT cmdTimer;
     (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
     long long count = 1;
@@ -1491,6 +1501,17 @@ void StopAllServices(int flags, const char **exclude, int size,
             count = 0;
         }
     }
+}
+
+void StopAllServices(int flags, const char **exclude, int size,
+    int (*filter)(const Service *service, const char **exclude, int size))
+{
+    StopAppSpawnBeforeReboot();
+    StopConfiguredServices(flags, exclude, size, filter);
+#if defined(SUPPORT_SA_MULTI_USER) && !defined(OHOS_LITE)
+    StopAllServiceByUserIdInstances();
+#endif
+    WaitForAllServicesStopped();
     INIT_LOGI("StopAllServices end");
 #if defined(ENABLE_HOOK_MGR)
     HookMgrExecute(GetBootStageHookMgr(), INIT_ALL_SERVICES_REAP, NULL, NULL);

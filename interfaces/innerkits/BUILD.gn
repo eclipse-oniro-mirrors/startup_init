@@ -11,6 +11,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//base/startup/init/begetd.gni")
+
+config("support_sa_multi_user_config") {
+  defines = []
+  if (init_extra_static_modules != "") {
+    defines += [ "SUPPORT_SA_MULTI_USER" ]
+  }
+}
+
 if (!defined(ohos_lite) || init_feature_begetctl_liteos) {
   syspara_sources = [
     "syscap/init_syscap.c",
@@ -290,6 +298,7 @@ if (defined(ohos_lite)) {
 
   ohos_shared_library("libbegetutil") {
     branch_protector_ret = "pac_ret"
+    configs = [ ":support_sa_multi_user_config" ]
     sources = [
       "fd_holder/fd_holder.c",
       "reboot/init_reboot_innerkits.c",

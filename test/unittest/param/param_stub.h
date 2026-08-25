@@ -81,6 +81,7 @@ typedef enum {
 } STUB_TYPE;
 void SetStubResult(STUB_TYPE type, int result);
 int GetStubResult(STUB_TYPE type);
+void TestSetKillStubResult(int result, int err);
 void PrepareCmdLineData();
 ParamLabelIndex *TestGetParamLabelIndex(const char *name);
 

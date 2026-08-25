@@ -17,6 +17,7 @@
 #define BEGET_UTILS_API_H
 
 #include <inttypes.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -49,8 +50,16 @@ enum ServiceAction {
 };
 
 int ServiceControlWithExtra(const char *serviceName, int action, const char *extArgv[], int extArgc);
+#ifdef SUPPORT_SA_MULTI_USER
+int ServiceControlWithExtraByUserId(const char *serviceName, int action, int32_t userId,
+    const char *extArgv[], int extArgc);
+#endif
 int ServiceControl(const char *serviceName, int action);
 int ServiceWaitForStatus(const char *serviceName, ServiceStatus status, int waitTimeout);
+#ifdef SUPPORT_SA_MULTI_USER
+int ServiceWaitForStatusByUserId(const char *serviceName, int32_t userId, ServiceStatus status,
+    int waitTimeout);
+#endif
 int ServiceSetReady(const char *serviceName);
 int StartServiceByTimer(const char *serviceName, uint64_t timeout);
 int StopServiceTimer(const char *serviceName);
