@@ -314,9 +314,6 @@ if (defined(ohos_lite)) {
     if (init_feature_devicetype_extend) {
       defines += [ "DEVICETYPE_EXTEND" ]
     }
-    if (init_feature_white_box) {
-      defines += [ "INIT_FEATURE_WHITE_BOX" ]
-    }
     if (target_cpu == "arm64" || target_cpu == "x86_64" ||
         target_cpu == "riscv64") {
       defines += [ "SUPPORT_64BIT" ]
@@ -384,9 +381,6 @@ if (defined(ohos_lite)) {
     ]
     if (init_feature_devicetype_extend) {
       defines += [ "DEVICETYPE_EXTEND" ]
-    }
-    if (init_feature_white_box) {
-      defines += [ "INIT_FEATURE_WHITE_BOX" ]
     }
     if (target_cpu == "arm64" || target_cpu == "x86_64" ||
         target_cpu == "riscv64") {
@@ -517,9 +511,6 @@ if (defined(ohos_lite)) {
     ]
     if (init_feature_devicetype_extend) {
       defines += [ "DEVICETYPE_EXTEND" ]
-    }
-    if (init_feature_white_box) {
-      defines += [ "INIT_FEATURE_WHITE_BOX" ]
     }
     if (target_cpu == "arm64" || target_cpu == "x86_64" ||
         target_cpu == "riscv64") {
