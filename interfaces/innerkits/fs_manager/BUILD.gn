@@ -28,6 +28,7 @@ config("libfsmanager_exported_configs") {
 }
 
 ohos_static_library("libfsmanager_static") {
+  branch_protector_ret = "pac_ret"
   if (!defined(ohos_lite)) {
     sources = [
       "//base/startup/init/interfaces/innerkits/hookmgr/hookmgr.c",
@@ -103,6 +104,7 @@ ohos_static_library("libfsmanager_static") {
 }
 
 ohos_static_library("libfsmanager_static_real") {
+  branch_protector_ret = "pac_ret"
   visibility = [
     ":*",
     "//base/startup/init/*",

@@ -43,6 +43,7 @@ if (defined(ohos_lite)) {
   }
 } else {
   ohos_source_set("inithook") {
+    branch_protector_ret = "pac_ret"
     defines = [
       "_GNU_SOURCE",
       "PARAM_SUPPORT_TRIGGER",

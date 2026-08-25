@@ -55,6 +55,7 @@ if (defined(ohos_lite)) {
   import("//build/ohos.gni")
 
   ohos_static_library("loopevent") {
+    branch_protector_ret = "pac_ret"
     sources = common_sources
     public_configs = [ ":exported_header_files" ]
     include_dirs = common_include
