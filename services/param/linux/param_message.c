@@ -90,6 +90,14 @@ ParamMsgContent *GetNextContent(const ParamMessage *request, uint32_t *offset)
         return NULL;
     }
     ParamMsgContent *content = (ParamMsgContent *)(msg->data + *offset);
+    // [NEW] contentSize 数值上限校验
+    if (content->contentSize > PARAM_CONST_VALUE_LEN_MAX) {
+        return NULL;
+    }
+    // [NEW] content 完整区域边界校验，与 FillParamMsgContent 的 bufferSize 校验对称
+    if (*offset + sizeof(ParamMsgContent) + content->contentSize > msg->msgSize - sizeof(ParamMessage)) {
+        return NULL;
+    }
     *offset += sizeof(ParamMsgContent) + PARAM_ALIGN(content->contentSize);
     return content;
 }
