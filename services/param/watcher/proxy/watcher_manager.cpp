@@ -64,15 +64,42 @@ int32_t WatcherManager::AddRemoteWatcher(uint32_t id, uint32_t &watcherId, const
         // check watcher id
         int ret = GetRemoteWatcherId(remoteWatcherId);
         WATCHER_CHECK(ret == 0, return ERR_FAIL, "Failed to get watcher id for %u", id);
+        uint32_t callingPid = static_cast<uint32_t>(GetCallingPid());
+        auto it = pidWatcherMap_.find(callingPid);
+        if (it != pidWatcherMap_.end()) {
+            WATCHER_LOGI("PID %u already has remoteWatcher %u, replacing", callingPid, it->second);
+            RemoteWatcher *oldWatcher = GetRemoteWatcher(it->second);
+            if (oldWatcher != nullptr) {
+                CleanupOldWatcher(oldWatcher);
+            }
+        }
         // create remote watcher
         RemoteWatcher *remoteWatcher = new RemoteWatcher(remoteWatcherId, watcher);
         WATCHER_CHECK(remoteWatcher != nullptr, return ERR_FAIL, "Failed to create watcher for %u", id);
-        remoteWatcher->SetAgentId(GetCallingPid());
+        remoteWatcher->SetAgentId(callingPid);
         AddRemoteWatcher(remoteWatcher);
+        pidWatcherMap_[callingPid] = remoteWatcherId;
     }
     WATCHER_LOGI("Add remote watcher remoteWatcherId %u %u success", remoteWatcherId, id);
     watcherId = remoteWatcherId;
     return 0;
+}
+
+void WatcherManager::CleanupOldWatcher(RemoteWatcherPtr oldWatcher)
+{
+    oldWatcher->TraversalNodeSafe(
+        [this, oldWatcher](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+            auto group = GetWatcherGroup(node->GetNodeId());
+            if (group == nullptr) {
+                return;
+            }
+            DelParamWatcher(group, oldWatcher);
+            if (group->Empty()) {
+                SendMessage(group, MSG_DEL_WATCHER);
+                DelWatcherGroup(group);
+            }
+        });
+    DelRemoteWatcher(oldWatcher);
 }
 
 int32_t WatcherManager::DelRemoteWatcher(uint32_t remoteWatcherId)
@@ -86,6 +113,7 @@ int32_t WatcherManager::DelRemoteWatcher(uint32_t remoteWatcherId)
             "Can not find watcher %u calling %u", remoteWatcher->GetAgentId(), static_cast<uint32_t>(GetCallingPid()));
         WATCHER_LOGI("Del remote watcher remoteWatcherId %u", remoteWatcherId);
         watcher = remoteWatcher->GetWatcher();
+        pidWatcherMap_.erase(remoteWatcher->GetAgentId());
         DelRemoteWatcher(remoteWatcher);
     }
     sptr<IRemoteObject> object = watcher->AsObject();
@@ -154,6 +182,15 @@ int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remote
     WATCHER_CHECK(remoteWatcher != nullptr, return -1, "Can not find remote watcher %d", remoteWatcherId);
     WATCHER_CHECK(remoteWatcher->CheckAgent(GetCallingPid()), return 0,
         "Can not find watcher %u calling %u", remoteWatcher->GetAgentId(), static_cast<uint32_t>(GetCallingPid()));
+    auto getGroup = GetWatcherGroup(keyPrefix);
+    if (getGroup != nullptr) {
+        WatcherNodePtr existNode = getGroup->GetNode(remoteWatcherId);
+        if (existNode != nullptr) {
+            WATCHER_LOGI("Add watcher %s remoteWatcherId: %u already exists", keyPrefix.c_str(), remoteWatcherId);
+            return 0;
+        }
+        WATCHER_LOGV("getGroup node not exist");
+    }
     auto group = AddWatcherGroup(keyPrefix);
     WATCHER_CHECK(group != nullptr, return -1, "Failed to create group for %s", keyPrefix.c_str());
     {
@@ -508,6 +545,7 @@ void WatcherManager::OnRemoteDied(RemoteWatcherPtr remoteWatcher)
                 DelWatcherGroup(group);
             }
         });
+    pidWatcherMap_.erase(remoteWatcher->GetAgentId());
     DelRemoteWatcher(remoteWatcher);
 }
 
@@ -637,6 +675,7 @@ void WatcherManager::Clear(void)
     remoteWatchers_ = nullptr;
     delete watcherGroups_;
     watcherGroups_ = nullptr;
+    pidWatcherMap_.clear();
 }
 
 int WatcherManager::AddRemoteWatcher(RemoteWatcherPtr remoteWatcher)
@@ -851,7 +890,7 @@ WatcherNodePtr WatcherNode::GetNext(ListHead *list)
 int WatcherNode::CompareNode(ListNodePtr node, ListNodePtr newNode)
 {
     WatcherNodePtr watcher = WatcherNode::ConvertNodeToBase(node);
-    WatcherNodePtr newWatcher = WatcherNode::ConvertNodeToBase(node);
+    WatcherNodePtr newWatcher = WatcherNode::ConvertNodeToBase(newNode);
     return watcher->nodeId_ - newWatcher->nodeId_;
 }
 
