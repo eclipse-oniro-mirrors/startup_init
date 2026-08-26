@@ -82,7 +82,7 @@ typedef int (*StrcpySFunc)(char *dest, size_t destMax, const char *src);
 void UpdateStrcpySFunc(StrcpySFunc func);
 
 // for wrapper ioctl;
-int __real_ioctl(int fd, int req, ...);
+int RealIoctl(int fd, unsigned long req, ...) __asm__("__real_ioctl");
 typedef int (*IoctlFunc)(int fd, int req, va_list args);
 void UpdateIoctlFunc(IoctlFunc func);
 

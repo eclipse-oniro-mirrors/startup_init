@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <net/if.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -58,6 +59,10 @@
 #define BOOT_DETECTOR_IOCTL_BASE 'B'
 #define SET_SHUT_STAGE _IOW(BOOT_DETECTOR_IOCTL_BASE, 106, int)
 #define SHUT_STAGE_FRAMEWORK_START 1
+#define ENTERPRISE_SPACE_DEV "/dev/access_token_id"
+#define ENTERPRISE_SPACE_IOCTL_BASE 'A'
+#define ACCESS_TOKENID_GET_ENTERPRISE_SPACE_ID _IOR(ENTERPRISE_SPACE_IOCTL_BASE, 29, uint8_t)
+#define ACCESS_TOKENID_SET_ENTERPRISE_SPACE_ID _IOW(ENTERPRISE_SPACE_IOCTL_BASE, 30, uint8_t)
 #define UMOUNT_DATA_RETRY_COUNT 3
 #define NS_DATA_UMOUNT_FAIL_TAG_LEN 22
 #define NS_DATA_UMOUNT_SUCCESS_TAG_LEN 22
@@ -1337,6 +1342,52 @@ static void DoStopFeedHighdog(const struct CmdArgs *ctx)
     return;
 }
 
+static int SetEnterpriseSpaceFlag(bool flag)
+{
+    int fd = open(ENTERPRISE_SPACE_DEV, O_RDWR | O_CLOEXEC);
+    if (fd < 0) {
+        INIT_LOGE("Open %s for enterprise space flag failed, errno %d", ENTERPRISE_SPACE_DEV, errno);
+        return -1;
+    }
+
+    int ret = ioctl(fd, ACCESS_TOKENID_SET_ENTERPRISE_SPACE_ID, &flag);
+    if (ret < 0) {
+        INIT_LOGE("Set enterprise space flag failed, ret %d errno %d", ret, errno);
+        (void)close(fd);
+        return -1;
+    }
+
+    bool actualFlag = false;
+    ret = ioctl(fd, ACCESS_TOKENID_GET_ENTERPRISE_SPACE_ID, &actualFlag);
+    if (ret < 0) {
+        INIT_LOGE("Get enterprise space flag failed, ret %d errno %d", ret, errno);
+        (void)close(fd);
+        return -1;
+    }
+    if (actualFlag != flag) {
+        INIT_LOGE("Verify enterprise space flag failed, expected %d actual %d", flag, actualFlag);
+        (void)close(fd);
+        return -1;
+    }
+
+    (void)close(fd);
+    INIT_LOGI("Set enterprise space flag success, flag=%d", flag);
+    return 0;
+}
+
+static void DoSetSpaceFlag(const struct CmdArgs *ctx)
+{
+    bool flag = false;
+    if (strcmp(ctx->argv[0], "true") == 0) {
+        flag = true;
+    } else if (strcmp(ctx->argv[0], "false") != 0) {
+        INIT_LOGE("SetSpaceFlag rejected invalid enterprise space flag: %s; expected true or false", ctx->argv[0]);
+        return;
+    }
+
+    (void)SetEnterpriseSpaceFlag(flag);
+}
+
 static const struct CmdTable g_cmdTable[] = {
     { "syncexec ", 1, 10, 0, DoSyncExec },
     { "exec ", 1, 10, 0, DoExec },
@@ -1367,6 +1418,7 @@ static const struct CmdTable g_cmdTable[] = {
     { "swapon", 1, 1, 0, DoSwapon },
     { "mksandbox", 1, 1, 0, DoMkSandbox },
     { "stop_feed_highdog", 0, 1, 0, DoStopFeedHighdog },
+    { "SetSpaceFlag ", 1, 1, 0, DoSetSpaceFlag },
     { "mount_fstab_sp ", 1, 1, 0, DoMountFstabFileSp },
 };
 
