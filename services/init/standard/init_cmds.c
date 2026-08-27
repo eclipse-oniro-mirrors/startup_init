@@ -873,47 +873,6 @@ static bool DoUmountOtherNsData()
     return nsDataRelease;
 }
 
-INIT_STATIC bool EchoToPath(const char* path, const char* content)
-{
-    int fd = open(path, O_WRONLY);
-    if (fd == -1) {
-        INIT_LOGE("open %s failed", path);
-        return false;
-    }
-    if (write(fd, content, strlen(content)) < 0) {
-        INIT_LOGE("write %s : %s failed", path, content);
-        close(fd);
-        return false;
-    }
-    close(fd);
-    return true;
-}
- 
-INIT_STATIC bool IsHyperHoldDisabled()
-{
-    FILE *file = fopen(ESWAP_ENABLE_PATH, "r");
-    if (!file) {
-        INIT_LOGE("failed open file");
-        return false;
-    }
-    char buffer[HP_ENABLE_BUFFER_SIZE] = {0};
-    if (fgets(buffer, sizeof(buffer) - 1, file) == NULL) {
-        (void)fclose(file);
-        INIT_LOGE("failed read from file");
-        return false;
-    }
-    (void)fclose(file);
-    size_t index = strcspn(buffer, "\n");
-    if (index < sizeof(buffer)) {
-        buffer[index] = '\0';
-    }
-    if (strcmp(buffer, "disable") == 0) {
-        return true;
-    } else {
-        return false;
-    }
-}
- 
 INIT_STATIC void DumpHyperHoldCloseResult(bool dmaEswapDeinitSucc, bool gpuEswapDeinitSucc)
 {
     const char *dumpPath = "/log/startup/mntdump.txt";
@@ -921,12 +880,6 @@ INIT_STATIC void DumpHyperHoldCloseResult(bool dmaEswapDeinitSucc, bool gpuEswap
     if (dumpFd == -1) {
         INIT_LOGE("mount dump path create fail, errno is %d", errno);
         return;
-    }
-    bool isHPDisabled = IsHyperHoldDisabled();
-    if (isHPDisabled) {
-        write(dumpFd, "hyperhold is totally disabled\n", HP_DISABLE_SUCC_TAG_LEN);
-    } else {
-        write(dumpFd, "hyperhold disable timeout\n", HP_DISABLE_FAIL_TAG_LEN);
     }
     if (dmaEswapDeinitSucc) {
         write(dumpFd, "dma swapfile deinit succ\n", HP_TURBO_DEINIT_TAG_LEN);
@@ -941,47 +894,6 @@ INIT_STATIC void DumpHyperHoldCloseResult(bool dmaEswapDeinitSucc, bool gpuEswap
     close(dumpFd);
 }
  
-INIT_STATIC void DisableHyperholdTimeOut(int interval, long long totalWait)
-{
-    INIT_LOGI("disable hyperhold begin");
-    INIT_TIMING_STAT cmdTimer;
-    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
- 
-    // 1. disable hp to ensure no further swapout
-    if (!EchoToPath(ESWAP_ENABLE_PATH, DISABLE_ESWAP)) {
-        INIT_LOGE("disable hyperhold failed");
-    }
-    if (IsHyperHoldDisabled()) {
-        INIT_LOGI("disable hyperhold succ");
-        return;
-    }
-    // 2. disable hp cache to ensure that the init swap-in will free extent
-    if (!EchoToPath(HP_CACHE_LEVEL_PATH, HP_CACHE_LEVEL_OFF)) {
-        INIT_LOGE("close hp_cache failed");
-    }
-    // 3. here all processes except init have died, only swapin root memcg
-    if (!EchoToPath(ROOT_MEMCG_SWAPIN_PATH, ESWAP_SWAP_IN)) {
-        INIT_LOGE("swapin failed");
-    }
-    // 4. close hp again to ensure hp file is closed
-    while (true) {
-        if (IsHyperHoldDisabled()) {
-            INIT_LOGE("close hyperhold succ");
-            break;
-        } else {
-            INIT_LOGE("close hyperhold failed");
-        }
-        if (!EchoToPath(ESWAP_ENABLE_PATH, DISABLE_ESWAP)) {
-            INIT_LOGE("disable hyperhold failed");
-        }
-        usleep(interval);
-        (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
-        long long diff = InitDiffTime(&cmdTimer);
-        if (diff > totalWait) {
-            break;
-        }
-    }
-}
 
 INIT_STATIC bool DeInitDmaEswapSpace()
 {
@@ -996,6 +908,7 @@ INIT_STATIC bool DeInitDmaEswapSpace()
         return false;
     }
     close(fd);
+    INIT_LOGI("deinit dma eswap succ");
     return true;
 }
 
@@ -1089,9 +1002,6 @@ static void RetryUmountData()
         if (retry == UMOUNT_DATA_RETRY_COUNT - 1) {
             CreatNewStartupFile();
             DumpProcStackFiles();
-        }
-        if (!IsHyperHoldDisabled()) {
-            DisableHyperholdTimeOut(CLOSE_HP_INTERVAL_WAIT, CLOSE_HP_WAIT_TIME);
         }
         if (!dmaEswapDeinitSucc) {
             dmaEswapDeinitSucc = DeInitDmaEswapSpace();

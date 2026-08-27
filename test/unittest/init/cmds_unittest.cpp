@@ -598,41 +598,6 @@ HWTEST_F(CmdsUnitTest, TestInitDiffTime, TestSize.Level1)
     EXPECT_TRUE(diff > 0);
 }
 
-HWTEST_F(CmdsUnitTest, TestEchoToPath, TestSize.Level1)
-{
-    char *content = LoadStringFromFile(ESWAP_ENABLE_PATH);
-    if (strcmp(content, "enable") == 0) {
-        EchoToPath(ESWAP_ENABLE_PATH, DISABLE_ESWAP);
-        char *ret = LoadStringFromFile(ESWAP_ENABLE_PATH);
-        EXPECT_TRUE(strcmp(ret, "disable") == 0 || strcmp(ret, "readonly") == 0);
-    } else if (strcmp(content, "disable") == 0) {
-        EchoToPath(ESWAP_ENABLE_PATH, "enable");
-        char *ret = LoadStringFromFile(ESWAP_ENABLE_PATH);
-        EXPECT_TRUE(strcmp(ret, "enable"));
-    }
-    EchoToPath(ESWAP_ENABLE_PATH, content);
-}
- 
-HWTEST_F(CmdsUnitTest, TestDisableHyperholdTimeOut, TestSize.Level1)
-{
-    INIT_TIMING_STAT cmdTimer;
-    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.startTime);
-    DisableHyperholdTimeOut(CLOSE_HP_INTERVAL_WAIT, CLOSE_HP_WAIT_TIME);
-    (void)clock_gettime(CLOCK_MONOTONIC, &cmdTimer.endTime);
-    DumpHyperHoldCloseResult(true, true);
-    DumpHyperHoldCloseResult(false, true);
-    DumpHyperHoldCloseResult(true, false);
-    DumpHyperHoldCloseResult(false, false);
-    long long diff = InitDiffTime(&cmdTimer);
-    char *retEswap = LoadStringFromFile(ESWAP_ENABLE_PATH);
-    EXPECT_STRNE(retEswap, "enable");
-    if (strcmp(retEswap, "disable") == 0) {
-        EXPECT_LT(diff, 5000);
-    } else if (strcmp(retEswap, "readonly") == 0) {
-        EXPECT_GT(diff, 500);
-    }
-}
-
 HWTEST_F(CmdsUnitTest, TestDeInitEswapSpace, TestSize.Level1)
 {
     bool ret = DeInitDmaEswapSpace();
