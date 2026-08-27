@@ -25,8 +25,12 @@ int OutputSuccess(cJSON *data)
     cJSON_AddStringToObject(response, "status", "success");
     cJSON_AddItemToObject(response, "data", data);
     char *jsonStr = cJSON_PrintUnformatted(response);
-    (void)fprintf(stdout, "%s\n", jsonStr);
-    free(jsonStr);
+    if (jsonStr != nullptr) {
+        (void)fprintf(stdout, "%s\n", jsonStr);
+        free(jsonStr);
+    } else {
+        CLI_LOG("Failed to serialize success response: out of memory");
+    }
     cJSON_Delete(response);
     return 0;
 }
@@ -40,8 +44,12 @@ int OutputError(const std::string &code, const std::string &message, const std::
     cJSON_AddStringToObject(response, "errMsg", message.c_str());
     cJSON_AddStringToObject(response, "suggestion", suggestion.c_str());
     char *jsonStr = cJSON_PrintUnformatted(response);
-    (void)fprintf(stdout, "%s\n", jsonStr);
-    free(jsonStr);
+    if (jsonStr != nullptr) {
+        (void)fprintf(stdout, "%s\n", jsonStr);
+        free(jsonStr);
+    } else {
+        CLI_LOG("Failed to serialize error response: out of memory");
+    }
     cJSON_Delete(response);
     return 1;
 }
