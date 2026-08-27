@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <sys/ioctl.h>
 #include "func_wrapper.h"
 #include "securec.h"
 #ifdef __cplusplus
@@ -145,21 +146,27 @@ void UpdateOpenFunc(OpenFunc func)
     g_open = func;
 }
 
-int WrapOpen(const char *pathname, int flag, ...) __asm__("__wrap_open");
+static int CallRealOpen(const char *pathname, int flag, va_list args)
+{
+    if ((flag & O_CREAT) != 0) {
+        return RealOpen(pathname, flag, va_arg(args, mode_t));
+    }
+    return RealOpen(pathname, flag);
+}
 
+int WrapOpen(const char *pathname, int flag, ...) __asm__("__wrap_open");
 int WrapOpen(const char *pathname, int flag, ...)
 {
-    if (g_open) {
-        return g_open(pathname, flag);
-    }
-    if ((flag & O_CREAT) == 0) {
-        return RealOpen(pathname, flag);
-    }
     va_list args;
     va_start(args, flag);
-    mode_t mode = va_arg(args, mode_t);
+    int ret;
+    if (g_open) {
+        ret = g_open(pathname, flag);
+    } else {
+        ret = CallRealOpen(pathname, flag, args);
+    }
     va_end(args);
-    return RealOpen(pathname, flag, mode);
+    return ret;
 }
 
 // start wrap close
@@ -201,18 +208,21 @@ void UpdateIoctlFunc(IoctlFunc func)
     g_ioctl = func;
 }
 
-int __wrap_ioctl(int fd, int req, ...)
+int WrapIoctl(int fd, unsigned long req, ...) __asm__("__wrap_ioctl");
+int WrapIoctl(int fd, unsigned long req, ...)
 {
     va_list args;
     va_start(args, req);
     int rc;
     if (g_ioctl) {
-        rc = g_ioctl(fd, req, args);
+        rc = g_ioctl(fd, static_cast<int>(req), args);
     } else if (_IOC_DIR(req) == _IOC_NONE && _IOC_SIZE(req) == 0) {
-        rc = __real_ioctl(fd, req);
+        rc = RealIoctl(fd, req);
+    } else if (req == _IOWR('d', 0x09, int)) {
+        rc = RealIoctl(fd, req, nullptr);
     } else {
         void *arg = va_arg(args, void *);
-        rc = __real_ioctl(fd, req, arg);
+        rc = RealIoctl(fd, req, arg);
     }
     va_end(args);
     return rc;

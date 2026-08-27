@@ -13,8 +13,13 @@
  * limitations under the License.
  */
 
+#include <cerrno>
+#include <cstdint>
 #include <dlfcn.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
 #include <sys/statvfs.h>
+#include "func_wrapper.h"
 #include "init_cmds.h"
 #include "init_param.h"
 #include "init_group_manager.h"
@@ -31,6 +36,105 @@ using namespace std;
 #define CLOSE_HP_INTERVAL_WAIT 10000
 #define DMA_DEVICE_FILE "/dev/dma_reclaim"
 #define GPU_RECLAIM_IMPL_SO "libgpu_reclaim.so"
+#define ENTERPRISE_SPACE_TEST_FD 101
+
+static constexpr char ENTERPRISE_SPACE_TEST_DEV[] = "/dev/access_token_id";
+static constexpr unsigned long ENTERPRISE_SPACE_TEST_GET_REQUEST = _IOR('A', 29, std::uint8_t);
+static constexpr unsigned long ENTERPRISE_SPACE_TEST_SET_REQUEST = _IOW('A', 30, std::uint8_t);
+
+static int g_enterpriseSpaceOpenResult = ENTERPRISE_SPACE_TEST_FD;
+static int g_enterpriseSpaceSetResult = 0;
+static int g_enterpriseSpaceGetResult = 0;
+static int g_enterpriseSpaceOpenCount = 0;
+static int g_enterpriseSpaceIoctlCount = 0;
+static int g_enterpriseSpaceCloseCount = 0;
+static int g_enterpriseSpaceLastFlags = 0;
+static int g_enterpriseSpaceLastFd = -1;
+static bool g_enterpriseSpaceSetFlag = false;
+static bool g_enterpriseSpaceReadbackFlag = false;
+static bool g_enterpriseSpaceUseCustomReadback = false;
+static unsigned long g_enterpriseSpaceRequests[2] = { 0 };
+
+static int EnterpriseSpaceOpenMock(const char *path, int flags)
+{
+    EXPECT_STREQ(path, ENTERPRISE_SPACE_TEST_DEV);
+    g_enterpriseSpaceOpenCount++;
+    g_enterpriseSpaceLastFlags = flags;
+    if (g_enterpriseSpaceOpenResult < 0) {
+        errno = ENOENT;
+    }
+    return g_enterpriseSpaceOpenResult;
+}
+
+static int EnterpriseSpaceIoctlMock(int fd, int request, va_list args)
+{
+    int requestIndex = g_enterpriseSpaceIoctlCount++;
+    g_enterpriseSpaceLastFd = fd;
+    unsigned long requestCode = static_cast<unsigned int>(request);
+    if (requestIndex < static_cast<int>(ARRAY_LENGTH(g_enterpriseSpaceRequests))) {
+        g_enterpriseSpaceRequests[requestIndex] = requestCode;
+    }
+    if (requestCode == ENTERPRISE_SPACE_TEST_SET_REQUEST) {
+        bool *flag = va_arg(args, bool *);
+        EXPECT_NE(flag, nullptr);
+        if (g_enterpriseSpaceSetResult != 0) {
+            errno = ENOTTY;
+            return g_enterpriseSpaceSetResult;
+        }
+        g_enterpriseSpaceSetFlag = *flag;
+        return 0;
+    }
+    if (requestCode == ENTERPRISE_SPACE_TEST_GET_REQUEST) {
+        bool *flag = va_arg(args, bool *);
+        EXPECT_NE(flag, nullptr);
+        if (g_enterpriseSpaceGetResult != 0) {
+            errno = ENOTTY;
+            return g_enterpriseSpaceGetResult;
+        }
+        *flag = g_enterpriseSpaceUseCustomReadback ? g_enterpriseSpaceReadbackFlag : g_enterpriseSpaceSetFlag;
+        return 0;
+    }
+    errno = EINVAL;
+    return -1;
+}
+
+static int EnterpriseSpaceCloseMock(int fd)
+{
+    g_enterpriseSpaceCloseCount++;
+    g_enterpriseSpaceLastFd = fd;
+    return 0;
+}
+
+static void ResetEnterpriseSpaceIoMock()
+{
+    g_enterpriseSpaceOpenResult = ENTERPRISE_SPACE_TEST_FD;
+    g_enterpriseSpaceSetResult = 0;
+    g_enterpriseSpaceGetResult = 0;
+    g_enterpriseSpaceOpenCount = 0;
+    g_enterpriseSpaceIoctlCount = 0;
+    g_enterpriseSpaceCloseCount = 0;
+    g_enterpriseSpaceLastFlags = 0;
+    g_enterpriseSpaceLastFd = -1;
+    g_enterpriseSpaceSetFlag = false;
+    g_enterpriseSpaceReadbackFlag = false;
+    g_enterpriseSpaceUseCustomReadback = false;
+    g_enterpriseSpaceRequests[0] = 0;
+    g_enterpriseSpaceRequests[1] = 0;
+}
+
+static void EnableEnterpriseSpaceIoMock()
+{
+    UpdateOpenFunc(EnterpriseSpaceOpenMock);
+    UpdateIoctlFunc(EnterpriseSpaceIoctlMock);
+    UpdateCloseFunc(EnterpriseSpaceCloseMock);
+}
+
+static void ExecuteSetSpaceFlagCommand()
+{
+    int cmdIndex = -1;
+    ASSERT_NE(GetMatchCmd("SetSpaceFlag ", &cmdIndex), nullptr);
+    DoCmdByIndex(cmdIndex, "true", nullptr);
+}
 
 static int DoCmdByName(const char *name, const char *cmdContent)
 {
@@ -67,8 +171,16 @@ class CmdsUnitTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
     static void TearDownTestCase(void) {};
-    void SetUp() {};
-    void TearDown() {};
+    void SetUp() override
+    {
+        ResetEnterpriseSpaceIoMock();
+    }
+    void TearDown() override
+    {
+        UpdateOpenFunc(nullptr);
+        UpdateIoctlFunc(nullptr);
+        UpdateCloseFunc(nullptr);
+    }
 };
 
 HWTEST_F(CmdsUnitTest, TestCmdExecByName1, TestSize.Level1)
@@ -150,6 +262,124 @@ HWTEST_F(CmdsUnitTest, TestCmdExecByName2, TestSize.Level1)
     ret = DoCmdByName("insmod ", "a b");
     EXPECT_EQ(ret, 0);
     ret = DoCmdByName("insmod ", "/data /data");
+}
+
+/*
+ * @tc.name: SetSpaceFlag_001
+ * @tc.desc: Verify command registration and successful enterprise space SET/GET validation.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CmdsUnitTest, SetSpaceFlag_001, TestSize.Level1)
+{
+    int cmdIndex = -1;
+    const char *cmd = GetMatchCmd("SetSpaceFlag ", &cmdIndex);
+    ASSERT_NE(cmd, nullptr);
+    EXPECT_STREQ(cmd, "SetSpaceFlag ");
+    EXPECT_GE(cmdIndex, 0);
+
+    EnableEnterpriseSpaceIoMock();
+    DoCmdByIndex(cmdIndex, "true", nullptr);
+    EXPECT_EQ(g_enterpriseSpaceOpenCount, 1);
+    EXPECT_EQ(g_enterpriseSpaceIoctlCount, 2);
+    EXPECT_EQ(g_enterpriseSpaceCloseCount, 1);
+    EXPECT_EQ(g_enterpriseSpaceLastFlags, O_RDWR | O_CLOEXEC);
+    EXPECT_EQ(g_enterpriseSpaceLastFd, ENTERPRISE_SPACE_TEST_FD);
+    EXPECT_EQ(g_enterpriseSpaceRequests[0], ENTERPRISE_SPACE_TEST_SET_REQUEST);
+    EXPECT_EQ(g_enterpriseSpaceRequests[1], ENTERPRISE_SPACE_TEST_GET_REQUEST);
+    EXPECT_TRUE(g_enterpriseSpaceSetFlag);
+}
+
+/*
+ * @tc.name: SetSpaceFlag_002
+ * @tc.desc: Verify false clears the enterprise space flag and validates the readback value.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CmdsUnitTest, SetSpaceFlag_002, TestSize.Level2)
+{
+    int cmdIndex = -1;
+    ASSERT_NE(GetMatchCmd("SetSpaceFlag ", &cmdIndex), nullptr);
+    g_enterpriseSpaceSetFlag = true;
+    EnableEnterpriseSpaceIoMock();
+    DoCmdByIndex(cmdIndex, "false", nullptr);
+    EXPECT_EQ(g_enterpriseSpaceOpenCount, 1);
+    EXPECT_EQ(g_enterpriseSpaceIoctlCount, 2);
+    EXPECT_EQ(g_enterpriseSpaceCloseCount, 1);
+    EXPECT_EQ(g_enterpriseSpaceRequests[0], ENTERPRISE_SPACE_TEST_SET_REQUEST);
+    EXPECT_EQ(g_enterpriseSpaceRequests[1], ENTERPRISE_SPACE_TEST_GET_REQUEST);
+    EXPECT_FALSE(g_enterpriseSpaceSetFlag);
+}
+
+/*
+ * @tc.name: SetSpaceFlag_003
+ * @tc.desc: Verify invalid command values do not access the enterprise space device.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CmdsUnitTest, SetSpaceFlag_003, TestSize.Level2)
+{
+    int cmdIndex = -1;
+    ASSERT_NE(GetMatchCmd("SetSpaceFlag ", &cmdIndex), nullptr);
+    DoCmdByIndex(cmdIndex, "invalid", nullptr);
+    EXPECT_EQ(g_enterpriseSpaceOpenCount, 0);
+    EXPECT_EQ(g_enterpriseSpaceIoctlCount, 0);
+    EXPECT_EQ(g_enterpriseSpaceCloseCount, 0);
+}
+
+/*
+ * @tc.name: SetEnterpriseSpaceFlag_001
+ * @tc.desc: Verify an open failure stops before ioctl and close.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CmdsUnitTest, SetEnterpriseSpaceFlag_001, TestSize.Level2)
+{
+    g_enterpriseSpaceOpenResult = -1;
+    EnableEnterpriseSpaceIoMock();
+    ExecuteSetSpaceFlagCommand();
+    EXPECT_EQ(g_enterpriseSpaceOpenCount, 1);
+    EXPECT_EQ(g_enterpriseSpaceIoctlCount, 0);
+    EXPECT_EQ(g_enterpriseSpaceCloseCount, 0);
+}
+
+/*
+ * @tc.name: SetEnterpriseSpaceFlag_002
+ * @tc.desc: Verify a SET ioctl failure closes the device and returns failure.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CmdsUnitTest, SetEnterpriseSpaceFlag_002, TestSize.Level2)
+{
+    g_enterpriseSpaceSetResult = -1;
+    EnableEnterpriseSpaceIoMock();
+    ExecuteSetSpaceFlagCommand();
+    EXPECT_EQ(g_enterpriseSpaceIoctlCount, 1);
+    EXPECT_EQ(g_enterpriseSpaceCloseCount, 1);
+}
+
+/*
+ * @tc.name: SetEnterpriseSpaceFlag_003
+ * @tc.desc: Verify a GET ioctl failure closes the device and returns failure.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CmdsUnitTest, SetEnterpriseSpaceFlag_003, TestSize.Level2)
+{
+    g_enterpriseSpaceGetResult = -1;
+    EnableEnterpriseSpaceIoMock();
+    ExecuteSetSpaceFlagCommand();
+    EXPECT_EQ(g_enterpriseSpaceIoctlCount, 2);
+    EXPECT_EQ(g_enterpriseSpaceCloseCount, 1);
+}
+
+/*
+ * @tc.name: SetEnterpriseSpaceFlag_004
+ * @tc.desc: Verify a mismatched GET value closes the device and returns failure.
+ * @tc.type: FUNC
+ */
+HWTEST_F(CmdsUnitTest, SetEnterpriseSpaceFlag_004, TestSize.Level2)
+{
+    g_enterpriseSpaceUseCustomReadback = true;
+    g_enterpriseSpaceReadbackFlag = false;
+    EnableEnterpriseSpaceIoMock();
+    ExecuteSetSpaceFlagCommand();
+    EXPECT_EQ(g_enterpriseSpaceIoctlCount, 2);
+    EXPECT_EQ(g_enterpriseSpaceCloseCount, 1);
 }
 
 HWTEST_F(CmdsUnitTest, TestCommonMkdir, TestSize.Level1)
