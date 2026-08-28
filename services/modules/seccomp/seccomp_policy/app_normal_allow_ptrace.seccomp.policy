@@ -238,7 +238,6 @@ prlimit64;all
 syncfs;all
 sendmmsg;all
 process_vm_readv;all
-process_vm_writev;all
 sched_setattr;all
 sched_getattr;all
 renameat2;all
