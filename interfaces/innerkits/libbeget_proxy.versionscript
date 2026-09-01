@@ -16,6 +16,15 @@
     AclGetDevUdid;
     AclGetSerial;
     AclGetDiskSN;
+    AclGetCpuId;
+    AclGetCpuArchitecture;
+    AclGetCpuVendor;
+    AclGetBoardSerial;
+    AclGetBoardVendor;
+    AclGetBoardProductName;
+    AclGetBiosVendor;
+    AclGetBiosVersion;
+    AclGetBiosReleaseDate;
     ServiceWatchForStatus;
     SystemWatchParameter;
     WatchParameter;

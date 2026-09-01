@@ -176,6 +176,19 @@ const char *AclGetSerial(void);
 int AclGetDevUdid(char *udid, int size);
 int AclGetDiskSN(char *diskSN, int size);
 
+const char *AclGetCpuId(void);
+const char *AclGetCpuArchitecture(void);
+const char *AclGetCpuVendor(void);
+int AclGetBoardSerial(char *value, int size);
+const char *AclGetBoardVendor(void);
+const char *AclGetBoardProductName(void);
+const char *AclGetBiosVendor(void);
+const char *AclGetBiosVersion(void);
+const char *AclGetBiosReleaseDate(void);
+
+#define BOARD_INFO_PERMISSION_DENIED_CODE 201
+#define BOARD_INFO_PERMISSION_DENIED_MSG "Permission denied. requires ohos.permission.ACCESS_BOARD_INFO"
+
 int GetPerformanceClass(void);
 
 /**

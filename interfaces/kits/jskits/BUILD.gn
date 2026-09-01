@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//base/startup/init/begetd.gni")
 import("//build/ohos.gni")
 
 ohos_shared_library("deviceinfo") {
@@ -84,6 +85,39 @@ ohos_shared_library("systemparameterenhance") {
     "bounds_checking_function:libsec_shared",
     "napi:ace_napi",
   ]
+  relative_install_dir = "module"
+  subsystem_name = "startup"
+  part_name = "init"
+}
+
+ohos_shared_library("boardinfo") {
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "$root_gen_dir/base/startup/init/interfaces/innerkits",
+  ]
+
+  sources = [ "src/native_boardinfo_js.cpp" ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbeget_proxy",
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+  ]
+
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "napi:ace_napi",
+    "samgr:samgr_proxy",
+  ]
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   relative_install_dir = "module"
   subsystem_name = "startup"
   part_name = "init"

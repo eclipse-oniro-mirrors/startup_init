@@ -18,6 +18,7 @@
         "syscap": [
             "SystemCapability.Startup.SystemInfo",
             "SystemCapability.Startup.SystemInfo.Lite",
+            "SystemCapability.Startup.BoardInfo",
             "SystemCapability.Base"
         ],
         "features": [
@@ -85,6 +86,7 @@
                 "cJSON",
                 "hicollie",
                 "drivers_interface_partitionslot",
+                "drivers_interface_boardinfo",
                 "code_signature",
                 "runtime_core",
                 "taihe_ffi_gen",

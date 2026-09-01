@@ -16,6 +16,8 @@
 #ifndef OHOS_SYSTEM_DEVICE_ID_KITS_S
 #define OHOS_SYSTEM_DEVICE_ID_KITS_S
 #include <mutex>
+#include <optional>
+#include <utility>
 #include "idevice_info.h"
 #include "singleton.h"
 #include "beget_ext.h"
@@ -31,6 +33,15 @@ public:
     int32_t GetUdid(std::string& result);
     int32_t GetSerialID(std::string& result);
     int32_t GetDiskSN(std::string& result);
+    int32_t GetCpuId(std::string& result);
+    int32_t GetCpuArchitecture(std::string& result);
+    int32_t GetCpuVendor(std::string& result);
+    int32_t GetBoardSerial(std::string& result);
+    int32_t GetBoardVendor(std::string& result);
+    int32_t GetBoardProductName(std::string& result);
+    int32_t GetBiosVendor(std::string& result);
+    int32_t GetBiosVersion(std::string& result);
+    int32_t GetBiosReleaseDate(std::string& result);
 
     void FinishStartSASuccess(const sptr<IRemoteObject> &remoteObject);
     void FinishStartSAFailed();
@@ -51,6 +62,11 @@ private:
 
     void LoadDeviceInfoSa(std::unique_lock<std::mutex> &lock);
     sptr<IDeviceInfo> GetService(std::unique_lock<std::mutex> &lock);
+    int32_t CallRemoteBoardInfo(const char* name,
+        int32_t (IDeviceInfo::*method)(std::string&),
+        std::string& result,
+        std::unique_lock<std::mutex> &lock,
+        std::optional<std::pair<int32_t, std::string>> &resultPair);
     std::mutex lock_;
     std::condition_variable deviceInfoLoadCon_;
     sptr<IRemoteObject::DeathRecipient> deathRecipient_ {};

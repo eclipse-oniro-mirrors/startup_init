@@ -91,6 +91,24 @@ HWTEST_F(DeviceInfoUnittest, Init_DevInfoAgentTest_001, TestSize.Level1)
     EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
     ret = kits.GetDiskSN(serial);
     EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    ret = kits.GetCpuId(serial);
+    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    ret = kits.GetCpuArchitecture(serial);
+    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    ret = kits.GetCpuVendor(serial);
+    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    ret = kits.GetBoardSerial(serial);
+    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    ret = kits.GetBoardVendor(serial);
+    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    ret = kits.GetBoardProductName(serial);
+    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    ret = kits.GetBiosVendor(serial);
+    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    ret = kits.GetBiosVersion(serial);
+    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    ret = kits.GetBiosReleaseDate(serial);
+    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
 }
 
 HWTEST_F(DeviceInfoUnittest, Init_DevInfoDiedTest_001, TestSize.Level1)
@@ -242,6 +260,27 @@ HWTEST_F(DeviceInfoUnittest, Init_TestDeviceInfoProxy_001, TestSize.Level1)
     (void)AclGetDevUdid(localDeviceId, UDID_LEN);
     const char *serialNumber = AclGetSerial();
     EXPECT_NE(nullptr, serialNumber);
+
+    serialNumber = AclGetCpuId();
+    EXPECT_NE(nullptr, serialNumber);
+    serialNumber = AclGetCpuArchitecture();
+    EXPECT_NE(nullptr, serialNumber);
+    serialNumber = AclGetCpuVendor();
+    EXPECT_NE(nullptr, serialNumber);
+    char boardSn[256] = {0};
+    int ret = AclGetBoardSerial(boardSn, sizeof(boardSn));
+    EXPECT_GE(ret, 0);
+    serialNumber = AclGetBoardVendor();
+    EXPECT_NE(nullptr, serialNumber);
+    serialNumber = AclGetBoardProductName();
+    EXPECT_NE(nullptr, serialNumber);
+    serialNumber = AclGetBiosVendor();
+    EXPECT_NE(nullptr, serialNumber);
+    serialNumber = AclGetBiosVersion();
+    EXPECT_NE(nullptr, serialNumber);
+    serialNumber = AclGetBiosReleaseDate();
+    EXPECT_NE(nullptr, serialNumber);
+    
     char diskSN[DISK_SN_LEN] = {0};
     AclGetDevUdid(diskSN, DISK_SN_LEN);
 }
