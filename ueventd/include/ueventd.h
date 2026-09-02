@@ -15,6 +15,7 @@
 
 #ifndef BASE_STARTUP_INITLITE_UEVENTD_H
 #define BASE_STARTUP_INITLITE_UEVENTD_H
+#include <stdbool.h>
 #include <unistd.h>
 #ifdef __cplusplus
 #if __cplusplus
@@ -77,6 +78,7 @@ const char *ActionString(ACTION action);
 void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *uevent);
 void RetriggerUevent(int sockFd, char **devices, int num);
 void RetriggerUeventByPath(int sockFd, char *path);
+void RetriggerUeventPatch(bool isHandleEvent);
 void RetriggerDmUeventByPath(int sockFd, char *path, char **devices, int num);
 void RetriggerSpecialUevent(int sockFd, char *path, char **devices, int num, CompareUevent compare);
 void ProcessUevent(int sockFd, char **devices, int num, CompareUevent compare);
