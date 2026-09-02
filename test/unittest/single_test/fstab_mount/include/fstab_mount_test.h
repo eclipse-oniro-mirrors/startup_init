@@ -27,8 +27,6 @@ MountResult MountWithCheckpoint(const char *source, const char *target,
 int GetDataWithoutCheckpoint(char *fsSpecificData, size_t fsSpecificDataSize,
     char *checkpointData, size_t checkpointDataSize);
 
-int DoMountOneItem(FstabItem *item, MountResult *result);
-
 int GetOverlayDevice(FstabItem *item, char *devRofs, const uint32_t devRofsLen,
     char *devExt4, const uint32_t devExt4Len);
 
