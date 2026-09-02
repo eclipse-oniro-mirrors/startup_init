@@ -248,7 +248,6 @@ static void SavaDataUeventInfo(const struct Uevent *uevent)
         INIT_ERROR_CHECK(g_patchUeventInfo->firmware != NULL, FreeDataUeventInfo(); return, "copy firmware fail");
     }
 }
-
 #else
 static void SavaDataUeventInfo(const struct Uevent *uevent)
 {
