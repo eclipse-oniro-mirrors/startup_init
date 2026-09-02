@@ -215,7 +215,7 @@ static void FreeDataUeventInfo(void)
     g_patchUeventInfo = NULL;
 }
 
-static void SavaDataUeventInfo(const struct Uevent *uevent)
+static void SaveDataUeventInfo(const struct Uevent *uevent)
 {
     INIT_LOGI("Handle save data uevent info");
     INIT_WARNING_CHECK(g_patchUeventInfo == NULL, return, "data uevent info already init");
@@ -249,7 +249,7 @@ static void SavaDataUeventInfo(const struct Uevent *uevent)
     }
 }
 #else
-static void SavaDataUeventInfo(const struct Uevent *uevent)
+static void SaveDataUeventInfo(const struct Uevent *uevent)
 {
 }
 #endif
@@ -280,7 +280,7 @@ static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **d
             HandleBlockDeviceEvent(uevent);
             return;
         } else if (strstr(uevent->partitionName, "userdata") != NULL) {
-            SavaDataUeventInfo(uevent);
+            SaveDataUeventInfo(uevent);
             return;
         }
     }
