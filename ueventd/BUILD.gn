@@ -115,7 +115,10 @@ if (defined(ohos_lite)) {
     sources = service_ueventd_sources
     include_dirs = service_ueventd_include
     deps = service_ueventd_ramdisk_deps
-    defines = [ "__RAMDISK__" ]
+    defines = [
+      "__RAMDISK__",
+      "SUPPORT_PATCH",
+    ]
     external_deps = []
     cflags = []
     if (build_selinux) {

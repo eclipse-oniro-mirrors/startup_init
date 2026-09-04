@@ -54,6 +54,10 @@ static const char *actions[] = {
     [ACTION_UNKNOWN] = "unknown",
 };
 
+#ifdef SUPPORT_PATCH
+static struct Uevent *g_patchUeventInfo = NULL;
+#endif
+
 static SUBSYSTEMTYPE GetSubsystemType(const char *subsystem)
 {
     if (subsystem == NULL || *subsystem == '\0') {
@@ -186,6 +190,70 @@ static bool IsOtherPartitionName(const char *partitionName)
         strcmp(partitionName, "cust_b") == 0;
 }
 
+#ifdef SUPPORT_PATCH
+static void FreeDataUeventInfo(void)
+{
+    if (g_patchUeventInfo == NULL) {
+        return;
+    }
+    if (g_patchUeventInfo->subsystem != NULL) {
+        free((void*)g_patchUeventInfo->subsystem);
+    }
+    if (g_patchUeventInfo->syspath != NULL) {
+        free((void*)g_patchUeventInfo->syspath);
+    }
+    if (g_patchUeventInfo->deviceName != NULL) {
+        free((void*)g_patchUeventInfo->deviceName);
+    }
+    if (g_patchUeventInfo->partitionName != NULL) {
+        free((void*)g_patchUeventInfo->partitionName);
+    }
+    if (g_patchUeventInfo->firmware != NULL) {
+        free((void*)g_patchUeventInfo->firmware);
+    }
+    free(g_patchUeventInfo);
+    g_patchUeventInfo = NULL;
+}
+
+static void SaveDataUeventInfo(const struct Uevent *uevent)
+{
+    INIT_LOGI("Handle save data uevent info");
+    INIT_WARNING_CHECK(g_patchUeventInfo == NULL, return, "data uevent info already init");
+    g_patchUeventInfo = (struct Uevent *)calloc(sizeof(struct Uevent), 1U);
+    INIT_ERROR_CHECK(g_patchUeventInfo != NULL, return, "data uevent info alloc failed");
+    if (memcpy_s(g_patchUeventInfo, sizeof(struct Uevent), uevent, sizeof(struct Uevent)) != EOK) {
+        INIT_LOGE("[uevent] memcpy patch uevent info failed");
+        FreeDataUeventInfo();
+        return;
+    }
+    if (uevent->subsystem != NULL) {
+        g_patchUeventInfo->subsystem = strdup(uevent->subsystem);
+        INIT_ERROR_CHECK(g_patchUeventInfo->subsystem != NULL, FreeDataUeventInfo(); return, "copy subsystem fail");
+    }
+    if (uevent->syspath != NULL) {
+        g_patchUeventInfo->syspath = strdup(uevent->syspath);
+        INIT_ERROR_CHECK(g_patchUeventInfo->syspath != NULL, FreeDataUeventInfo(); return, "copy syspath fail");
+    }
+    if (uevent->deviceName != NULL) {
+        g_patchUeventInfo->deviceName = strdup(uevent->deviceName);
+        INIT_ERROR_CHECK(g_patchUeventInfo->deviceName != NULL, FreeDataUeventInfo(); return, "copy deviceName fail");
+    }
+    if (uevent->partitionName != NULL) {
+        g_patchUeventInfo->partitionName = strdup(uevent->partitionName);
+        INIT_ERROR_CHECK(g_patchUeventInfo->partitionName != NULL,
+                         FreeDataUeventInfo(); return, "copy partitionName fail");
+    }
+    if (uevent->firmware != NULL) {
+        g_patchUeventInfo->firmware = strdup(uevent->firmware);
+        INIT_ERROR_CHECK(g_patchUeventInfo->firmware != NULL, FreeDataUeventInfo(); return, "copy firmware fail");
+    }
+}
+#else
+static void SaveDataUeventInfo(const struct Uevent *uevent)
+{
+}
+#endif
+
 static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **devices, int num)
 {
     for (int i = 0; i < num; i++) {
@@ -210,6 +278,9 @@ static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **d
             IsOtherPartitionName(uevent->partitionName)) {
             INIT_LOGI("Handle required partitionName %s", uevent->partitionName);
             HandleBlockDeviceEvent(uevent);
+            return;
+        } else if (strstr(uevent->partitionName, "userdata") != NULL) {
+            SaveDataUeventInfo(uevent);
             return;
         }
     }
@@ -374,6 +445,16 @@ static void Trigger(const char *path, int sockFd, char **devices, int num, Compa
         }
     }
     closedir(dir);
+}
+
+void RetriggerUeventPatch(bool isHandleEvent)
+{
+#ifdef SUPPORT_PATCH
+    if (isHandleEvent) {
+        HandleBlockDeviceEvent(g_patchUeventInfo);
+    }
+    FreeDataUeventInfo();
+#endif
 }
 
 void RetriggerUeventByPath(int sockFd, char *path)
