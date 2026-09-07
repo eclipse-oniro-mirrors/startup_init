@@ -21,10 +21,12 @@
 #include <grp.h>
 #include <limits.h>
 #include <pwd.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <time.h>
 
@@ -950,4 +952,26 @@ long long GetUptimeInMicroSeconds(const struct timespec *uptime)
 
     return ((long long)uptime->tv_sec * SECOND_TO_MICRO_SECOND) +
             (uptime->tv_nsec / MICRO_SECOND_TO_NANOSECOND);
+}
+
+#define WAIT_POLL_INTERVAL_MS 10
+#define WAIT_POLL_INTERVAL_US (WAIT_POLL_INTERVAL_MS * 1000)
+int WaitPidTimeout(pid_t pid, int timeoutMs)
+{
+    int status = 0;
+    int retry = timeoutMs / WAIT_POLL_INTERVAL_MS;
+    while (retry-- > 0) {
+        pid_t r = waitpid(pid, &status, WNOHANG);
+        if (r == pid) {
+            return status;
+        }
+        if (r < 0) {
+            return -1;
+        }
+        usleep(WAIT_POLL_INTERVAL_US);
+    }
+    INIT_LOGE("wait pid %d timeout, force kill", pid);
+    kill(pid, SIGKILL);
+    waitpid(pid, &status, 0);
+    return -1;
 }

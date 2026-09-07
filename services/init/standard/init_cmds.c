@@ -152,7 +152,15 @@ int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, u
     return 0;
 }
 
-static int SyncExecCommand(int argc, char * const *argv)
+#ifdef STARTUP_INIT_TEST
+#define SYNC_EXEC_TIMEOUT_MS 200
+#define FD_DUMP_TIMEOUT_MS 200
+#else
+#define SYNC_EXEC_TIMEOUT_MS 30000
+#define FD_DUMP_TIMEOUT_MS 5000
+#endif
+
+int SyncExecCommand(int argc, char * const *argv)
 {
     INIT_LOGI("Sync exec: %s", argv[0]);
     pid_t pid = fork();
@@ -161,9 +169,8 @@ static int SyncExecCommand(int argc, char * const *argv)
         INIT_CHECK_ONLY_ELOG(execv(argv[0], argv) == 0, "execv %s failed! err %d.", argv[0], errno);
         exit(-1);
     }
-    int status;
-    pid_t ret = waitpid(pid, &status, 0);
-    if (ret != pid) {
+    int status = WaitPidTimeout(pid, SYNC_EXEC_TIMEOUT_MS);
+    if (status < 0) {
         INIT_LOGE("failed wait pid %d, errno %d", pid, errno);
         return -1;
     }
@@ -821,9 +828,8 @@ static void DumpFdInfo()
         INIT_LOGE("fork failed, err is %d", errno);
         return;
     }
-    int status;
-    pid_t ret = waitpid(pid, &status, 0);
-    if (ret != pid) {
+    int status = WaitPidTimeout(pid, FD_DUMP_TIMEOUT_MS);
+    if (status < 0) {
         INIT_LOGE("failed wait pid %d, errno is %d", pid, errno);
     }
     INIT_LOGI("dump fd info end");

@@ -254,28 +254,34 @@ static void SaveDataUeventInfo(const struct Uevent *uevent)
 }
 #endif
 
+bool IsRequiredPartitionName(const char *partitionName)
+{
+    static const char *requiredNames[] = {
+        "vendor", "system", "sys_prod", "chip_prod", "chipset", "boot",
+        "ramdisk", "rvt", "dtbo", "modem_driver", "hyperhold"
+    };
+    const size_t count = sizeof(requiredNames) / sizeof(requiredNames[0]);
+    for (size_t i = 0; i < count; i++) {
+        if (strstr(partitionName, requiredNames[i]) != NULL) {
+            return true;
+        }
+    }
+    return IsOtherPartitionName(partitionName);
+}
+
 static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **devices, int num)
 {
     for (int i = 0; i < num; i++) {
         if (uevent->partitionName == NULL) {
-            if (strstr(devices[i], uevent->deviceName) != NULL) {
-                INIT_LOGI("%s match with required partition %s success, now handle it", devices[i], uevent->deviceName);
+            if (uevent->deviceName != NULL &&
+                strstr(devices[i], uevent->deviceName) != NULL) {
+                INIT_LOGI("%s match with required partition %s success, now handle it",
+                    devices[i], uevent->deviceName);
                 HandleBlockDeviceEvent(uevent);
                 return;
             }
         } else if (strstr(devices[i], uevent->partitionName) != NULL ||
-            strstr(uevent->partitionName, "vendor") != NULL ||
-            strstr(uevent->partitionName, "system") != NULL ||
-            strstr(uevent->partitionName, "sys_prod") != NULL ||
-            strstr(uevent->partitionName, "chip_prod") != NULL ||
-            strstr(uevent->partitionName, "chipset") != NULL ||
-            strstr(uevent->partitionName, "boot") != NULL ||
-            strstr(uevent->partitionName, "ramdisk") != NULL ||
-            strstr(uevent->partitionName, "rvt") != NULL ||
-            strstr(uevent->partitionName, "dtbo") != NULL ||
-            strstr(uevent->partitionName, "modem_driver") != NULL ||
-            strstr(uevent->partitionName, "hyperhold") != NULL ||
-            IsOtherPartitionName(uevent->partitionName)) {
+            IsRequiredPartitionName(uevent->partitionName)) {
             INIT_LOGI("Handle required partitionName %s", uevent->partitionName);
             HandleBlockDeviceEvent(uevent);
             return;
@@ -284,7 +290,8 @@ static void HandleRequiredBlockDeviceNodes(const struct Uevent *uevent, char **d
             return;
         }
     }
-    INIT_LOGW("Not found device for partitionName %s ", uevent->partitionName);
+    INIT_LOGW("Not found device for partitionName %s ",
+        (uevent->partitionName != NULL) ? uevent->partitionName : "(null)");
 }
 
 static void HandleUeventRequired(const struct Uevent *uevent, char **devices, int num)

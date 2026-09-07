@@ -17,6 +17,7 @@
 #define BASE_STARTUP_INITLITE_UEVENTD_H
 #include <stdbool.h>
 #include <unistd.h>
+#include "beget_ext.h"
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -85,6 +86,7 @@ void ProcessUevent(int sockFd, char **devices, int num, CompareUevent compare);
 void CloseUeventConfig(void);
 char **GetBootDeviceArray(void);
 int GetBootDeviceNum(void);
+INIT_LOCAL_API bool IsRequiredPartitionName(const char *partitionName);
 #ifdef __cplusplus
 #if __cplusplus
 }

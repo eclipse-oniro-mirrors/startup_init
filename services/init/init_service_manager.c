@@ -1447,13 +1447,17 @@ static void StopWorkingset(const char *workingsetPath)
     close(workingsetFd);
 }
 
+#ifndef STARTUP_INIT_TEST
+#define APPSPAWN_WAIT_TIMEOUT_MS 5000
+#endif
+
 static void StopAppSpawnBeforeReboot(void)
 {
     Service *service = GetServiceByName("appspawn");
     if (service != NULL && service->pid > 0) { // notify appspawn stop
 #ifndef STARTUP_INIT_TEST
         kill(service->pid, SIGTERM);
-        waitpid(service->pid, 0, 0);
+        WaitPidTimeout(service->pid, APPSPAWN_WAIT_TIMEOUT_MS);
         service->pid = -1;
 #endif
     }

@@ -787,4 +787,28 @@ HWTEST_F(UeventdEventUnitTest, Init_BootDeviceIsMatchedTest_DefaultBootDevice001
     EXPECT_EQ(ret, 0);
 }
 
+// Branch 1: loop matches a required name → return true.
+HWTEST_F(UeventdEventUnitTest, IsRequiredPartitionName_Match, TestSize.Level1)
+{
+    EXPECT_TRUE(IsRequiredPartitionName("vendor"));
+    EXPECT_TRUE(IsRequiredPartitionName("system"));
+    EXPECT_TRUE(IsRequiredPartitionName("ramdisk"));
+    EXPECT_TRUE(IsRequiredPartitionName("myvendor"));
+}
+
+// Branch 2: loop exhausts, IsOtherPartitionName returns true → return true.
+HWTEST_F(UeventdEventUnitTest, IsRequiredPartitionName_OtherMatch, TestSize.Level1)
+{
+    EXPECT_TRUE(IsRequiredPartitionName("patch_a"));
+    EXPECT_TRUE(IsRequiredPartitionName("version_b"));
+    EXPECT_TRUE(IsRequiredPartitionName("cust_a"));
+}
+
+// Branch 3: neither in requiredNames nor IsOtherPartitionName → return false.
+HWTEST_F(UeventdEventUnitTest, IsRequiredPartitionName_NoMatch, TestSize.Level1)
+{
+    EXPECT_FALSE(IsRequiredPartitionName("unknownpart"));
+    EXPECT_FALSE(IsRequiredPartitionName("xyz"));
+}
+
 } // UeventdUt

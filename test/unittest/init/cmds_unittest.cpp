@@ -15,10 +15,14 @@
 
 #include <cerrno>
 #include <cstdint>
+#include <csignal>
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/statvfs.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #include "func_wrapper.h"
 #include "init_cmds.h"
 #include "init_param.h"
@@ -616,5 +620,44 @@ HWTEST_F(CmdsUnitTest, TestDeInitEswapSpace, TestSize.Level1)
         dlclose(libGpuKiaHandle);
         EXPECT_EQ(ret, true);
     }
+}
+
+// Branch 1: child exits quickly → returns the child's exit status.
+HWTEST_F(CmdsUnitTest, WaitPidTimeout_ChildExits, TestSize.Level1)
+{
+    constexpr int testExitCode = 42;
+    constexpr int testWaitTimeoutMs = 3000;
+    pid_t pid = fork();
+    ASSERT_GE(pid, 0);
+    if (pid == 0) {
+        _exit(testExitCode);
+    }
+    int status = WaitPidTimeout(pid, testWaitTimeoutMs);
+    EXPECT_NE(status, -1);
+    EXPECT_EQ(WEXITSTATUS(status), testExitCode);
+}
+
+// Branch 2: invalid pid → waitpid returns -1 → returns -1 immediately.
+HWTEST_F(CmdsUnitTest, WaitPidTimeout_InvalidPid, TestSize.Level1)
+{
+    constexpr pid_t invalidTestPid = 999999;
+    constexpr int testShortTimeoutMs = 1000;
+    int status = WaitPidTimeout(invalidTestPid, testShortTimeoutMs);
+    EXPECT_EQ(status, -1);
+}
+
+// Branch 3: child hangs → timeout → SIGKILL + reap → returns -1.
+HWTEST_F(CmdsUnitTest, WaitPidTimeout_TimeoutKill, TestSize.Level1)
+{
+    constexpr int testKillTimeoutMs = 300;
+    pid_t pid = fork();
+    ASSERT_GE(pid, 0);
+    if (pid == 0) {
+        for (;;) {}
+    }
+    int status = WaitPidTimeout(pid, testKillTimeoutMs);
+    EXPECT_EQ(status, -1);
+    EXPECT_EQ(kill(pid, 0), -1);
+    EXPECT_EQ(errno, ESRCH);
 }
 } // namespace init_ut
