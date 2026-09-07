@@ -15,7 +15,9 @@
 
 #ifndef BASE_STARTUP_INITLITE_UEVENTD_H
 #define BASE_STARTUP_INITLITE_UEVENTD_H
+#include <stdbool.h>
 #include <unistd.h>
+#include "beget_ext.h"
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -77,12 +79,14 @@ const char *ActionString(ACTION action);
 void ParseUeventMessage(const char *buffer, ssize_t length, struct Uevent *uevent);
 void RetriggerUevent(int sockFd, char **devices, int num);
 void RetriggerUeventByPath(int sockFd, char *path);
+void RetriggerUeventPatch(bool isHandleEvent);
 void RetriggerDmUeventByPath(int sockFd, char *path, char **devices, int num);
 void RetriggerSpecialUevent(int sockFd, char *path, char **devices, int num, CompareUevent compare);
 void ProcessUevent(int sockFd, char **devices, int num, CompareUevent compare);
 void CloseUeventConfig(void);
 char **GetBootDeviceArray(void);
 int GetBootDeviceNum(void);
+INIT_LOCAL_API bool IsRequiredPartitionName(const char *partitionName);
 #ifdef __cplusplus
 #if __cplusplus
 }

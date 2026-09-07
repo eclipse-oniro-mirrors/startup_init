@@ -147,6 +147,8 @@ int GetBlockDeviceByName(const char *deviceName, const Fstab *fstab, char* miscD
 bool IsSupportedFilesystem(const char *fsType);
 int DoFormat(const char *devPath, const char *fsType);
 int MountOneItem(FstabItem *item);
+int DoMountOneItem(FstabItem *item, MountResult *result);
+int DoFsckF2fs(FstabItem *item);
 void FsAdjustPartitionNameBySlot(FstabItem *item);
 MountStatus GetMountStatusForMountPoint(const char *mp);
 int MountAllWithFstabFile(const char *fstabFile, bool required);

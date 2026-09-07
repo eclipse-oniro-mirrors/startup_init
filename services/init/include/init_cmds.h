@@ -23,6 +23,7 @@
 #include <time.h>
 
 #include "cJSON.h"
+#include "beget_ext.h"
 #include "init_cmdexecutor.h"
 #ifdef __cplusplus
 #if __cplusplus
@@ -128,6 +129,7 @@ void PluginExecCmdByCmdIndex(int index, const char *cmdContent, const ConfigCont
 const char *PluginGetCmdIndex(const char *cmdStr, int *index);
 const char *GetPluginCmdNameByIndex(int index);
 int AddCareContextCmdExecutor(const char *cmdName, CmdExecutor executor);
+INIT_LOCAL_API int SyncExecCommand(int argc, char * const *argv);
 
 #ifdef __cplusplus
 #if __cplusplus

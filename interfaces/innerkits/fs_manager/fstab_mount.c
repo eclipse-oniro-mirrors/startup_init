@@ -309,7 +309,6 @@ MountStatus GetMountStatusForMountPoint(const char *mp)
     return status;
 }
 
-INIT_STATIC int DoMountOneItem(FstabItem *item, MountResult *result);
 #define MAX_RESIZE_PARAM_NUM 20
 static int BuildResizeArgs(const FstabItem *item, const unsigned long long size, const int kdumpResult,
                            char *argv[], char *sizeStr)
@@ -385,7 +384,7 @@ static int DoResizeF2fs(FstabItem *item, const unsigned long long size)
 }
 
 #define MAX_FSCK_PARAM_NUM 20
-static int DoFsckF2fs(FstabItem *item)
+int DoFsckF2fs(FstabItem *item)
 {
     char *file = "/system/bin/fsck.f2fs";
     BEGET_ERROR_CHECK(access(file, F_OK) == 0, return -1, "fsck.f2fs is not exists.");
@@ -680,7 +679,7 @@ INIT_STATIC int GetDataWithoutCheckpoint(char *fsSpecificData, size_t fsSpecific
     return rc;
 }
 
-INIT_STATIC int DoMountOneItem(FstabItem *item, MountResult *result)
+int DoMountOneItem(FstabItem *item, MountResult *result)
 {
     BEGET_LOGI("Mount device %s to %s", item->deviceName, item->mountPoint);
     unsigned long mountFlags;

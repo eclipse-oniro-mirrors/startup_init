@@ -214,6 +214,8 @@ void *OH_ExtendableStrDictGet(void **strDict, int dictSize, const char *target, 
 
 long long GetUptimeInMicroSeconds(const struct timespec *uptime);
 
+INIT_LOCAL_API int WaitPidTimeout(pid_t pid, int timeoutMs);
+
 #ifdef __cplusplus
 #if __cplusplus
 }
