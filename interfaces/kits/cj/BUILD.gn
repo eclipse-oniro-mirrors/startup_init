@@ -69,7 +69,7 @@ ohos_shared_library("cj_device_info_ffi") {
     defines += [ "WINDOWS_PLATFORM" ]
   }
 
-  version_script = "libcj_device_info_ffi.map"
+  version_script = "libcj_startup_init_ffi.map"
 
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "startup"
@@ -116,7 +116,7 @@ ohos_shared_library("cj_system_parameter_enhance_ffi") {
     defines += [ "WINDOWS_PLATFORM" ]
   }
 
-  version_script = "libcj_system_parameter_enhance_ffi.map"
+  version_script = "libcj_startup_init_ffi.map"
 
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "startup"
