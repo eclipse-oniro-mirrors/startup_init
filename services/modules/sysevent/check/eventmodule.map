@@ -1,0 +1,6 @@
+{
+    global;
+      ReportSysEvent;
+    local;
+      *;
+};

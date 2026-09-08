@@ -44,4 +44,6 @@ ohos_shared_library("eventmodule") {
   } else {
     module_install_dir = "lib/init"
   }
+  version_script = "check/eventmodule.map"
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
 }
