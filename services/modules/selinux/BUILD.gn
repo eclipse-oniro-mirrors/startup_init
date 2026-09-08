@@ -53,6 +53,8 @@ ohos_shared_library("selinuxadp") {
     "system",
     "updater",
   ]
+  version_script = "check/libselinuxadp.map"
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
 }
 
 config("selinux_static_config") {
