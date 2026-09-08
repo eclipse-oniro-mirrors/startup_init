@@ -71,6 +71,7 @@ int InitParamService(void)
     PARAM_CHECK(ret == 0, return ret, "Init persist parameter workspace fail");
 
     // from build
+#ifndef PARAM_CONST_FLASH_ONLY
     LoadParamFromBuild();
 #ifdef PARAM_LOAD_CFG_FROM_CODE
     char *buffer = calloc(1, PARAM_VALUE_LEN_MAX);
@@ -84,6 +85,7 @@ int InitParamService(void)
             ret, g_paramDefCfgNodes[i].name, g_paramDefCfgNodes[i].value);
     }
     free(buffer);
+#endif
 #endif
 
     return 0;
@@ -146,4 +148,33 @@ void LiteParamService(void)
     LoadPersistParams();
 }
 CORE_INIT(LiteParamService);
+#endif
+
+#ifdef PARAM_CONST_FLASH_ONLY
+#ifdef PARAM_LOAD_CFG_FROM_CODE
+INIT_LOCAL_API int LookupConstParamFromBuild(const char *name, const char **outValue)
+{
+    if (name == NULL || outValue == NULL) {
+        return -1;
+    }
+    static char trimBuf[PARAM_VALUE_LEN_MAX + 1];
+    for (size_t i = 0; i < ARRAY_LENGTH(g_paramDefCfgNodes); i++) {
+        if (strcmp(g_paramDefCfgNodes[i].name, name) != 0) {
+            continue;
+        }
+        const char *raw = g_paramDefCfgNodes[i].value;
+        const char *trimmed = StringTrim(trimBuf, PARAM_VALUE_LEN_MAX, raw);
+        *outValue = trimmed;
+        return 0;
+    }
+    return -1;
+}
+#else
+INIT_LOCAL_API int LookupConstParamFromBuild(const char *name, const char **outValue)
+{
+    (void)name;
+    (void)outValue;
+    return -1;
+}
+#endif
 #endif

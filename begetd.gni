@@ -48,6 +48,9 @@ declare_args() {
   init_lite_param_name_len_max = 96
   init_lite_persist_all = true
 
+  # Read const.* params directly from Flash instead of preloading into RAM.
+  init_lite_param_const_flash_only = false
+
   startup_init_feature_decode_group_file = false
 
   startup_init_test_performance = true
