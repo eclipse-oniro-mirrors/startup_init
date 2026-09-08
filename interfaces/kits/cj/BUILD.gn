@@ -72,6 +72,8 @@ ohos_shared_library("cj_device_info_ffi") {
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "startup"
   part_name = "init"
+  version_script = "cj_device_info_ffi.map"
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
 }
 
 ohos_shared_library("cj_system_parameter_enhance_ffi") {
@@ -117,4 +119,6 @@ ohos_shared_library("cj_system_parameter_enhance_ffi") {
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "startup"
   part_name = "init"
+  version_script = "cj_system_parameter_enhance_ffi.map"
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
 }

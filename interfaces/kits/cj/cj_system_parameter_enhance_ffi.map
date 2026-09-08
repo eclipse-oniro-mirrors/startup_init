@@ -1,0 +1,8 @@
+{
+    global;
+      FfiOHOSSysTemParameterGet;
+      FfiOHOSSysTemParameterSet;
+      MallocCString;
+    local;
+      *;
+};

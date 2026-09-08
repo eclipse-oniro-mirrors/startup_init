@@ -1,0 +1,37 @@
+{
+    global:
+      OH_GetAbiList;
+      OH_GetBootloaderVersion;
+      OH_GetBrand;
+      OH_GetBuildHost;
+      OH_GetBuildRootHash;
+      OH_GetBuildTime;
+      OH_GetBuildType;
+      OH_GetBuildUser;
+      OH_GetDeviceType;
+      OH_GetDisplayVersion;
+      OH_GetDistributionOSApiVersion;
+      OH_GetDistributionOSName;
+      OH_GetDistributionOSReleaseType;
+      OH_GetDistributionOSVersion;
+      OH_GetFirstApiVersion;
+      OH_GetHardwareModel;
+      OH_GetIncrementalVersion;
+      OH_GetManufacture;
+      OH_GetMarketName;
+      OH_GetOSFullName;
+      OH_GetOSReleaseType;
+      OH_GetProductModel;
+      OH_GetProductModelAlias;
+      OH_GetProductSeries;
+      OH_GetSdkApiVersion;
+      OH_GetSdkMinorApiVersion;
+      OH_GetSdkPatchApiVersion;
+      OH_GetSecurityPatchTag;
+      OH_GetSoftwareModel;
+      OH_GetVersionId;
+      OH_IsApiVersionGreaterOrEqual;
+      canIUse;
+    local;
+      *;
+};
