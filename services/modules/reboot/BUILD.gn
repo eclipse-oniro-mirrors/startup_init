@@ -60,6 +60,8 @@ ohos_shared_library("rebootmodule") {
     "system",
     "updater",
   ]
+  version_script = "check/rebootmodule.map"
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
 }
 
 ohos_source_set("libreboot_static") {

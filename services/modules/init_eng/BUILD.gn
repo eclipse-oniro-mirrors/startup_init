@@ -45,6 +45,8 @@ ohos_shared_library("init_eng") {
   } else {
     module_install_dir = "lib/init"
   }
+  version_script = "check/init_eng.map"
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
 }
 
 config("initeng_static_config") {
