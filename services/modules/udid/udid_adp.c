@@ -34,11 +34,17 @@ INIT_UDID_LOCAL_API int GetSha256Value(const char *input, char *udid, uint32_t u
     char buf[DEV_BUF_LENGTH] = { 0 };
     unsigned char hash[HASH_LENGTH] = { 0 };
 
+#ifndef OHOS_LITE
     mbedtls_sha256_context context;
     mbedtls_sha256_init(&context);
     mbedtls_sha256_starts(&context, 0);
     mbedtls_sha256_update(&context, (const unsigned char *)input, strlen(input));
     mbedtls_sha256_finish(&context, hash);
+#else
+    if (mbedtls_sha256((const unsigned char *)input, strlen(input), hash, 0) != 0) {
+        return EC_FAILURE;
+    }
+#endif
 
     for (size_t i = 0; i < HASH_LENGTH; i++) {
         unsigned char value = hash[i];
