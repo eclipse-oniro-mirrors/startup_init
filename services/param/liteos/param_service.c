@@ -105,6 +105,10 @@ void StopParamService(void)
 
 int SystemWriteParam(const char *name, const char *value)
 {
+#if defined(PARAM_WORKSPACE_DYNAMIC_ALLOC) && defined(PARAM_CONST_FLASH_ONLY)
+    int initRet = EnsureParamServiceInit();
+    PARAM_CHECK(initRet == 0, return initRet, "SystemWriteParam lazy init failed %d", initRet);
+#endif
     uint32_t ctrlService = 0;
     int ret = CheckParameterSet(name, value, GetParamSecurityLabel(), &ctrlService);
     PARAM_CHECK(ret == 0, return ret, "Forbid to set parameter %s", name);
@@ -143,9 +147,11 @@ void LiteParamService(void)
     }
     init = 1;
     EnableInitLog(INIT_INFO);
+#if !defined(PARAM_WORKSPACE_DYNAMIC_ALLOC) || !defined(PARAM_CONST_FLASH_ONLY)
     InitParamService();
     // get persist param
     LoadPersistParams();
+#endif
 }
 CORE_INIT(LiteParamService);
 #endif

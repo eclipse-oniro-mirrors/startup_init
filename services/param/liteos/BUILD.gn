@@ -189,5 +189,8 @@ static_library("param_client_lite") {
     if (init_lite_param_const_flash_only) {
       defines += [ "PARAM_CONST_FLASH_ONLY" ]
     }
+    if (init_lite_param_workspace_dynamic_alloc) {
+      defines += [ "PARAM_WORKSPACE_DYNAMIC_ALLOC" ]
+    }
   }
 }
