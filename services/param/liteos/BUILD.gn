@@ -186,5 +186,8 @@ static_library("param_client_lite") {
     if (init_lite_persist_all) {
       defines += [ "LITE_PERSIST_ALL" ]
     }
+    if (init_lite_param_const_flash_only) {
+      defines += [ "PARAM_CONST_FLASH_ONLY" ]
+    }
   }
 }
