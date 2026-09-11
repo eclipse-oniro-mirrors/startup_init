@@ -144,6 +144,10 @@ INIT_LOCAL_API int WriteParam(const char *name, const char *value, uint32_t *dat
 INIT_LOCAL_API int AddSecurityLabel(const ParamAuditData *auditData);
 INIT_LOCAL_API ParamSecurityLabel *GetParamSecurityLabel(void);
 
+#if defined(PARAM_WORKSPACE_DYNAMIC_ALLOC) && defined(PARAM_CONST_FLASH_ONLY)
+INIT_LOCAL_API int EnsureParamServiceInit(void);
+#endif
+
 INIT_LOCAL_API void LoadParamFromBuild(void);
 INIT_LOCAL_API int LoadParamFromCmdLine(void);
 INIT_LOCAL_API void LoadParamAreaSize(void);

@@ -132,9 +132,17 @@ static int AllocSpaceMemory(uint32_t maxLabel)
     ParamWorkSpace *paramSpace = GetParamWorkSpace();
     PARAM_CHECK(paramSpace != NULL, return -1, "Invalid workspace");
     uint32_t realLen = PARAM_ALIGN(sizeof(WorkSpaceSize) + sizeof(uint32_t) * maxLabel);
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+    if ((workSpace->area->currOffset + realLen) >= workSpace->area->dataSize) {
+        if (ExtendWorkSpace(workSpace, realLen) != 0) {
+            return 0;
+        }
+    }
+#else
     PARAM_CHECK((workSpace->area->currOffset + realLen) < workSpace->area->dataSize, return 0,
         "Failed to allocate currOffset %u, dataSize %u datalen %u",
         workSpace->area->currOffset, workSpace->area->dataSize, realLen);
+#endif
     WorkSpaceSize *node = (WorkSpaceSize *)(workSpace->area->data + workSpace->area->currOffset);
     node->maxLabelIndex = maxLabel;
     node->spaceSize[WORKSPACE_INDEX_DAC] = PARAM_WORKSPACE_DAC;
@@ -173,7 +181,16 @@ static int CreateWorkSpace(int onlyRead)
     }
     paramSpace->maxLabelIndex++;
 #else
-    ret = AddWorkSpace(WORKSPACE_NAME_NORMAL, WORKSPACE_INDEX_DAC, onlyRead, PARAM_WORKSPACE_MAX);
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+#ifdef PARAM_CONST_FLASH_ONLY
+    ret = AddWorkSpace(WORKSPACE_NAME_NORMAL, WORKSPACE_INDEX_DAC, onlyRead, PARAM_WORKSPACE_INIT_SIZE);
+#else
+    // dynamic-only: eager const preload must fit without growing during boot.
+    ret = AddWorkSpace(WORKSPACE_NAME_NORMAL, WORKSPACE_INDEX_DAC, onlyRead, PARAM_WORKSPACE_EAGER_INIT_SIZE);
+#endif
+#else
+     ret = AddWorkSpace(WORKSPACE_NAME_NORMAL, WORKSPACE_INDEX_DAC, onlyRead, PARAM_WORKSPACE_MAX);
+#endif
     PARAM_CHECK(ret == 0, return -1, "Failed to add dac workspace");
     ret = OpenWorkSpace(WORKSPACE_INDEX_DAC, onlyRead);
     PARAM_CHECK(ret == 0, return -1, "Failed to open dac workspace");
@@ -224,6 +241,23 @@ INIT_INNER_API int InitParamWorkSpace(int onlyRead, const PARAM_WORKSPACE_OPS *o
     }
     return ret;
 }
+
+#if defined(PARAM_WORKSPACE_DYNAMIC_ALLOC) && defined(PARAM_CONST_FLASH_ONLY)
+/* Load persist params only after a successful init; a failed init retries on the next call. */
+INIT_LOCAL_API int EnsureParamServiceInit(void)
+{
+    if (PARAM_TEST_FLAG(GetParamWorkSpace()->flags, WORKSPACE_FLAGS_FOR_INIT)) {
+        return 0;
+    }
+    int ret = InitParamService();
+    if (ret != 0) {
+        PARAM_LOGE("InitParamService failed %d", ret);
+        return ret;
+    }
+    LoadPersistParams();
+    return 0;
+}
+#endif
 
 INIT_LOCAL_API void CloseParamWorkSpace(void)
 {
