@@ -34,6 +34,9 @@ extern "C" {
 
 INIT_LOCAL_API int InitWorkSpace(WorkSpace *workSpace, int onlyRead, uint32_t spaceSize);
 INIT_LOCAL_API void CloseWorkSpace(WorkSpace *workSpace);
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+INIT_LOCAL_API int ExtendWorkSpace(WorkSpace *workSpace, uint32_t needLen);
+#endif
 
 #define GetTrieNode(workSpace, offset) (ParamTrieNode *)(((offset) == 0 || (offset) > (workSpace)->area->dataSize) ? \
     NULL : (workSpace)->area->data + (offset))

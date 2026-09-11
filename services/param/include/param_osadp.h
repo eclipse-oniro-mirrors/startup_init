@@ -101,6 +101,18 @@ extern "C" {
 #define PARAM_WORKSPACE_DAC PARAM_WORKSPACE_SMALL
 #endif
 
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+#ifndef PARAM_WORKSPACE_INIT_SIZE
+#define PARAM_WORKSPACE_INIT_SIZE 256
+#endif
+#ifndef PARAM_WORKSPACE_EAGER_INIT_SIZE
+#define PARAM_WORKSPACE_EAGER_INIT_SIZE (6 * 1024)
+#endif
+#ifndef PARAM_WORKSPACE_GROW_SIZE
+#define PARAM_WORKSPACE_GROW_SIZE 256
+#endif
+#endif
+
 // support timer
 #if defined __LITEOS_A__ || defined __LITEOS_M__
 struct ParamTimer_;
@@ -148,6 +160,9 @@ INIT_LOCAL_API int ParamMutexDelete(ParamMutex *mutex);
 
 INIT_LOCAL_API void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, int readOnly);
 INIT_LOCAL_API void FreeSharedMem(const MemHandle *handle, void *mem, uint32_t dataSize);
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+__attribute__((weak)) void *ReallocSysParamMem(void *mem, uint32_t newSize);
+#endif
 
 #ifdef __cplusplus
 #if __cplusplus
