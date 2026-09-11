@@ -28,6 +28,33 @@
 
 static uint32_t AllocateParamTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLen);
 
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+INIT_LOCAL_API int ExtendWorkSpace(WorkSpace *workSpace, uint32_t needLen)
+{
+    PARAM_CHECK(workSpace != NULL && workSpace->area != NULL, return -1, "Invalid workSpace");
+    uint32_t currTotal = workSpace->area->dataSize + sizeof(ParamTrieHeader);
+    uint32_t needTotal = workSpace->area->currOffset + needLen + sizeof(ParamTrieHeader);
+    uint32_t newTotal = currTotal;
+    while (newTotal < needTotal) {
+        newTotal += PARAM_WORKSPACE_GROW_SIZE;
+    }
+    if (newTotal > PARAM_WORKSPACE_MAX) {
+        newTotal = PARAM_WORKSPACE_MAX;
+    }
+    if (newTotal <= currTotal) {
+        PARAM_LOGE("ExtendWorkSpace reached limit %u curr %u need %u",
+            PARAM_WORKSPACE_MAX, currTotal, needTotal);
+        return -1;
+    }
+    void *newArea = ReallocSysParamMem(workSpace->area, newTotal);
+    PARAM_CHECK(newArea != NULL, return -1, "Failed to realloc workspace to %u", newTotal);
+    workSpace->area = (ParamTrieHeader *)newArea;
+    workSpace->area->dataSize = newTotal - sizeof(ParamTrieHeader);
+    PARAM_LOGI("ExtendWorkSpace %u -> %u", currTotal, newTotal);
+    return 0;
+}
+#endif
+
 static int GetRealFileName(WorkSpace *workSpace, char *buffer, uint32_t size)
 {
     int ret = PARAM_SPRINTF(buffer, size, "%s/%s", PARAM_STORAGE_PATH, workSpace->fileName);
@@ -71,9 +98,17 @@ static uint32_t AllocateParamTrieNode(WorkSpace *workSpace, const char *key, uin
 {
     uint32_t len = keyLen + sizeof(ParamTrieNode) + 1;
     len = PARAM_ALIGN(len);
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+    if ((workSpace->area->currOffset + len) >= workSpace->area->dataSize) {
+        if (ExtendWorkSpace(workSpace, len) != 0) {
+            return 0;
+        }
+    }
+#else
     PARAM_CHECK((workSpace->area->currOffset + len) < workSpace->area->dataSize, return 0,
         "Failed to allocate currOffset %d, dataSize %d space %s",
         workSpace->area->currOffset, workSpace->area->dataSize, workSpace->fileName);
+#endif
     ParamTrieNode *node = (ParamTrieNode *)(workSpace->area->data + workSpace->area->currOffset);
     node->length = keyLen;
     int ret = PARAM_MEMCPY(node->key, keyLen, key, keyLen);
@@ -150,18 +185,30 @@ static ParamTrieNode *AddToSubTrie(WorkSpace *workSpace, ParamTrieNode *current,
     if (ret < 0) {
         subTrie = GetTrieNode(workSpace, current->left);
         if (subTrie == NULL) {
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+            uint32_t curOff = (uint32_t)((char *)current - (char *)workSpace->area->data);
+#endif
             uint32_t offset = AllocateParamTrieNode(workSpace, key, keyLen);
             PARAM_CHECK(offset != 0, return NULL,
                 "Failed to allocate key '%s' in space '%s'", key, workSpace->fileName);
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+            current = (ParamTrieNode *)(workSpace->area->data + curOff);
+#endif
             SaveIndex(&current->left, offset);
             return GetTrieNode(workSpace, current->left);
         }
     } else {
         subTrie = GetTrieNode(workSpace, current->right);
         if (subTrie == NULL) {
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+            uint32_t curOff = (uint32_t)((char *)current - (char *)workSpace->area->data);
+#endif
             uint32_t offset = AllocateParamTrieNode(workSpace, key, keyLen);
             PARAM_CHECK(offset != 0, return NULL,
                 "Failed to allocate key '%s' in space '%s'", key, workSpace->fileName);
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+            current = (ParamTrieNode *)(workSpace->area->data + curOff);
+#endif
             SaveIndex(&current->right, offset);
             return GetTrieNode(workSpace, current->right);
         }
@@ -187,9 +234,15 @@ ParamTrieNode *AddTrieNode(WorkSpace *workSpace, const char *key, uint32_t keyLe
             ParamTrieNode *next = GetTrieNode(workSpace, current->child);
             current = AddToSubTrie(workSpace, next, remainingKey, subKeyLen);
         } else {
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+            uint32_t curOff = (uint32_t)((char *)current - (char *)workSpace->area->data);
+#endif
             uint32_t dataOffset = AllocateParamTrieNode(workSpace, remainingKey, subKeyLen);
             PARAM_CHECK(dataOffset != 0, return NULL,
                 "Failed to allocate key '%s' in space '%s'", key, workSpace->fileName);
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+            current = (ParamTrieNode *)(workSpace->area->data + curOff);
+#endif
             SaveIndex(&current->child, dataOffset);
             current = (ParamTrieNode *)GetTrieNode(workSpace, current->child);
         }
@@ -242,9 +295,17 @@ INIT_LOCAL_API uint32_t AddParamSecurityNode(WorkSpace *workSpace, const ParamAu
     PARAM_CHECK(CheckWorkSpace(workSpace) == 0, return OFFSET_ERR, "Invalid workSpace");
     PARAM_CHECK(auditData != NULL, return OFFSET_ERR, "Invalid auditData");
     uint32_t realLen = PARAM_ALIGN(sizeof(ParamSecurityNode) + sizeof(uid_t) * auditData->memberNum);
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+    if ((workSpace->area->currOffset + realLen) >= workSpace->area->dataSize) {
+        if (ExtendWorkSpace(workSpace, realLen) != 0) {
+            return OFFSET_ERR;
+        }
+    }
+#else
     PARAM_CHECK((workSpace->area->currOffset + realLen) < workSpace->area->dataSize,
         return OFFSET_ERR, "Failed to allocate currOffset %u, dataSize %u datalen %u",
         workSpace->area->currOffset, workSpace->area->dataSize, realLen);
+#endif
     ParamSecurityNode *node = (ParamSecurityNode *)(workSpace->area->data + workSpace->area->currOffset);
     node->uid = auditData->dacData.uid;
     node->gid = auditData->dacData.gid;
@@ -283,9 +344,17 @@ INIT_LOCAL_API uint32_t AddParamNode(WorkSpace *workSpace, uint8_t type,
         realLen += keyLen + GetParamMaxLen(type);
     }
     realLen = PARAM_ALIGN(realLen);
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+    if ((workSpace->area->currOffset + realLen) >= workSpace->area->dataSize) {
+        if (ExtendWorkSpace(workSpace, realLen) != 0) {
+            return OFFSET_ERR;
+        }
+    }
+#else
     PARAM_CHECK((workSpace->area->currOffset + realLen) < workSpace->area->dataSize,
         return OFFSET_ERR, "Failed to allocate currOffset %u, dataSize %u datalen %u",
         workSpace->area->currOffset, workSpace->area->dataSize, realLen);
+#endif
 
     ParamNode *node = (ParamNode *)(workSpace->area->data + workSpace->area->currOffset);
     ATOMIC_INIT(&node->commitId, 0);
@@ -368,8 +437,14 @@ INIT_LOCAL_API int AddParamEntry(uint32_t index, uint8_t type, const char *name,
     PARAM_CHECK(node != NULL, return PARAM_CODE_REACHED_MAX, "failed add node");
     ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, node->dataIndex);
     if (entry == NULL) {
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+        uint32_t nodeOff = (uint32_t)((char *)node - (char *)workSpace->area->data);
+#endif
         uint32_t offset = AddParamNode(workSpace, type, name, strlen(name), value, strlen(value), 0);
         PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "failed allocate name %s", name);
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+        node = (ParamTrieNode *)(workSpace->area->data + nodeOff);
+#endif
         SaveIndex(&node->dataIndex, offset);
     }
     return 0;
@@ -390,8 +465,14 @@ INIT_LOCAL_API int AddSecurityLabel(const ParamAuditData *auditData)
     }
     uint32_t offset = node->labelIndex;
     if (node->labelIndex == 0) {  // can not support update for label
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+        uint32_t nodeOff = (uint32_t)((char *)node - (char *)workSpace->area->data);
+#endif
         offset = AddParamSecurityNode(workSpace, auditData);
         PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "failed add label");
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+        node = (ParamTrieNode *)(workSpace->area->data + nodeOff);
+#endif
         SaveIndex(&node->labelIndex, offset);
     } else {
         ParamSecurityNode *label = (ParamSecurityNode *)GetTrieNode(workSpace, node->labelIndex);
