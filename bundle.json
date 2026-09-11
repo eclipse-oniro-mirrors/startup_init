@@ -36,6 +36,7 @@
             "init_lite_param_name_len_max",
             "init_lite_persist_all",
             "init_lite_param_const_flash_only",
+            "init_lite_param_workspace_dynamic_alloc",
             "init_use_encaps",
             "init_feature_seccomp_privilege",
             "init_feature_group_type",

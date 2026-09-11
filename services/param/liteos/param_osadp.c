@@ -231,6 +231,13 @@ __attribute__((weak)) void FreeSysParamMem(void *mem)
     free(mem);
 }
 
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+__attribute__((weak)) void *ReallocSysParamMem(void *mem, uint32_t newSize)
+{
+    return realloc(mem, newSize);
+}
+#endif
+
 INIT_LOCAL_API void *GetSharedMem(const char *fileName, MemHandle *handle, uint32_t spaceSize, int readOnly)
 {
     PARAM_CHECK(spaceSize <= PARAM_WORKSPACE_MAX, return NULL, "Invalid spaceSize %u", spaceSize);

@@ -21,6 +21,7 @@
 
 #include "init_cmds.h"
 #include "init_hook.h"
+#include "init_param.h"
 #include "param_base.h"
 #include "param_trie.h"
 #include "param_utils.h"
@@ -436,10 +437,16 @@ static int AddParam(WorkSpace *workSpace, ParamInfos paramInfos, uint32_t *dataI
         "Failed to add node name %s space %s", paramInfos.name, workSpace->fileName);
     ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, node->dataIndex);
     if (entry == NULL) {
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+        uint32_t nodeOff = (uint32_t)((char *)node - (char *)workSpace->area->data);
+#endif
         uint32_t offset = AddParamNode(workSpace, paramInfos.type, paramInfos.name,
             strlen(paramInfos.name), paramInfos.value, strlen(paramInfos.value), paramInfos.mode);
         PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX,
             "Failed to allocate name %s space %s", paramInfos.name, workSpace->fileName);
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+        node = (ParamTrieNode *)(workSpace->area->data + nodeOff);
+#endif
         SaveIndex(&node->dataIndex, offset);
         ATOMIC_SYNC_ADD_AND_FETCH(&workSpace->area->commitId, 1, MEMORY_ORDER_RELEASE);
 #ifdef PARAM_SUPPORT_SELINUX
@@ -773,6 +780,25 @@ static int CopyConstParamValue(const char *flashValue, char *value, uint32_t *le
 
 int SystemReadParam(const char *name, char *value, uint32_t *len)
 {
+#if defined(PARAM_WORKSPACE_DYNAMIC_ALLOC) && defined(PARAM_CONST_FLASH_ONLY)
+    PARAM_CHECK(name != NULL && len != NULL, return PARAM_CODE_ERROR,
+        "SystemReadParam failed! name is:%s, errNum is:%d!", name, PARAM_CODE_ERROR);
+    if (IS_READY_ONLY(name)) {
+        if (PARAM_TEST_FLAG(GetParamWorkSpace()->flags, WORKSPACE_FLAGS_FOR_INIT)) {
+            int ret = CheckParamPermission(GetParamSecurityLabel(), name, DAC_READ);
+            if (ret != 0) {
+                return ret;
+            }
+        }
+        const char *flashValue = NULL;
+        if (LookupConstParamFromBuild(name, &flashValue) == 0 && flashValue != NULL) {
+            return CopyConstParamValue(flashValue, value, len);
+        }
+        return PARAM_CODE_NOT_FOUND;
+    }
+    int initRet = EnsureParamServiceInit();
+    PARAM_CHECK(initRet == 0, return initRet, "SystemReadParam lazy init failed %d", initRet);
+#endif
     PARAM_WORKSPACE_CHECK(GetParamWorkSpace(), return PARAM_WORKSPACE_NOT_INIT,
         "SystemReadParam failed! name is:%s, errNum is:%d!", name, PARAM_WORKSPACE_NOT_INIT);
     PARAM_CHECK(name != NULL && len != NULL, return PARAM_CODE_ERROR,
@@ -806,6 +832,25 @@ int SystemReadParam(const char *name, char *value, uint32_t *len)
 
 int SystemFindParameter(const char *name, ParamHandle *handle)
 {
+#if defined(PARAM_WORKSPACE_DYNAMIC_ALLOC) && defined(PARAM_CONST_FLASH_ONLY)
+    PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
+    if (IS_READY_ONLY(name)) {
+        if (PARAM_TEST_FLAG(GetParamWorkSpace()->flags, WORKSPACE_FLAGS_FOR_INIT)) {
+            int ret = CheckParamPermission(GetParamSecurityLabel(), name, DAC_READ);
+            if (ret != 0) {
+                return ret;
+            }
+        }
+        const char *flashValue = NULL;
+        if (LookupConstParamFromBuild(name, &flashValue) == 0 && flashValue != NULL) {
+            *handle = PARAM_CONST_EXIST_SENTINEL_HANDLE;
+            return 0;
+        }
+        return PARAM_CODE_NOT_FOUND;
+    }
+    int initRet = EnsureParamServiceInit();
+    PARAM_CHECK(initRet == 0, return initRet, "SystemFindParameter lazy init failed %d", initRet);
+#endif
     PARAM_WORKSPACE_CHECK(GetParamWorkSpace(), return PARAM_WORKSPACE_NOT_INIT, "Param workspace has not init.");
     PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
     *handle = -1;

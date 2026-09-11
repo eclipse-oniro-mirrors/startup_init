@@ -48,6 +48,10 @@ __attribute__((destructor)) static void ClientDeinit(void)
 int SystemSetParameter(const char *name, const char *value)
 {
     PARAM_CHECK(name != NULL && value != NULL, return -1, "Invalid name or value %s", name);
+#if defined(PARAM_WORKSPACE_DYNAMIC_ALLOC) && defined(PARAM_CONST_FLASH_ONLY)
+    int initRet = EnsureParamServiceInit();
+    PARAM_CHECK(initRet == 0, return initRet, "SystemSetParameter lazy init failed %d", initRet);
+#endif
     uint32_t ctrlService = 0;
     int ret = CheckParameterSet(name, value, GetParamSecurityLabel(), &ctrlService);
     PARAM_CHECK(ret == 0, return ret, "Forbid to set parameter %s", name);
