@@ -22,9 +22,6 @@
 #include <sys/ipc.h>
 #include <sys/mman.h>
 #include <sys/shm.h>
-#else
-#include "los_task.h"
-#include "los_mux.h"
 #endif
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -263,72 +260,72 @@ INIT_LOCAL_API void paramMutexEnvInit(void)
 INIT_LOCAL_API int ParamRWMutexCreate(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
-    uint32_t ret = LOS_MuxCreate(&lock->mutex);
-    PARAM_CHECK(ret == LOS_OK, return -1, "failed init mutex ret %d", ret);
+    lock->mutex = osMutexNew(NULL);
+    PARAM_CHECK(lock->mutex != NULL, return -1, "Failed to init mutex");
     return 0;
 }
 
 INIT_LOCAL_API int ParamRWMutexWRLock(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
-    uint32_t ret = LOS_MuxPend(lock->mutex, LOS_WAIT_FOREVER);
-    PARAM_CHECK(ret == LOS_OK, return -1, "failed mutex lock ret %d %d", ret, lock->mutex);
+    osStatus_t ret = osMutexAcquire(lock->mutex, osWaitForever);
+    PARAM_CHECK(ret == osOK, return -1, "Failed to mutex lock ret %d", ret);
     return 0;
 }
 
 INIT_LOCAL_API int ParamRWMutexRDLock(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
-    uint32_t ret = LOS_MuxPend(lock->mutex, LOS_WAIT_FOREVER);
-    PARAM_CHECK(ret == LOS_OK, return -1, "failed mutex lock ret %d %d", ret, lock->mutex);
+    osStatus_t ret = osMutexAcquire(lock->mutex, osWaitForever);
+    PARAM_CHECK(ret == osOK, return -1, "Failed to mutex lock ret %d", ret);
     return 0;
 }
 
 INIT_LOCAL_API int ParamRWMutexUnlock(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
-    uint32_t ret = LOS_MuxPost(lock->mutex);
-    PARAM_CHECK(ret == LOS_OK, return -1, "failed mutex lock ret %d %d", ret, lock->mutex);
+    osStatus_t ret = osMutexRelease(lock->mutex);
+    PARAM_CHECK(ret == osOK, return -1, "Failed to mutex unlock ret %d", ret);
     return 0;
 }
 
 INIT_LOCAL_API int ParamRWMutexDelete(ParamRWMutex *lock)
 {
     PARAM_CHECK(lock != NULL, return -1, "Invalid lock");
-    uint32_t ret = LOS_MuxDelete(lock->mutex);
-    PARAM_CHECK(ret == LOS_OK, return -1, "failed mutex lock ret %d %d", ret, lock->mutex);
+    osStatus_t ret = osMutexDelete(lock->mutex);
+    PARAM_CHECK(ret == osOK, return -1, "Failed to mutex delete ret %d", ret);
     return 0;
 }
 
 INIT_LOCAL_API int ParamMutexCreate(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid lock");
-    uint32_t ret = LOS_MuxCreate(&mutex->mutex);
-    PARAM_CHECK(ret == LOS_OK, return -1, "failed init mutex ret %d", ret);
+    mutex->mutex = osMutexNew(NULL);
+    PARAM_CHECK(mutex->mutex != NULL, return -1, "Failed to init mutex");
     return 0;
 }
 
 INIT_LOCAL_API int ParamMutexPend(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid lock");
-    uint32_t ret = LOS_MuxPend(mutex->mutex, LOS_WAIT_FOREVER);
-    PARAM_CHECK(ret == LOS_OK, return -1, "failed mutex lock ret %d %d", ret, mutex->mutex);
+    osStatus_t ret = osMutexAcquire(mutex->mutex, osWaitForever);
+    PARAM_CHECK(ret == osOK, return -1, "Failed to mutex lock ret %d", ret);
     return 0;
 }
 
 INIT_LOCAL_API int ParamMutexPost(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid lock");
-    uint32_t ret = LOS_MuxPost(mutex->mutex);
-    PARAM_CHECK(ret == LOS_OK, return -1, "failed mutex lock ret %d %d", ret, mutex->mutex);
+    osStatus_t ret = osMutexRelease(mutex->mutex);
+    PARAM_CHECK(ret == osOK, return -1, "Failed to mutex unlock ret %d", ret);
     return 0;
 }
 
 INIT_LOCAL_API int ParamMutexDelete(ParamMutex *mutex)
 {
     PARAM_CHECK(mutex != NULL, return -1, "Invalid mutex");
-    uint32_t ret = LOS_MuxDelete(mutex->mutex);
-    PARAM_CHECK(ret == LOS_OK, return -1, "failed delete mutex lock ret %d %d", ret, mutex->mutex);
+    osStatus_t ret = osMutexDelete(mutex->mutex);
+    PARAM_CHECK(ret == osOK, return -1, "Failed to delete mutex ret %d", ret);
     return 0;
 }
 #endif
