@@ -170,7 +170,7 @@ ohos_executable("init") {
       defined(global_parts_info.security_access_token)) {
     external_deps += [
       "access_token:libnativetoken_shared",
-      "access_token:libtoken_setproc_shared",
+      "access_token:libtokensetproc_shared",
     ]
     defines += [ "INIT_SUPPORT_ACCESS_TOKEN" ]
   }
