@@ -155,7 +155,7 @@ ohos_executable("init") {
   external_deps += [ "storage_service:libfscryptutils_static" ]
   external_deps += [
     "bounds_checking_function:libsec_shared",
-    "cJSON:cjson_static",
+    "cJSON:cjson",
   ]
 
   deps += [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_stub_versionscript" ]
@@ -169,8 +169,8 @@ ohos_executable("init") {
   if (defined(global_parts_info) &&
       defined(global_parts_info.security_access_token)) {
     external_deps += [
-      "access_token:libnativetoken",
-      "access_token:libtoken_setproc",
+      "access_token:libnativetoken_shared",
+      "access_token:libtoken_setproc_shared",
     ]
     defines += [ "INIT_SUPPORT_ACCESS_TOKEN" ]
   }
