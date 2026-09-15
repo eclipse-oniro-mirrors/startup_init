@@ -16,6 +16,7 @@ import("//build/ohos.gni")
 
 ohos_shared_library("module_update_init") {
   branch_protector_ret = "pac_ret"
+  version_script = "module_update_init.versionscript"
   sanitize = {
     cfi = true
     cfi_cross_dso = true
