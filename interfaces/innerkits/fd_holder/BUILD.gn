@@ -29,7 +29,7 @@ ohos_static_library("fdholder") {
     "//base/startup/init/interfaces/innerkits/include",
   ]
   public_configs = [ ":exported_header_files" ]
-  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps = [ "bounds_checking_function:libsec_shared" ]
   part_name = "init"
   subsystem_name = "startup"
 }

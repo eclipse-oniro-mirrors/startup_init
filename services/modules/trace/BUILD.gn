@@ -28,7 +28,7 @@ ohos_shared_library("inittrace") {
   external_deps = [
     "bounds_checking_function:libsec_shared",
     "cJSON:cjson",
-    "zlib:libz",
+    "zlib:shared_libz",
   ]
 
   part_name = "init"
