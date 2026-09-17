@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 
 #include "init_param.h"
+#include "parameter.h"
 #include "param_base.h"
 #include "param_message.h"
 #include "param_stub.h"
@@ -23,6 +24,7 @@
 #include "param_utils.h"
 #include "param_osadp.h"
 #include "param_manager.h"
+#include "param_persist.h"
 #include "sys_param.h"
 
 using namespace testing::ext;
@@ -46,6 +48,21 @@ static int CheckServerParamValue(const char *name, const char *expectValue)
         EXPECT_EQ(strcmp(tmp, expectValue), 0);
     }
     return 0;
+}
+
+// const 参数一旦写入即变为只读且无法删除；测试二进制多次执行时上一轮残留的
+// const 参数仍存在于参数工作区中，导致 SystemWriteParam 返回 PARAM_CODE_READ_ONLY。
+// 从计数器后缀开始探测，找到一个尚不存在的 const 键，保证每轮执行使用全新的键。
+static string MakeUniqueConstKey(const char *base)
+{
+    static unsigned long counter = 0;
+    string key = string(base) + "_" + to_string(counter);
+    while (FindParameter(key.c_str()) != (uint32_t)(-1)) {
+        counter++;
+        key = string(base) + "_" + to_string(counter);
+    }
+    counter++;
+    return key;
 }
 
 namespace init_ut {
@@ -208,17 +225,19 @@ public:
         EXPECT_NE(ret, 0);
 
         // 保存一个只读的属性，大于最大值
+        string constKey1 = MakeUniqueConstKey("const.test_readonly.dddddddddddddddddd.fffffffffffffffffff");
         TestBufferValue(buffer, PARAM_VALUE_LEN_MAX - 1);
-        ret = SystemWriteParam("const.test_readonly.dddddddddddddddddd.fffffffffffffffffff", buffer);
+        ret = SystemWriteParam(constKey1.c_str(), buffer);
         EXPECT_EQ(ret, 0);
 
+        string constKey2 = MakeUniqueConstKey("const.test_readonly.aaaaaaaaaaaaaaaaaa.fffffffffffffffffff");
         TestBufferValue(buffer, PARAM_VALUE_LEN_MAX + 1);
-        ret = SystemWriteParam("const.test_readonly.aaaaaaaaaaaaaaaaaa.fffffffffffffffffff", buffer);
+        ret = SystemWriteParam(constKey2.c_str(), buffer);
         EXPECT_EQ(ret, 0);
 
         // 更新只读项目
         TestBufferValue(buffer, PARAM_VALUE_LEN_MAX - 1);
-        ret = SystemWriteParam("const.test_readonly.dddddddddddddddddd.fffffffffffffffffff", buffer);
+        ret = SystemWriteParam(constKey1.c_str(), buffer);
         EXPECT_NE(ret, 0);
 
         // 写普通属性
@@ -697,7 +716,8 @@ HWTEST_F(ParamUnitTest, Init_TestParamCache_001, TestSize.Level0)
 {
     const char *value = CachedParameterGet(nullptr);
     EXPECT_EQ(value, nullptr);
-    const char *name = "test.write.1111111.222222";
+    string nameStr = MakeUniqueConstKey("test.write.1111111.222222");
+    const char *name = nameStr.c_str();
     CachedHandle cacheHandle = CachedParameterCreate(name, "true");
     EXPECT_NE(cacheHandle, nullptr);
     value = CachedParameterGet(cacheHandle);
@@ -722,6 +742,27 @@ HWTEST_F(ParamUnitTest, Init_TestParamCache_001, TestSize.Level0)
     EXPECT_EQ(valueChange, 1);
     CachedParameterGetChanged(cacheHandle3, nullptr);
     CachedParameterDestroy(cacheHandle3);
+}
+
+HWTEST_F(ParamUnitTest, Init_TestPersistCommitIdNullArea_001, TestSize.Level0)
+{
+    ParamUnitTest test;
+    WorkSpace *space = GetWorkSpace(WORKSPACE_INDEX_DAC);
+    ASSERT_NE(space, nullptr);
+    ASSERT_NE(space->area, nullptr);
+    ParamTrieHeader *savedArea = space->area;
+    space->area = nullptr;
+    CheckAndSavePersistParam();
+    EXPECT_EQ(space->area, nullptr);
+    space->area = savedArea;
+
+    ParamWorkSpace *paramSpace = GetParamWorkSpace();
+    ASSERT_NE(paramSpace, nullptr);
+    WorkSpace *savedWorkSpace = paramSpace->workSpace[WORKSPACE_INDEX_DAC];
+    paramSpace->workSpace[WORKSPACE_INDEX_DAC] = nullptr;
+    CheckAndSavePersistParam();
+    EXPECT_EQ(paramSpace->workSpace[WORKSPACE_INDEX_DAC], nullptr);
+    paramSpace->workSpace[WORKSPACE_INDEX_DAC] = savedWorkSpace;
 }
 
 HWTEST_F(ParamUnitTest, Init_TestUpdatePersistCommitIdNullArea_001, TestSize.Level0)

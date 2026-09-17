@@ -198,6 +198,7 @@ public:
         char buffer[triggerBuffer];
         int ret = sprintf_s(buffer, sizeof(buffer), "%s=%s", param, value);
         EXPECT_GE(ret, 0);
+        SystemWriteParam(param, "0");
         JobNode *node = AddTrigger(TRIGGER_PARAM, triggerName, buffer, 0);
         JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
@@ -231,13 +232,14 @@ public:
     {
         const char *triggerName = "param:test_param.222";
         const char *param = "test_param.aaa.222.2222";
-        SystemWriteParam(param, "2");
+        SystemWriteParam(param, "0");
         char buffer[triggerBuffer];
         int ret = sprintf_s(buffer, sizeof(buffer), "%s=*", param);
         EXPECT_GE(ret, 0);
         JobNode *node = AddTrigger(TRIGGER_PARAM, triggerName, buffer, 0);
         JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
+        SystemWriteParam(param, "2");
 
         g_matchTrigger = 0;
         ret = sprintf_s(buffer, sizeof(buffer), "%s=%s", param, "2");
@@ -287,6 +289,7 @@ public:
         char buffer[triggerBuffer];
         int ret = sprintf_s(buffer, sizeof(buffer), "%s=%s && %s=%s", param1, "1", param2, "2");
         EXPECT_GE(ret, 0);
+        SystemWriteParam(param2, "0");
         JobNode *node = AddTrigger(TRIGGER_PARAM, triggerName, buffer, 0);
         JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
@@ -318,6 +321,7 @@ public:
         char buffer[triggerBuffer];
         int ret = sprintf_s(buffer, sizeof(buffer), "aaaa && %s=%s && %s=%s", param1, "1", param2, "2");
         EXPECT_GE(ret, 0);
+        SystemWriteParam(param2, "0");
         JobNode *node = AddTrigger(TRIGGER_UNKNOW, triggerName, buffer, 0);
         JobNode *trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
         EXPECT_EQ(trigger, node);
@@ -415,9 +419,8 @@ public:
         ret = AddCommand(trigger, cmdIndex, value, nullptr);
         EXPECT_EQ(ret, 0);
         TRIGGER_SET_FLAG(trigger, TRIGGER_FLAGS_ONCE);
-        SystemWriteParam(param, value);
-
         RegisterTriggerExec(TRIGGER_PARAM, TestCmdExec);
+        SystemWriteParam(param, value);
         LE_DoAsyncEvent(LE_GetDefaultLoop(), GetTriggerWorkSpace()->eventHandle);
         EXPECT_EQ(g_execCmdId, cmdIndex);
         trigger = GetTriggerByName(GetTriggerWorkSpace(), triggerName);
@@ -446,9 +449,9 @@ public:
         ret = AddCommand(trigger, cmdIndex, value, nullptr);
         EXPECT_EQ(ret, 0);
         TRIGGER_SET_FLAG(trigger, TRIGGER_FLAGS_ONCE);
+        RegisterTriggerExec(TRIGGER_PARAM, TestCmdExec);
         SystemWriteParam(param, value);
 
-        RegisterTriggerExec(TRIGGER_PARAM, TestCmdExec);
         FreeTrigger(GetTriggerWorkSpace(), reinterpret_cast<TriggerNode *>(trigger));
         LE_DoAsyncEvent(LE_GetDefaultLoop(), GetTriggerWorkSpace()->eventHandle);
         EXPECT_NE(g_execCmdId, cmdIndex);

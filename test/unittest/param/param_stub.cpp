@@ -388,15 +388,16 @@ void PrepareCmdLineData()
 
 static void PrepareAreaSizeFile(void)
 {
-    const char *ohosParamSize = "default_param=1024\n"
+    const char *ohosParamSize = "default_param=20480\n"
             "hilog_param=2048\n"
             "const_product_param=2048\n"
             "startup_param=20480\n"
             "persist_param=2048\n"
-            "const_param=20480\n"
-            "test_watch=153600\n" // 1024 * 150
+            "const_param=102400\n"
+            "test_watch=409600\n" // 1024 * 400
             "test_write=204800\n" // 1024 * 200
-            "const_param***=20480\n"
+            "test_read=204800\n" // 1024 * 200
+            "const_param***=102400\n"
             "persist_sys_param=2048\n";
     CreateTestFile(PARAM_AREA_SIZE_CFG, ohosParamSize);
 }
