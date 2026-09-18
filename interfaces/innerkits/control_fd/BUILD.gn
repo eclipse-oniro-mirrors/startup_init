@@ -24,6 +24,12 @@ config("exported_header_files") {
 
 ohos_static_library("libcontrolfd") {
   branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "../../../cfi_blocklist.txt"
+  }
   sources = [
     "control_fd_client.c",
     "control_fd_service.c",
