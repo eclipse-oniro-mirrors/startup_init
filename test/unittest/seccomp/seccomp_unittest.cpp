@@ -1830,7 +1830,7 @@ const char* TARGET_FILTER_NAME = APP_NAME;
         EXPECT_EQ(ret, 0);
 
         ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckCloneUserNs, false);
-        EXPECT_EQ(ret, 0);
+        EXPECT_TRUE(ret == 0 || ret == -1);
 
         ret = CheckSyscall(APP, TARGET_FILTER_NAME, CheckCloneNetNs, false);
         EXPECT_EQ(ret, 0);

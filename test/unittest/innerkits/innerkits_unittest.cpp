@@ -193,6 +193,7 @@ HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_GetMountFlags001, TestSize.Level1
 */
 HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_GetSlotInfo001, TestSize.Level1)
 {
+    PrepareCmdLineData();
     EXPECT_NE(GetBootSlots(), -1);
     EXPECT_NE(GetCurrentSlot(), -1);
 }
@@ -206,6 +207,7 @@ HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_GetSlotInfo001, TestSize.Level1)
 */
 HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_LoadFstabFromCommandLine001, TestSize.Level1)
 {
+    PrepareCmdLineData();
     EXPECT_NE(LoadFstabFromCommandLine(), (Fstab *)nullptr);
 }
 
@@ -218,6 +220,7 @@ HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_LoadFstabFromCommandLine001, Test
 */
 HWTEST_F(InnerkitsUnitTest, Init_InnerkitsTest_GetBlockDevicePath001, TestSize.Level1)
 {
+    PrepareCmdLineData();
     char devicePath[MAX_BUFFER_LEN] = {0};
     EXPECT_EQ(GetBlockDevicePath("/vendor", devicePath, MAX_BUFFER_LEN), 0);
     EXPECT_EQ(GetBlockDevicePath("/misc", devicePath, MAX_BUFFER_LEN), 0);

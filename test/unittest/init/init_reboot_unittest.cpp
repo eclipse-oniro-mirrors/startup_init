@@ -110,6 +110,7 @@ HWTEST_F(InitRebootUnitTest, TestAddRebootCmdNormal, TestSize.Level1)
 
 HWTEST_F(InitRebootUnitTest, TestRebootCmdExec, TestSize.Level1)
 {
+    PrepareCmdLineData();
     PARAM_LOGE("TestRebootCmdExec");
     PluginExecCmdByName("reboot", "reboot");
     PluginExecCmdByName("reboot.shutdown", "reboot,shutdown");

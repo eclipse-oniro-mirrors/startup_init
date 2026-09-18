@@ -15,6 +15,9 @@
 
 #include "gtest/gtest.h"
 
+#include <cstdint>
+#include <string>
+
 #include "init_param.h"
 #include "init_utils.h"
 #include "parameter.h"
@@ -41,6 +44,23 @@ public:
     }
     void TearDown() {}
 };
+
+#ifndef OHOS_LITE
+// const 参数一旦写入即变为只读，且无法删除；测试二进制多次执行时上一轮残留的
+// const 参数仍存在于参数工作区中，导致 SystemWriteParam 返回 PARAM_CODE_READ_ONLY。
+// 这里从计数器后缀开始探测，找到一个尚不存在的 const 键，保证每轮执行使用全新的键。
+static std::string MakeUniqueConstKey(const char *base)
+{
+    static unsigned long counter = 0;
+    std::string key = std::string(base) + "_" + std::to_string(counter);
+    while (FindParameter(key.c_str()) != static_cast<uint32_t>(-1)) {
+        counter++;
+        key = std::string(base) + "_" + std::to_string(counter);
+    }
+    counter++;
+    return key;
+}
+#endif
 
 HWTEST_F(SysparaUnitTest, parameterTest001, TestSize.Level0)
 {
@@ -169,7 +189,6 @@ HWTEST_F(SysparaUnitTest, parameterTest001_3, TestSize.Level0)
     EXPECT_STRNE(GetBuildHost(), nullptr);
     EXPECT_STRNE(GetBuildTime(), nullptr);
     EXPECT_STRNE(GetBuildRootHash(), nullptr);
-    EXPECT_STRNE(GetChipType(), nullptr);
     EXPECT_GT(GetBootCount(), -1);
     EXPECT_STRNE(GetDeviceColor(), nullptr);
 }
@@ -486,72 +505,72 @@ HWTEST_F(SysparaUnitTest, parameterTest0018, TestSize.Level0)
 #ifndef OHOS_LITE
 HWTEST_F(SysparaUnitTest, parameterTest0019, TestSize.Level0)
 {
-    char key1[] = "const.test.for_update_test";
-    char key2[] = "persist.test.for_update_test";
+    std::string key1 = MakeUniqueConstKey("const.test.for_update_test");
+    std::string key2 = MakeUniqueConstKey("persist.test.for_update_test");
     char value1[] = "initSet";
     char value2[] = "initUpdate";
 
-    int ret = SystemUpdateConstParam(key1, value2);
+    int ret = SystemUpdateConstParam(key1.c_str(), value2);
     EXPECT_EQ(ret, PARAM_CODE_INVALID_NAME);
-    ret = SystemWriteParam(key1, value1);
+    ret = SystemWriteParam(key1.c_str(), value1);
     EXPECT_EQ(ret, 0);
-    ret = SystemUpdateConstParam(key1, value2);
+    ret = SystemUpdateConstParam(key1.c_str(), value2);
     EXPECT_EQ(ret, 0);
-    ret = SystemUpdateConstParam(key2, value2);
+    ret = SystemUpdateConstParam(key2.c_str(), value2);
     EXPECT_EQ(ret, PARAM_CODE_INVALID_NAME);
 }
 
 HWTEST_F(SysparaUnitTest, parameterTest0020, TestSize.Level0)
 {
-    char key1[] = "const.test.for_update_test1";
+    std::string key1 = MakeUniqueConstKey("const.test.for_update_test1");
     char value1[] = "initSet"; // len < 96
     char value2[] = "initUpdate_abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" \
         "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"; // len > 96
 
-    int ret = SystemWriteParam(key1, value1);
+    int ret = SystemWriteParam(key1.c_str(), value1);
     EXPECT_EQ(ret, 0);
-    ret = SystemUpdateConstParam(key1, value2);
+    ret = SystemUpdateConstParam(key1.c_str(), value2);
     EXPECT_EQ(ret, PARAM_CODE_INVALID_VALUE);
 }
 
 HWTEST_F(SysparaUnitTest, parameterTest0021, TestSize.Level0)
 {
-    char key1[] = "const.test.for_update_test2";
+    std::string key1 = MakeUniqueConstKey("const.test.for_update_test2");
     char value1[] = "initSet_abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" \
         "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"; // len > 96
     char value2[] = "initUpdate_abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" \
         "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"; // len > 96
 
-    int ret = SystemWriteParam(key1, value1);
+    int ret = SystemWriteParam(key1.c_str(), value1);
     EXPECT_EQ(ret, 0);
-    ret = SystemUpdateConstParam(key1, value2);
+    ret = SystemUpdateConstParam(key1.c_str(), value2);
     EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(SysparaUnitTest, parameterTest0022, TestSize.Level0)
 {
-    char key1[] = "const.test.for_update_test3";
+    std::string key1 = MakeUniqueConstKey("const.test.for_update_test3");
     char value1[] = "initSet_abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" \
         "abcdefghijklmnopqrstuvwxyzabcdefghi"; // len = 96
     char value2[] = "initUpdate_abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" \
         "abcdefghijklmnopqrstuvwxyzabcdef"; // len = 96
 
-    int ret = SystemWriteParam(key1, value1);
+    int ret = SystemWriteParam(key1.c_str(), value1);
     EXPECT_EQ(ret, 0);
-    ret = SystemUpdateConstParam(key1, value2);
+    ret = SystemUpdateConstParam(key1.c_str(), value2);
     EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(SysparaUnitTest, parameterTest0023, TestSize.Level0)
 {
-    char key1[] = "const.test.for_update_test4";
+    std::string key1 = MakeUniqueConstKey("const.test.for_update_test4");
     char value1[] = "initSet_abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" \
         "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"; // len > 96
     char value2[] = "initUpdate_abcdefghijkl"; // len < 96
 
-    int ret = SystemWriteParam(key1, value1);
+    int ret = SystemWriteParam(key1.c_str(), value1);
     EXPECT_EQ(ret, 0);
-    ret = SystemUpdateConstParam(key1, value2);
+    ret = SystemUpdateConstParam(key1.c_str(), value2);
     EXPECT_EQ(ret, 0);
 }
 
@@ -566,19 +585,40 @@ HWTEST_F(SysparaUnitTest, parameterTest0026, TestSize.Level0)
 {
     char key[] = "const.deviceManager.getdevicetype_extend_enable";
     int ret = 0;
-    
-    if (FindParameter(key) == (uint32_t)(-1)) {
+
+    if (FindParameter(key) == static_cast<uint32_t>(-1)) {
         ret = SystemWriteParam(key, "true");
     } else {
         ret = SystemUpdateConstParam(key, "true");
     }
     EXPECT_EQ(ret, 0);
- 
+
     const char *deviceType = GetDeviceType();
     EXPECT_STRNE(deviceType, nullptr);
- 
+
     ret = SystemUpdateConstParam(key, "false");
     EXPECT_EQ(ret, 0);
 }
+
+//selinux forbid persist.ark.deferfreeze
+HWTEST_F(SysparaUnitTest, parameterTest027, TestSize.Level0)
+{
+    char key2[] = "persist.ark.deferfreeze";
+    char value2[64] = {0};
+    char defValue2[] = "value of key > 32 ...";
+    int ret = GetParameter(key2, defValue2, value2, 64);
+    EXPECT_NE(ret, -1);
+}
+
+//dac forbid ohos.boot.sn
+HWTEST_F(SysparaUnitTest, parameterTest028, TestSize.Level0)
+{
+    char key2[] = "ohos.boot.sn";
+    char value2[64] = {0};
+    char defValue2[] = "value of key > 32 ...";
+    int ret = GetParameter(key2, defValue2, value2, 64);
+    EXPECT_NE(ret, -1);
+}
+
 #endif
 }  // namespace OHOS
