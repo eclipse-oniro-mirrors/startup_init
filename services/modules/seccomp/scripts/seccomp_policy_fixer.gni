@@ -192,11 +192,11 @@ template("ohos_prebuilt_seccomp") {
       output_name = _output_name
       deps = []
       sources = []
-      if (invoker.filtername != "nwebspawn") { 
+      if (invoker.filtername != "nwebspawn") {
         deps += [ ":${_seccomp_filter_target}" ]
         sources += get_target_outputs(":${_seccomp_filter_target}")
       } else {
-        sources += [ 
+        sources += [
           "./nwebspawn_filter.c",
         ]
         external_deps = [ "bundle_framework:appexecfwk_base" ]
@@ -206,6 +206,17 @@ template("ohos_prebuilt_seccomp") {
         cfi_cross_dso = true
         debug = false
       }
+
+      if (!use_clang_coverage) {
+        version_script =
+            "//base/startup/init/services/modules/seccomp/seccomp_filter.map"
+      }
+
+      cflags = [
+        "-Os",
+        "-fno-asynchronous-unwind-tables",
+        "-fno-unwind-tables",
+      ]
 
       relative_install_dir = "seccomp"
 
