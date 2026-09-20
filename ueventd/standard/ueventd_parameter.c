@@ -84,10 +84,14 @@ static void *ThreadRun(void *data)
         pthread_mutex_unlock(&(parameterCtrl->lock));
         struct DeviceUdevConf *config = GetFirstParameter(parameterCtrl);
         if (config == NULL) {
+            pthread_mutex_lock(&(parameterCtrl->lock));
             parameterCtrl->empty = 1;
+            pthread_mutex_unlock(&(parameterCtrl->lock));
             continue;
         }
+        pthread_mutex_lock(&(parameterCtrl->lock));
         parameterCtrl->empty = 0;
+        pthread_mutex_unlock(&(parameterCtrl->lock));
         const char *paramValue = (config->action == ACTION_ADD) ? "added" : "removed";
         INIT_LOGI("[uevent] SystemSetParameter %s act %s", config->parameter, paramValue);
         int len = sprintf_s(paramName, sizeof(paramName), "startup.uevent.%s", config->parameter);
@@ -96,7 +100,9 @@ static void *ThreadRun(void *data)
             pthread_mutex_lock(&(parameterCtrl->parameterLock));
             OH_ListAddTail(&parameterCtrl->parameterList, &config->paramNode);
             pthread_mutex_unlock(&(parameterCtrl->parameterLock));
+            pthread_mutex_lock(&(parameterCtrl->lock));
             parameterCtrl->empty = 1;
+            pthread_mutex_unlock(&(parameterCtrl->lock));
         }
     }
     return NULL;

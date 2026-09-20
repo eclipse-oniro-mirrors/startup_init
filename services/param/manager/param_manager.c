@@ -29,6 +29,9 @@
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
 #include <sys/mman.h>
 #endif
+
+#define SELINUX_PERMISSION 1002
+
 static DUMP_PRINTF g_printf = printf;
 
 #ifdef PARAM_CONST_FLASH_ONLY
@@ -46,7 +49,7 @@ ParamNode *SystemCheckMatchParamWait(const char *name, const char *value)
     PARAM_WORKSPACE_CHECK(paramSpace, return NULL, "Invalid space");
 
     WorkSpace *workspace = GetWorkSpaceByName(name);
-    PARAM_CHECK_DUMPE(workspace != NULL, return NULL, "failed get workspace %s", name);
+    PARAM_CHECK_DUMPE(workspace != NULL, return NULL, "Failed to get workspace %s", name);
     PARAM_LOGV("SystemCheckMatchParamWait name %s", name);
     uint32_t nameLength = strlen(name);
     ParamTrieNode *node = FindTrieNode(workspace, name, nameLength, NULL);
@@ -286,7 +289,7 @@ INIT_INNER_API int GetParamSecurityAuditData(const char *name, int type, ParamAu
     PARAM_CHECK(space != NULL, return -1, "Invalid workSpace");
     FindTrieNode(space, name, strlen(name), &labelIndex);
     ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(space, labelIndex);
-    PARAM_CHECK(node != NULL, return DAC_RESULT_FORBIDED, "cannot get security label %d", labelIndex);
+    PARAM_CHECK(node != NULL, return DAC_RESULT_FORBIDED, "Can not get security label %d", labelIndex);
 
     auditData->name = name;
     auditData->dacData.uid = node->uid;
@@ -297,7 +300,7 @@ INIT_INNER_API int GetParamSecurityAuditData(const char *name, int type, ParamAu
         paramSpace->selinuxSpace.getParamLabel(name) : NULL;
     if (tmpName != NULL) {
         int ret = strcpy_s(auditData->label, sizeof(auditData->label), tmpName);
-        PARAM_CHECK(ret == 0, return 0, "failed copy label for %s", name);
+        PARAM_CHECK(ret == 0, return 0, "Failed to copy label for %s", name);
     }
 #endif
     return 0;
@@ -307,7 +310,7 @@ static int CreateCtrlInfo(ServiceCtrlInfo **ctrlInfo, const char *cmd, uint32_t 
     uint8_t ctrlParam, const char *format, ...)
 {
     *ctrlInfo = calloc(1, sizeof(ServiceCtrlInfo));
-    PARAM_CHECK(*ctrlInfo != NULL, return -1, "failed alloc memory %s", cmd);
+    PARAM_CHECK(*ctrlInfo != NULL, return -1, "Failed to alloc memory %s", cmd);
     va_list vargs;
     va_start(vargs, format);
     int len = vsnprintf_s((*ctrlInfo)->realKey,
@@ -466,8 +469,8 @@ static int AddParam(WorkSpace *workSpace, ParamInfos paramInfos, uint32_t *dataI
 static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const char *name, const char *value, int mode)
 {
     ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, *dataIndex);
-    PARAM_CHECK(entry != NULL, return PARAM_CODE_REACHED_MAX, "failed update param value %s %u", name, *dataIndex);
-    PARAM_CHECK(entry->keyLength == strlen(name), return PARAM_CODE_INVALID_NAME, "failed check name len %s", name);
+    PARAM_CHECK(entry != NULL, return PARAM_CODE_REACHED_MAX, "Failed to update param value %s %u", name, *dataIndex);
+    PARAM_CHECK(entry->keyLength == strlen(name), return PARAM_CODE_INVALID_NAME, "Failed to check name len %s", name);
 
     uint32_t valueLen = strlen(value);
     uint32_t commitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, MEMORY_ORDER_RELAXED);
@@ -480,12 +483,12 @@ static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const ch
         }
         if (entry->valueLength < PARAM_CONST_VALUE_LEN_MAX && valueLen < PARAM_CONST_VALUE_LEN_MAX) {
             int ret = PARAM_MEMCPY(entry->data + entry->keyLength + 1, PARAM_CONST_VALUE_LEN_MAX, value, valueLen + 1);
-            PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_VALUE, "failed copy value");
+            PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_VALUE, "Failed to copy value");
             entry->valueLength = valueLen;
         }
     } else if (entry->valueLength < PARAM_VALUE_LEN_MAX && valueLen < PARAM_VALUE_LEN_MAX) {
         int ret = PARAM_MEMCPY(entry->data + entry->keyLength + 1, PARAM_VALUE_LEN_MAX, value, valueLen + 1);
-        PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_VALUE, "failed copy value");
+        PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_VALUE, "Failed to copy value");
         entry->valueLength = valueLen;
     }
 
@@ -758,47 +761,8 @@ STATIC_INLINE int ReadParamValue(ParamNode *entry, char *value, uint32_t *length
     return ReadParamValue_(entry, &commitId, value, length);
 }
 
-#ifdef PARAM_CONST_FLASH_ONLY
-static int CopyConstParamValue(const char *flashValue, char *value, uint32_t *len)
-{
-    uint32_t valueLen = strlen(flashValue);
-    if (value == NULL) {
-        *len = valueLen + 1;
-        return 0;
-    }
-    if (*len <= valueLen) {
-        *len = valueLen + 1;
-        return PARAM_CODE_INVALID_VALUE;
-    }
-    if (memcpy_s(value, *len, flashValue, valueLen + 1) != EOK) {
-        return PARAM_CODE_ERROR;
-    }
-    *len = valueLen;
-    return 0;
-}
-#endif
-
 int SystemReadParam(const char *name, char *value, uint32_t *len)
 {
-#if defined(PARAM_WORKSPACE_DYNAMIC_ALLOC) && defined(PARAM_CONST_FLASH_ONLY)
-    PARAM_CHECK(name != NULL && len != NULL, return PARAM_CODE_ERROR,
-        "SystemReadParam failed! name is:%s, errNum is:%d!", name, PARAM_CODE_ERROR);
-    if (IS_READY_ONLY(name)) {
-        if (PARAM_TEST_FLAG(GetParamWorkSpace()->flags, WORKSPACE_FLAGS_FOR_INIT)) {
-            int ret = CheckParamPermission(GetParamSecurityLabel(), name, DAC_READ);
-            if (ret != 0) {
-                return ret;
-            }
-        }
-        const char *flashValue = NULL;
-        if (LookupConstParamFromBuild(name, &flashValue) == 0 && flashValue != NULL) {
-            return CopyConstParamValue(flashValue, value, len);
-        }
-        return PARAM_CODE_NOT_FOUND;
-    }
-    int initRet = EnsureParamServiceInit();
-    PARAM_CHECK(initRet == 0, return initRet, "SystemReadParam lazy init failed %d", initRet);
-#endif
     PARAM_WORKSPACE_CHECK(GetParamWorkSpace(), return PARAM_WORKSPACE_NOT_INIT,
         "SystemReadParam failed! name is:%s, errNum is:%d!", name, PARAM_WORKSPACE_NOT_INIT);
     PARAM_CHECK(name != NULL && len != NULL, return PARAM_CODE_ERROR,
@@ -807,7 +771,9 @@ int SystemReadParam(const char *name, char *value, uint32_t *len)
     WorkSpace *workspace = NULL;
     int ret = CheckParamPermission_(&workspace, &node, GetParamSecurityLabel(), name, DAC_READ);
     if (ret != 0) {
-        PARAM_DUMPW("SystemReadParam failed!name is:%s,err:%d", name, ret);
+        if (ret != SELINUX_PERMISSION) {
+            PARAM_DUMPW("SystemReadParam failed!name is:%s,err:%d", name, ret);
+        }
         return ret;
     }
 #ifdef PARAM_SUPPORT_SELINUX
@@ -815,12 +781,6 @@ int SystemReadParam(const char *name, char *value, uint32_t *len)
     node = FindTrieNode(workspace, name, strlen(name), NULL);
 #endif
     if (node == NULL) {
-#ifdef PARAM_CONST_FLASH_ONLY
-        const char *flashValue = NULL;
-        if (LookupConstParamFromBuild(name, &flashValue) == 0 && flashValue != NULL) {
-            return CopyConstParamValue(flashValue, value, len);
-        }
-#endif
         return PARAM_CODE_NOT_FOUND;
     }
     ret =  ReadParamValue((ParamNode *)GetTrieNode(workspace, node->dataIndex), value, len);
@@ -832,25 +792,6 @@ int SystemReadParam(const char *name, char *value, uint32_t *len)
 
 int SystemFindParameter(const char *name, ParamHandle *handle)
 {
-#if defined(PARAM_WORKSPACE_DYNAMIC_ALLOC) && defined(PARAM_CONST_FLASH_ONLY)
-    PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
-    if (IS_READY_ONLY(name)) {
-        if (PARAM_TEST_FLAG(GetParamWorkSpace()->flags, WORKSPACE_FLAGS_FOR_INIT)) {
-            int ret = CheckParamPermission(GetParamSecurityLabel(), name, DAC_READ);
-            if (ret != 0) {
-                return ret;
-            }
-        }
-        const char *flashValue = NULL;
-        if (LookupConstParamFromBuild(name, &flashValue) == 0 && flashValue != NULL) {
-            *handle = PARAM_CONST_EXIST_SENTINEL_HANDLE;
-            return 0;
-        }
-        return PARAM_CODE_NOT_FOUND;
-    }
-    int initRet = EnsureParamServiceInit();
-    PARAM_CHECK(initRet == 0, return initRet, "SystemFindParameter lazy init failed %d", initRet);
-#endif
     PARAM_WORKSPACE_CHECK(GetParamWorkSpace(), return PARAM_WORKSPACE_NOT_INIT, "Param workspace has not init.");
     PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
     *handle = -1;
@@ -868,15 +809,6 @@ int SystemFindParameter(const char *name, ParamHandle *handle)
     } else if (entry != NULL) {
         return PARAM_CODE_NODE_EXIST;
     }
-#ifdef PARAM_CONST_FLASH_ONLY
-    if (entry == NULL) {
-        const char *flashValue = NULL;
-        if (LookupConstParamFromBuild(name, &flashValue) == 0 && flashValue != NULL) {
-            *handle = PARAM_CONST_EXIST_SENTINEL_HANDLE;
-            return 0;
-        }
-    }
-#endif
     return PARAM_CODE_NOT_FOUND;
 }
 

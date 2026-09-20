@@ -69,8 +69,9 @@ std::string GetParameter(const std::string& key, const std::string& def)
     uint32_t size = 0;
     int ret = SystemReadParam(key.c_str(), NULL, &size);
     if (ret == 0) {
-        std::vector<char> value(MAX_VALUE_LEN);
-        ret = SystemReadParam(key.c_str(), value.data(), &size);
+        uint32_t containerLenth = (size + 1 > MAX_VALUE_LEN) ? size + 1 : MAX_VALUE_LEN;
+        std::vector<char> value(containerLenth);
+        ret = SystemReadParam(key.c_str(), value.data(), &containerLenth);
         if (ret == 0) {
             return std::string(value.data());
         }
