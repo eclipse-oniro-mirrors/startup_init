@@ -171,8 +171,6 @@ ohos_executable("init") {
     external_deps += [
       "access_token:libnativetoken",
       "access_token:libtoken_setproc",
-
-      
     ]
     defines += [ "INIT_SUPPORT_ACCESS_TOKEN" ]
   }
