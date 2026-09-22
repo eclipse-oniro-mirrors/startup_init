@@ -194,6 +194,8 @@ typedef struct Service {
     char *kernelPerms;
     Perms servPerm;
     ServiceArgs pathArgs;
+    // One pending on-demand request; owned by init, not part of the service configuration.
+    ServiceArgs onDemandArgs;
     ServiceArgs writePidArgs;
     CmdLines *restartArg;
     ServiceSocket *socketCfg;
