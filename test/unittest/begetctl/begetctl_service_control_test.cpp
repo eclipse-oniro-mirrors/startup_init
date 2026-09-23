@@ -42,7 +42,6 @@ using namespace testing::ext;
 namespace init_ut {
 
 namespace {
-#ifdef SUPPORT_SA_MULTI_USER
 char g_serviceCtrlParamName[PARAM_NAME_LEN_MAX] = {0};
 char g_serviceCtrlParamValue[PARAM_VALUE_LEN_MAX] = {0};
 
@@ -65,7 +64,6 @@ void ResetServiceCtrlParam()
     (void)memset_s(g_serviceCtrlParamName, sizeof(g_serviceCtrlParamName), 0, sizeof(g_serviceCtrlParamName));
     (void)memset_s(g_serviceCtrlParamValue, sizeof(g_serviceCtrlParamValue), 0, sizeof(g_serviceCtrlParamValue));
 }
-#endif
 } // namespace
 
 /**
@@ -82,15 +80,17 @@ protected:
     {
         // Arrange: 每个测试前初始化Shell环境
         BShellParamCmdRegister(GetShellHandle(), 0);
+        TestSetServiceControlParamFunc(nullptr);
+        ResetServiceCtrlParam();
 #ifdef SUPPORT_SA_MULTI_USER
         TestSetByUserSetParamFunc(nullptr);
-        ResetServiceCtrlParam();
 #endif
     }
 
     void TearDown() override
     {
         // Cleanup: 清理测试状态
+        TestSetServiceControlParamFunc(nullptr);
 #ifdef SUPPORT_SA_MULTI_USER
         TestSetByUserSetParamFunc(nullptr);
 #endif
@@ -193,6 +193,180 @@ HWTEST_F(BegetctlServiceControlTest, StartService_WithServiceName_ExecutesSucces
 
     // Assert
     EXPECT_EQ(ret, 0) << "start_service [服务名] 命令应该成功执行";
+}
+
+/**
+ * @test StartOnDemand_WithServiceName_WritesStartParameter
+ * @brief 测试 service_control start_ondemand 命令启动按需服务
+ *
+ * 预期：命令返回0，发送按需启动控制参数及服务名
+ */
+HWTEST_F(BegetctlServiceControlTest, StartOnDemand_WithServiceName_WritesStartParameter, TestSize.Level1)
+{
+    // Arrange
+    char arg0[] = "service_control";
+    char arg1[] = "start_ondemand";
+    char arg2[] = "init_ondemand_ut";
+    char *args[] = {arg0, arg1, arg2, nullptr};
+
+    TestSetServiceControlParamFunc(RecordServiceCtrlParam);
+
+    // Act
+    int ret = BShellEnvDirectExecute(GetShellHandle(), 3, args);
+
+    // Assert
+    EXPECT_EQ(ret, 0);
+    EXPECT_STREQ(g_serviceCtrlParamName, "ohos.ctl.start_ondemand");
+    EXPECT_STREQ(g_serviceCtrlParamValue, "init_ondemand_ut");
+}
+
+/**
+ * @test StartOnDemand_WithExtraArguments_ForwardsArguments
+ * @brief 测试 service_control start_ondemand 命令传递扩展参数
+ *
+ * 预期：命令返回0，按顺序拼接并发送服务名和扩展参数
+ */
+HWTEST_F(BegetctlServiceControlTest, StartOnDemand_WithExtraArguments_ForwardsArguments, TestSize.Level1)
+{
+    // Arrange
+    char arg0[] = "service_control";
+    char arg1[] = "start_ondemand";
+    char arg2[] = "init_ondemand_ut";
+    char arg3[] = "event";
+    char arg4[] = "payload";
+    char *args[] = {arg0, arg1, arg2, arg3, arg4, nullptr};
+
+    TestSetServiceControlParamFunc(RecordServiceCtrlParam);
+
+    // Act
+    int ret = BShellEnvDirectExecute(GetShellHandle(), 5, args);
+
+    // Assert
+    EXPECT_EQ(ret, 0);
+    EXPECT_STREQ(g_serviceCtrlParamName, "ohos.ctl.start_ondemand");
+    EXPECT_STREQ(g_serviceCtrlParamValue, "init_ondemand_ut|event|payload");
+}
+
+/**
+ * @test StartOnDemand_WithoutServiceName_DoesNotWriteParameter
+ * @brief 测试 service_control start_ondemand 命令缺少服务名
+ *
+ * 预期：命令返回0，不发送服务控制参数
+ */
+HWTEST_F(BegetctlServiceControlTest, StartOnDemand_WithoutServiceName_DoesNotWriteParameter, TestSize.Level1)
+{
+    // Arrange
+    char arg0[] = "service_control";
+    char arg1[] = "start_ondemand";
+    char *args[] = {arg0, arg1, nullptr};
+
+    TestSetServiceControlParamFunc(RecordServiceCtrlParam);
+
+    // Act
+    int ret = BShellEnvDirectExecute(GetShellHandle(), 2, args);
+
+    // Assert
+    EXPECT_EQ(ret, 0);
+    EXPECT_STREQ(g_serviceCtrlParamName, "");
+    EXPECT_STREQ(g_serviceCtrlParamValue, "");
+}
+
+/**
+ * @test StartOnDemandService_WithServiceName_WritesStartParameter
+ * @brief 测试 start_ondemand_service 简写命令启动按需服务
+ *
+ * 预期：命令返回0，发送按需启动控制参数及服务名
+ */
+HWTEST_F(BegetctlServiceControlTest, StartOnDemandService_WithServiceName_WritesStartParameter, TestSize.Level1)
+{
+    // Arrange
+    char arg0[] = "start_ondemand_service";
+    char arg1[] = "init_ondemand_ut";
+    char *args[] = {arg0, arg1, nullptr};
+
+    TestSetServiceControlParamFunc(RecordServiceCtrlParam);
+
+    // Act
+    int ret = BShellEnvDirectExecute(GetShellHandle(), 2, args);
+
+    // Assert
+    EXPECT_EQ(ret, 0);
+    EXPECT_STREQ(g_serviceCtrlParamName, "ohos.ctl.start_ondemand");
+    EXPECT_STREQ(g_serviceCtrlParamValue, "init_ondemand_ut");
+}
+
+/**
+ * @test StartOnDemandService_WithExtraArguments_ForwardsArguments
+ * @brief 测试 start_ondemand_service 简写命令传递扩展参数
+ *
+ * 预期：命令返回0，按顺序拼接并发送服务名和扩展参数
+ */
+HWTEST_F(BegetctlServiceControlTest, StartOnDemandService_WithExtraArguments_ForwardsArguments, TestSize.Level1)
+{
+    // Arrange
+    char arg0[] = "start_ondemand_service";
+    char arg1[] = "init_ondemand_ut";
+    char arg2[] = "event";
+    char arg3[] = "payload";
+    char *args[] = {arg0, arg1, arg2, arg3, nullptr};
+
+    TestSetServiceControlParamFunc(RecordServiceCtrlParam);
+
+    // Act
+    int ret = BShellEnvDirectExecute(GetShellHandle(), 4, args);
+
+    // Assert
+    EXPECT_EQ(ret, 0);
+    EXPECT_STREQ(g_serviceCtrlParamName, "ohos.ctl.start_ondemand");
+    EXPECT_STREQ(g_serviceCtrlParamValue, "init_ondemand_ut|event|payload");
+}
+
+/**
+ * @test StartOnDemandService_WithoutServiceName_DoesNotWriteParameter
+ * @brief 测试 start_ondemand_service 简写命令缺少服务名
+ *
+ * 预期：命令返回0，不发送服务控制参数
+ */
+HWTEST_F(BegetctlServiceControlTest, StartOnDemandService_WithoutServiceName_DoesNotWriteParameter, TestSize.Level1)
+{
+    // Arrange
+    char arg0[] = "start_ondemand_service";
+    char *args[] = {arg0, nullptr};
+
+    TestSetServiceControlParamFunc(RecordServiceCtrlParam);
+
+    // Act
+    int ret = BShellEnvDirectExecute(GetShellHandle(), 1, args);
+
+    // Assert
+    EXPECT_EQ(ret, 0);
+    EXPECT_STREQ(g_serviceCtrlParamName, "");
+    EXPECT_STREQ(g_serviceCtrlParamValue, "");
+}
+
+/**
+ * @test ServiceControl_Start_WritesOrdinaryStartParameter
+ * @brief 测试普通 service_control start 命令不受按需启动入口影响
+ *
+ * 预期：命令返回0，仍发送 ohos.ctl.start 控制参数及服务名
+ */
+HWTEST_F(BegetctlServiceControlTest, ServiceControl_Start_WritesOrdinaryStartParameter, TestSize.Level1)
+{
+    // Arrange
+    char arg0[] = "service_control";
+    char arg1[] = "start";
+    char arg2[] = "init_ondemand_ut";
+    char *args[] = {arg0, arg1, arg2, nullptr};
+
+    TestSetServiceControlParamFunc(RecordServiceCtrlParam);
+
+    // Act
+    int ret = BShellEnvDirectExecute(GetShellHandle(), 3, args);
+
+    // Assert
+    EXPECT_EQ(ret, 0);
+    EXPECT_STREQ(g_serviceCtrlParamName, "ohos.ctl.start");
+    EXPECT_STREQ(g_serviceCtrlParamValue, "init_ondemand_ut");
 }
 
 #ifdef SUPPORT_SA_MULTI_USER

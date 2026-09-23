@@ -822,10 +822,40 @@ static void ReportServiceStartInfor(Service *service, int64_t pid)
     }
 }
 
+static void HandleServicePostFork(Service *service, int pid,
+    const struct timespec *startingTime, const struct timespec *preforkTime)
+{
+    struct timespec startedTime;
+    clock_gettime(CLOCK_REALTIME, &startedTime);
+    INIT_LOGI("ServiceStart started info %s(pid %d uid %d)", service->name, pid, service->servPerm.uID);
+    INIT_LOGI("starttime:%ld-%ld, prefork:%ld-%ld, startedtime:%ld-%ld",
+        startingTime->tv_sec, startingTime->tv_nsec, preforkTime->tv_sec,
+        preforkTime->tv_nsec, startedTime.tv_sec, startedTime.tv_nsec);
+#ifndef OHOS_LITE
+    ReportServiceStartInfor(service, pid);
+#endif
+    service->pid = pid;
+#ifndef OHOS_LITE
+    (void)ProcessServiceAdd(service);
+#endif
+    NotifyServiceChange(service, SERVICE_STARTED);
+#if defined(ENABLE_HOOK_MGR)
+    ServiceHookExecute(service->name, (const char *)&pid, INIT_SERVICE_FORK_AFTER);
+#endif
+}
+
 int ServiceStart(Service *service, ServiceArgs *pathArgs)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "ServiceStart failed! null ptr.");
-    INIT_INFO_CHECK(service->pid <= 0, return SERVICE_SUCCESS, "ServiceStart already started:%s", service->name);
+    if (service->pid > 0) {
+        if (service->attribute & SERVICE_ATTR_NEED_RESTART) {
+            INIT_LOGI("ServiceStart pid %d still recorded for %s with NEED_RESTART, deferring to ServiceReap",
+                service->pid, service->name);
+        } else {
+            INIT_LOGI("ServiceStart already started:%s", service->name);
+        }
+        return SERVICE_SUCCESS;
+    }
     INIT_ERROR_CHECK(pathArgs != NULL && pathArgs->count > 0,
         return SERVICE_FAILURE, "ServiceStart pathArgs is NULL:%s", service->name);
     struct timespec startingTime;
@@ -853,31 +883,14 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
         service->lastErrno = INIT_EFORK;
         return SERVICE_FAILURE;
     }
-    struct timespec startedTime;
-    clock_gettime(CLOCK_REALTIME, &startedTime);
-
-    INIT_LOGI("ServiceStart started info %s(pid %d uid %d)", service->name, pid, service->servPerm.uID);
-    INIT_LOGI("starttime:%ld-%ld, prefork:%ld-%ld, startedtime:%ld-%ld",
-        startingTime.tv_sec, startingTime.tv_nsec, preforkTime.tv_sec,
-        preforkTime.tv_nsec, startedTime.tv_sec, startedTime.tv_nsec);
-#ifndef OHOS_LITE
-    ReportServiceStartInfor(service, pid);
-#endif
-    service->pid = pid;
-#ifndef OHOS_LITE
-    (void)ProcessServiceAdd(service);
-#endif
-    NotifyServiceChange(service, SERVICE_STARTED);
-#if defined(ENABLE_HOOK_MGR)
-    // after service fork hooks
-    ServiceHookExecute(service->name, (const char *)&pid, INIT_SERVICE_FORK_AFTER);
-#endif
+    HandleServicePostFork(service, pid, &startingTime, &preforkTime);
     return SERVICE_SUCCESS;
 }
 
 int ServiceStop(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "stop service failed! null ptr.");
+    ClearOnDemandServiceArgs(service);
     NotifyServiceChange(service, SERVICE_STOPPING);
     if (service->serviceJobs.jobsName[JOB_ON_STOP] != NULL) {
         DoJobNow(service->serviceJobs.jobsName[JOB_ON_STOP]);
@@ -912,6 +925,7 @@ int ServiceStop(Service *service)
 int ServiceTerm(Service *service)
 {
     INIT_ERROR_CHECK(service != NULL, return SERVICE_FAILURE, "stop service failed! null ptr.");
+    ClearOnDemandServiceArgs(service);
     NotifyServiceChange(service, SERVICE_STOPPING);
     if (service->serviceJobs.jobsName[JOB_ON_STOP] != NULL) {
         DoJobNow(service->serviceJobs.jobsName[JOB_ON_STOP]);
@@ -1036,59 +1050,58 @@ static void ServiceReapHookExecute(Service *service)
 #endif
 }
 
-void ServiceReap(Service *service)
+static void ExecuteServiceRestart(Service *service, ServiceArgs *onDemandArgs)
 {
-    INIT_CHECK(service != NULL, return);
-    INIT_LOGI("ServiceReap info %s pid %d.", service->name, service->pid);
-    NotifyServiceChange(service, SERVICE_STOPPED);
-    int tmp = service->pid;
-    service->pid = -1;
+    int ret = ExecRestartCmd(service);
+    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "ServiceReap failed exec restartArg for %s", service->name);
+    if (service->serviceJobs.jobsName[JOB_ON_RESTART] != NULL) {
+        DoJobNow(service->serviceJobs.jobsName[JOB_ON_RESTART]);
+    }
+    ServiceArgs *pathArgs = &service->pathArgs;
+    if ((service->attribute & SERVICE_ATTR_NEED_RESTART) && onDemandArgs->count != 0) {
+        pathArgs = onDemandArgs;
+    }
+    ret = ServiceStart(service, pathArgs);
+    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "ServiceReap ServiceStart failed %s", service->name);
+    service->attribute &= (~SERVICE_ATTR_NEED_RESTART);
+}
 
+static void HandleServiceExit(Service *service, int oldPid, ServiceArgs *onDemandArgs)
+{
     if (service->attribute & SERVICE_ATTR_INVALID) {
         INIT_LOGE("ServiceReap error invalid service %s", service->name);
         return;
     }
-
-    // If the service set timer
-    // which means the timer handler will start the service
-    // Init should not start it automatically.
     INIT_CHECK(IsServiceWithTimerEnabled(service) == 0, return);
     if (!IsOnDemandService(service)) {
         CloseServiceSocket(service);
     }
     CloseServiceFile(service->fileCfg);
-    // stopped by system-init itself, no need to restart even if it is not one-shot service
     if (service->attribute & SERVICE_ATTR_NEED_STOP) {
         service->attribute &= (~SERVICE_ATTR_NEED_STOP);
         service->crashCnt = 0;
         return;
     }
 
-    // for one-shot service
-    if (service->attribute & SERVICE_ATTR_ONCE) {
-        // no need to restart
-        if (!(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
-            service->attribute &= (~SERVICE_ATTR_NEED_STOP);
-            return;
-        }
-        // the service could be restart even if it is one-shot service
+    if ((service->attribute & SERVICE_ATTR_ONCE) && !(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
+        service->attribute &= (~SERVICE_ATTR_NEED_STOP);
+        return;
     }
 
-    if (service->attribute & SERVICE_ATTR_PERIOD) { //period
+    if (service->attribute & SERVICE_ATTR_PERIOD) {
         ServiceStartTimer(service, service->period);
         return;
     }
 
-    // service no need to restart if it is an ondemand service.
-    if (IsOnDemandService(service)) {
+    if (IsOnDemandService(service) && !(service->attribute & SERVICE_ATTR_NEED_RESTART)) {
         CheckOndemandService(service);
         return;
     }
 
-    if (service->attribute & SERVICE_ATTR_CRITICAL) { // critical
+    if (service->attribute & SERVICE_ATTR_CRITICAL) {
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
             INIT_LOGE("ServiceReap error critical service crashed %s %d", service->name, service->crashCount);
-            service->pid = tmp;
+            service->pid = oldPid;
             ServiceReapHookExecute(service);
             service->pid = -1;
             ExecReboot("panic");
@@ -1101,16 +1114,26 @@ void ServiceReap(Service *service)
             return;
         }
     }
+    ExecuteServiceRestart(service, onDemandArgs);
+}
 
-    int ret = ExecRestartCmd(service);
-    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "ServiceReap failed exec restartArg for %s", service->name);
+void ServiceReap(Service *service)
+{
+    INIT_CHECK(service != NULL, return);
+    // Detach before jobs/hooks run. All return paths release this request's arguments.
+    ServiceArgs onDemandArgs = service->onDemandArgs;
+    service->onDemandArgs.argv = NULL;
+    service->onDemandArgs.count = 0;
+    INIT_LOGI("ServiceReap info %s pid %d.", service->name, service->pid);
+    NotifyServiceChange(service, SERVICE_STOPPED);
+    int oldPid = service->pid;
+    service->pid = -1;
 
-    if (service->serviceJobs.jobsName[JOB_ON_RESTART] != NULL) {
-        DoJobNow(service->serviceJobs.jobsName[JOB_ON_RESTART]);
+    HandleServiceExit(service, oldPid, &onDemandArgs);
+    if (IsOnDemandService(service) && service->pid <= 0) {
+        service->attribute &= ~SERVICE_ATTR_NEED_RESTART;
     }
-    ret = ServiceStart(service, &service->pathArgs);
-    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS, "ServiceReap ServiceStart failed %s", service->name);
-    service->attribute &= (~SERVICE_ATTR_NEED_RESTART);
+    FreeStringVector(onDemandArgs.argv, onDemandArgs.count);
 }
 
 int UpdaterServiceFds(Service *service, int *fds, size_t fdCount)

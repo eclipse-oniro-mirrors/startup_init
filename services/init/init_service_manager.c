@@ -159,6 +159,7 @@ static void FreeServiceKernelPerm(Service *service)
 void ReleaseService(Service *service)
 {
     INIT_CHECK(service != NULL, return);
+    ClearOnDemandServiceArgs(service);
     FreeServiceArg(&service->pathArgs);
     FreeServiceArg(&service->writePidArgs);
     FreeServiceArg(&service->capsArgs);
@@ -1354,6 +1355,55 @@ void StartServiceByName(const char *servName)
     // After starting, clear the extra parameters.
     FreeStringVector(extraArgs.argv, extraArgs.count);
     return;
+}
+
+void ClearOnDemandServiceArgs(Service *service)
+{
+    INIT_CHECK(service != NULL, return);
+    FreeServiceArg(&service->onDemandArgs);
+}
+
+static void StartOnDemandServiceLater(Service *service, ServiceArgs *extraArgs)
+{
+    service->attribute |= SERVICE_ATTR_NEED_RESTART;
+    service->onDemandArgs = *extraArgs;
+    extraArgs->argv = NULL;
+    extraArgs->count = 0;
+    int ret = ServiceStart(service, &service->pathArgs);
+    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS,
+        "On-demand service %s defer start failed, ret=%d", service->name, ret);
+}
+
+static void StartOnDemandServiceNow(Service *service, ServiceArgs *extraArgs)
+{
+    service->attribute &= ~SERVICE_ATTR_NEED_RESTART;
+    ServiceArgs *pathArgs = extraArgs->count != 0 ? extraArgs : &service->pathArgs;
+    int ret = ServiceStart(service, pathArgs);
+    INIT_CHECK_ONLY_ELOG(ret == SERVICE_SUCCESS,
+        "On-demand service %s immediate start failed, ret=%d", service->name, ret);
+}
+
+void StartOnDemandServiceByName(const char *servName)
+{
+    INIT_ERROR_CHECK(servName != NULL, return, "StartOnDemandServiceByName: servName is NULL");
+    ServiceArgs extraArgs = { 0 };
+    Service *service = GetServiceByExtServName(servName, &extraArgs);
+    INIT_ERROR_CHECK(service != NULL, FreeStringVector(extraArgs.argv, extraArgs.count);
+        return, "Cannot find service for on-demand request %s", servName);
+
+    if (!IsOnDemandService(service)) {
+        INIT_LOGE("Service %s is not on-demand, reject start_ondemand request", service->name);
+        FreeStringVector(extraArgs.argv, extraArgs.count);
+        return;
+    }
+
+    ClearOnDemandServiceArgs(service);
+    if (service->pid > 0) {
+        StartOnDemandServiceLater(service, &extraArgs);
+    } else {
+        StartOnDemandServiceNow(service, &extraArgs);
+    }
+    FreeStringVector(extraArgs.argv, extraArgs.count);
 }
 
 void StopServiceByName(const char *servName)

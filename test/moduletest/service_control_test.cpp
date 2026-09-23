@@ -13,10 +13,19 @@
  * limitations under the License.
  */
 #include <chrono>
+#include <cerrno>
+#include <cstdlib>
+#include <fstream>
+#include <limits>
 #include <thread>
 #include <gtest/gtest.h>
+#include <csignal>
 
 #include "service_control.h"
+#include "securec.h"
+#include "syspara/parameter.h"
+#include "sys_param.h"
+#include "init_param.h"
 #include "beget_ext.h"
 #include "test_utils.h"
 
@@ -266,5 +275,95 @@ HWTEST_F(ServiceControlTest, WaitForServiceStatusTest, TestSize.Level1)
     std::cout << "Wait for service " << serviceName << " status change to stop\n";
     ret = ServiceWaitForStatus(serviceName.c_str(), SERVICE_STOPPED, WAIT_SERVICE_STATUS_TIMEOUT);
     EXPECT_EQ(ret, -1);
+}
+
+namespace {
+constexpr int PROC_STAT_STATE_OFFSET = 2;
+constexpr int POLL_INTERVAL_MS = 100;
+
+bool IsLiveServiceProcess(uint32_t pid)
+{
+    if (pid <= 1 || pid > static_cast<uint32_t>(std::numeric_limits<pid_t>::max())) {
+        return false;
+    }
+    std::ifstream statFile("/proc/" + std::to_string(pid) + "/stat");
+    std::string statLine;
+    if (!std::getline(statFile, statLine)) {
+        return false;
+    }
+    // comm may contain spaces or ')': the state follows its final closing bracket.
+    size_t end = statLine.rfind(')');
+    if (end == std::string::npos || end + PROC_STAT_STATE_OFFSET >= statLine.size()) {
+        return false;
+    }
+    char state = statLine[end + PROC_STAT_STATE_OFFSET];
+    return state != 'Z' && state != 'X' && state != 'x' && kill(static_cast<pid_t>(pid), 0) == 0;
+}
+
+uint32_t WaitForNewServiceProcess(const std::string &name, uint32_t oldPid)
+{
+    const std::string pidKey = std::string(STARTUP_SERVICE_CTL) + "." + name + ".pid";
+    const auto deadline = std::chrono::steady_clock::now() +
+        std::chrono::seconds(WAIT_SERVICE_STATUS_TIMEOUT);
+    uint32_t previous = 0;
+    while (std::chrono::steady_clock::now() < deadline) {
+        uint32_t pid = GetUintParameter(pidKey.c_str(), 0);
+        if (pid != oldPid && GetServiceStatus(name) == "running" && IsLiveServiceProcess(pid)) {
+            if (pid == previous) {
+                return pid; // Two consecutive samples of a new, non-zombie instance.
+            }
+            previous = pid;
+        } else {
+            previous = 0;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(POLL_INTERVAL_MS));
+    }
+    return 0;
+}
+
+class OnDemandRecoveryCleanup {
+public:
+    explicit OnDemandRecoveryCleanup(const std::string &name) : name_(name) {}
+    ~OnDemandRecoveryCleanup()
+    {
+        (void)ServiceControl(name_.c_str(), STOP);
+    }
+
+private:
+    std::string name_;
+};
+} // namespace
+
+// Opt-in only: use an isolated, non-critical ondemand test service. This is an
+// interface recovery loop, not a high-load or samgr/SA availability test.
+HWTEST_F(ServiceControlTest, DISABLED_OnDemandRecovery, TestSize.Level1)
+{
+    const char *configuredName = std::getenv("INIT_ONDEMAND_TEST_SERVICE");
+    ASSERT_NE(configuredName, nullptr) << "Set an isolated ondemand test service explicitly";
+    const std::string serviceName(configuredName);
+    ASSERT_EQ(serviceName.find("init_ondemand_test_"), 0U);
+    ASSERT_EQ(serviceName.find_first_not_of(
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"), std::string::npos);
+    OnDemandRecoveryCleanup cleanup(serviceName);
+    constexpr int totalCycles = 20;
+    constexpr int minSuccess = 19;
+    int successCount = 0;
+
+    for (int i = 0; i < totalCycles; ++i) {
+        SCOPED_TRACE(i);
+        // Ordinary START avoids pre-arming a recovery before the simulated crash.
+        ASSERT_EQ(ServiceControl(serviceName.c_str(), START), 0);
+        uint32_t oldPid = WaitForNewServiceProcess(serviceName, 0);
+        ASSERT_GT(oldPid, 1U) << "No live test instance before crash";
+        ASSERT_EQ(kill(static_cast<pid_t>(oldPid), SIGKILL), 0) << "kill failed, errno=" << errno;
+        int ret = ServiceControl(serviceName.c_str(), START_ONDEMAND);
+        if (ret == 0 && WaitForNewServiceProcess(serviceName, oldPid) != 0) {
+            ++successCount;
+        } else {
+            std::cout << "Cycle " << i << ": no new live instance, ret=" << ret << std::endl;
+        }
+    }
+    std::cout << "Interface recovery: " << successCount << "/" << totalCycles << std::endl;
+    EXPECT_GE(successCount, minSuccess);
 }
 } // initModuleTest

@@ -116,7 +116,7 @@ static int BuildByUserCtrlValue(char *buffer, size_t size, const ByUserCtrlValue
 }
 #endif
 
-static int StartProcess(const char *name, const char *extArgv[], int extArgc)
+static int StartProcessByParameter(const char *parameter, const char *name, const char *extArgv[], int extArgc)
 {
     BEGET_ERROR_CHECK(name != NULL, return -1, "Service name is null.");
     int extraArg = 0;
@@ -128,6 +128,7 @@ static int StartProcess(const char *name, const char *extArgv[], int extArgc)
     if (extraArg == 1) {
         unsigned int len = 0;
         for (int i = 0; i < extArgc; i++) {
+            BEGET_ERROR_CHECK(extArgv[i] != NULL, return -1, "Extra argument is null.");
             len += strlen(extArgv[i]);
         }
         len += strlen(name) + extArgc + 1;
@@ -151,12 +152,17 @@ static int StartProcess(const char *name, const char *extArgv[], int extArgc)
                 return -1;
             }
         }
-        ret = SystemSetParameter("ohos.ctl.start", nameValue);
+        ret = SystemSetParameter(parameter, nameValue);
         free(nameValue);
     } else {
-        ret = SystemSetParameter("ohos.ctl.start", name);
+        ret = SystemSetParameter(parameter, name);
     }
     return ret;
+}
+
+static int StartProcess(const char *name, const char *extArgv[], int extArgc)
+{
+    return StartProcessByParameter("ohos.ctl.start", name, extArgv, extArgc);
 }
 
 static int StopProcess(const char *serviceName)
@@ -169,6 +175,11 @@ static int TermProcess(const char *serviceName)
 {
     BEGET_ERROR_CHECK(serviceName != NULL, return -1, "Service name is null.");
     return SystemSetParameter("ohos.ctl.term", serviceName);
+}
+
+static int StartOnDemandProcess(const char *serviceName, const char *extArgv[], int extArgc)
+{
+    return StartProcessByParameter("ohos.ctl.start_ondemand", serviceName, extArgv, extArgc);
 }
 
 #ifdef SUPPORT_SA_MULTI_USER
@@ -308,6 +319,9 @@ int ServiceControlWithExtra(const char *serviceName, int action, const char *ext
             break;
         case TERM:
             ret = TermProcess(serviceName);
+            break;
+        case START_ONDEMAND:
+            ret = StartOnDemandProcess(serviceName, extArgv, extArgc);
             break;
         default:
             BEGET_LOGE("Set service %s action %d error", serviceName, action);

@@ -54,6 +54,7 @@ const ParamCmdInfo *GetServiceStartCtrl(size_t *size)
         {"ohos.ctl.start", "start", "start "},
         {"ohos.ctl.stop", "stop", "stop "},
         {"ohos.ctl.term", "term", "termservice "},
+        {"ohos.ctl.start_ondemand", "start_ondemand", "start_ondemand "},
 #if defined(SUPPORT_SA_MULTI_USER) && !defined(OHOS_LITE)
         {"ohos.ctl.start.userid", "start_by_userid", "start_by_userid "},
         {"ohos.ctl.stop.userid", "stop_by_userid", "stop_by_userid "},

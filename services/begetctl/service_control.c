@@ -60,10 +60,16 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
     }
     if (strcmp(argv[0], "start_service") == 0) {
         ServiceControlWithExtra(argv[1], 0, (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
+    } else if (strcmp(argv[0], "start_ondemand_service") == 0) {
+        ServiceControlWithExtra(argv[1], START_ONDEMAND,
+            (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
     } else if (strcmp(argv[0], "stop_service") == 0) {
         ServiceControlWithExtra(argv[1], 1, (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
     } else if (strcmp(argv[0], "start") == 0) {
         ServiceControlWithExtra(argv[1], 0, (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
+    } else if (strcmp(argv[0], "start_ondemand") == 0) {
+        ServiceControlWithExtra(argv[1], START_ONDEMAND,
+            (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
     } else if (strcmp(argv[0], "stop") == 0) {
         ServiceControlWithExtra(argv[1], 1, (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
 #if defined(SUPPORT_SA_MULTI_USER) && !defined(OHOS_LITE)
@@ -95,8 +101,11 @@ MODULE_CONSTRUCTOR(void)
     const CmdInfo infos[] = {
         {"service_control", main_cmd, "stop service", "service_control stop servicename", "service_control stop"},
         {"service_control", main_cmd, "start service", "service_control start servicename", "service_control start"},
+        {"service_control", main_cmd, "start ondemand service",
+            "service_control start_ondemand servicename", "service_control start_ondemand"},
         {"stop_service", main_cmd, "stop service", "stop_service servicename", ""},
         {"start_service", main_cmd, "start service", "start_service servicename", ""},
+        {"start_ondemand_service", main_cmd, "start ondemand service", "start_ondemand_service servicename", ""},
 #if defined(SUPPORT_SA_MULTI_USER) && !defined(OHOS_LITE)
         {"startwithuserid", main_cmd, "start service with user id",
             "startwithuserid servicename userid [ext...]", ""},

@@ -16,7 +16,11 @@
 #ifndef STARTUP_INIT_SERVICE_CONTROL_TEST_H
 #define STARTUP_INIT_SERVICE_CONTROL_TEST_H
 
+#ifdef __cplusplus
+#include <cstddef>
+#else
 #include <stddef.h>
+#endif
 
 #include "service_control.h"
 
@@ -25,6 +29,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef int (*ServiceControlSetParamFunc)(const char *name, const char *value);
+void TestSetServiceControlParamFunc(ServiceControlSetParamFunc func);
 
 #ifdef SUPPORT_SA_MULTI_USER
 typedef int (*ByUserWaitParamFunc)(const char *name, const char *value, int waitTimeout);

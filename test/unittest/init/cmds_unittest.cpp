@@ -523,13 +523,17 @@ HWTEST_F(CmdsUnitTest, TestGetCmdKey, TestSize.Level1)
 
 HWTEST_F(CmdsUnitTest, TestDoCmdByIndex, TestSize.Level1)
 {
-    DoCmdByIndex(1, "/data/init_ut/test_cmd_dir0", nullptr);
+    EXPECT_STREQ(GetCmdKey(1), "mkdir ");
+    int cmdIndex = -1;
+    ASSERT_NE(GetMatchCmd("mkdir ", &cmdIndex), nullptr);
+    DoCmdByIndex(cmdIndex, "/data/init_ut/test_cmd_dir0", nullptr);
     int ret = access("/data/init_ut/test_cmd_dir0", F_OK);
     EXPECT_EQ(ret, 0);
 
-    const int execPos = 17;
-    DoCmdByIndex(execPos, "sleep 1", nullptr);
-    DoCmdByIndex(23, "test", nullptr); // 23 is cmd index
+    ASSERT_NE(GetMatchCmd("exec ", &cmdIndex), nullptr);
+    DoCmdByIndex(cmdIndex, "sleep 1", nullptr);
+    ASSERT_NE(GetMatchCmd("symlink ", &cmdIndex), nullptr);
+    DoCmdByIndex(cmdIndex, "test", nullptr); // Missing second argument must be rejected.
 }
 
 HWTEST_F(CmdsUnitTest, TestGetCmdLinesFromJson, TestSize.Level1)

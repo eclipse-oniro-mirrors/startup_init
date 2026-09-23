@@ -17,6 +17,13 @@
 
 #include "init_param.h"
 
+static ServiceControlSetParamFunc g_testServiceControlSetParamFunc = NULL;
+
+void TestSetServiceControlParamFunc(ServiceControlSetParamFunc func)
+{
+    g_testServiceControlSetParamFunc = func;
+}
+
 #ifdef SUPPORT_SA_MULTI_USER
 static ByUserWaitParamFunc g_testByUserWaitParamFunc = NULL;
 static ByUserSetParamFunc g_testByUserSetParamFunc = NULL;
@@ -27,6 +34,9 @@ extern int __real_SystemWaitParameter(const char *name, const char *value, int32
 
 static int TestSystemSetParameter(const char *name, const char *value)
 {
+    if (g_testServiceControlSetParamFunc != NULL) {
+        return g_testServiceControlSetParamFunc(name, value);
+    }
 #ifdef SUPPORT_SA_MULTI_USER
     if (g_testByUserSetParamFunc != NULL) {
         return g_testByUserSetParamFunc(name, value);

@@ -14,6 +14,7 @@
  */
 
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <cstdlib>
@@ -31,6 +32,7 @@
 #include "init_hook.h"
 #include "plugin_adapter.h"
 #include "func_wrapper.h"
+#include "service_control_test.h"
 
 const char *SERVICE_INFO_JSONSTR = "{"
     "\"services\":{"
@@ -864,4 +866,421 @@ HWTEST_F(ServiceUnitTest, TestGetKillServiceSig, TestSize.Level0)
     sig = GetKillServiceSig("normal_service");
     EXPECT_EQ(sig, SIGKILL);
 }
+
+namespace {
+constexpr const char *ONDEMAND_TEST_NAME = "test_sa_ondemand";
+constexpr const char *ONDEMAND_TEST_PATH = "/data/init_ut/ondemand_test_service";
+constexpr int MOCK_FORK_BASE_PID = 31000;
+constexpr mode_t TEST_DIR_MODE = 0755;
+int g_onDemandForkCount = 0;
+bool g_onDemandForkFailure = false;
+int g_onDemandSendCount = 0;
+std::string g_onDemandParamName;
+std::string g_onDemandParamValue;
+
+pid_t OnDemandFork()
+{
+    ++g_onDemandForkCount;
+    return g_onDemandForkFailure ? -1 : MOCK_FORK_BASE_PID + g_onDemandForkCount;
+}
+
+int CaptureOnDemandParameter(const char *name, const char *value)
+{
+    ++g_onDemandSendCount;
+    g_onDemandParamName = name;
+    g_onDemandParamValue = value;
+    return 0;
+}
+} // namespace
+
+class OnDemandServiceTest : public testing::Test {
+public:
+    static void SetUpTestCase()
+    {
+        ASSERT_TRUE(mkdir("/data/init_ut", TEST_DIR_MODE) == 0 || errno == EEXIST);
+        FILE *file = fopen(ONDEMAND_TEST_PATH, "w");
+        ASSERT_NE(file, nullptr);
+        EXPECT_EQ(fclose(file), 0);
+    }
+
+    static void TearDownTestCase()
+    {
+        unlink(ONDEMAND_TEST_PATH);
+    }
+
+    void SetUp() override
+    {
+        g_onDemandForkCount = 0;
+        g_onDemandForkFailure = false;
+        g_onDemandSendCount = 0;
+        g_onDemandParamName.clear();
+        g_onDemandParamValue.clear();
+        UpdateForkFunc(OnDemandFork);
+        const char *json = "{\"name\":\"test_sa_ondemand\","
+            "\"path\":[\"/data/init_ut/ondemand_test_service\",\"default\"],"
+            "\"uid\":\"system\",\"gid\":[\"system\"]}";
+        cJSON *item = cJSON_Parse(json);
+        ASSERT_NE(item, nullptr);
+        service_ = AddService(ONDEMAND_TEST_NAME);
+        if (service_ == nullptr) {
+            cJSON_Delete(item);
+            FAIL() << "AddService failed";
+        }
+        int ret = ParseOneService(item, service_);
+        cJSON_Delete(item);
+        ASSERT_EQ(ret, 0);
+        service_->attribute = SERVICE_ATTR_ONDEMAND;
+        service_->pid = -1;
+    }
+
+    void TearDown() override
+    {
+        TestSetServiceControlParamFunc(nullptr);
+        UpdateForkFunc(nullptr);
+        // Fork is mocked: do not stop or reap a real process.
+        ReleaseService(service_);
+        service_ = nullptr;
+    }
+
+protected:
+    Service *service_ = nullptr;
+};
+
+HWTEST_F(OnDemandServiceTest, RequestBeforeReap, TestSize.Level1)
+{
+    service_->pid = 1234; // Old PID still recorded; no real child is created.
+    DoCmdByName("start_ondemand ", ONDEMAND_TEST_NAME);
+    EXPECT_EQ(service_->pid, 1234);
+    EXPECT_EQ(g_onDemandForkCount, 0);
+    EXPECT_NE(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+
+    ServiceReap(service_);
+    EXPECT_EQ(g_onDemandForkCount, 1);
+    EXPECT_EQ(service_->pid, 31001);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+}
+
+HWTEST_F(OnDemandServiceTest, RequestAfterReap, TestSize.Level1)
+{
+    service_->pid = 1234;
+    ServiceReap(service_);
+    EXPECT_EQ(service_->pid, -1);
+    EXPECT_EQ(g_onDemandForkCount, 0);
+
+    DoCmdByName("start_ondemand ", ONDEMAND_TEST_NAME);
+    EXPECT_EQ(g_onDemandForkCount, 1);
+    EXPECT_EQ(service_->pid, 31001);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+}
+
+HWTEST_F(OnDemandServiceTest, ExtraArguments, TestSize.Level1)
+{
+    TestSetServiceControlParamFunc(CaptureOnDemandParameter);
+    const char *args[] = {"event", "payload"};
+    EXPECT_EQ(ServiceControlWithExtra(ONDEMAND_TEST_NAME, START_ONDEMAND, args, 2), 0);
+    EXPECT_EQ(g_onDemandParamName, "ohos.ctl.start_ondemand");
+    EXPECT_EQ(g_onDemandParamValue, "test_sa_ondemand|event|payload");
+    EXPECT_EQ(g_onDemandSendCount, 1);
+    TestSetServiceControlParamFunc(nullptr);
+
+    service_->pid = 1234;
+    DoCmdByName("start_ondemand ", g_onDemandParamValue.c_str());
+    EXPECT_NE(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+    ASSERT_NE(service_->onDemandArgs.argv, nullptr);
+    EXPECT_STREQ(service_->onDemandArgs.argv[0], ONDEMAND_TEST_PATH);
+    EXPECT_STREQ(service_->onDemandArgs.argv[1], "default");
+    EXPECT_STREQ(service_->onDemandArgs.argv[2], "event");
+    EXPECT_STREQ(service_->onDemandArgs.argv[3], "payload");
+    EXPECT_EQ(service_->onDemandArgs.argv[4], nullptr);
+    EXPECT_STREQ(service_->pathArgs.argv[1], "default");
+    EXPECT_EQ(g_onDemandForkCount, 0);
+    ServiceReap(service_);
+    EXPECT_EQ(g_onDemandForkCount, 1);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+    EXPECT_STREQ(service_->pathArgs.argv[1], "default");
+}
+
+HWTEST_F(OnDemandServiceTest, ImmediateExtraArguments, TestSize.Level1)
+{
+    DoCmdByName("start_ondemand ", "test_sa_ondemand|event|payload");
+    EXPECT_EQ(g_onDemandForkCount, 1);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+    EXPECT_STREQ(service_->pathArgs.argv[1], "default");
+}
+
+HWTEST_F(OnDemandServiceTest, DeferredArgumentsAreUsed, TestSize.Level1)
+{
+    service_->pid = 1234;
+    DoCmdByName("start_ondemand ", "test_sa_ondemand|event");
+    ASSERT_NE(service_->onDemandArgs.argv, nullptr);
+    // An invalid executable in the pending vector must prevent fork. If Reap
+    // incorrectly uses the valid configuration vector, the fork count becomes 1.
+    char *invalidPath = strdup("/nonexistent/init_ondemand_test");
+    ASSERT_NE(invalidPath, nullptr);
+    free(service_->onDemandArgs.argv[0]);
+    service_->onDemandArgs.argv[0] = invalidPath;
+    ServiceReap(service_);
+    EXPECT_EQ(g_onDemandForkCount, 0);
+    EXPECT_EQ(service_->pid, -1);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+    EXPECT_EQ(service_->onDemandArgs.count, 0);
+    EXPECT_STREQ(service_->pathArgs.argv[0], ONDEMAND_TEST_PATH);
+}
+
+HWTEST_F(OnDemandServiceTest, LatestRequestWins, TestSize.Level1)
+{
+    service_->pid = 1234;
+    DoCmdByName("start_ondemand ", "test_sa_ondemand|first");
+    DoCmdByName("start_ondemand ", "test_sa_ondemand|second");
+    ASSERT_NE(service_->onDemandArgs.argv, nullptr);
+    EXPECT_STREQ(service_->onDemandArgs.argv[1], "default");
+    EXPECT_STREQ(service_->onDemandArgs.argv[2], "second");
+    EXPECT_EQ(service_->onDemandArgs.argv[3], nullptr);
+    EXPECT_EQ(g_onDemandForkCount, 0);
+    DoCmdByName("start_ondemand ", ONDEMAND_TEST_NAME);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+    EXPECT_EQ(service_->onDemandArgs.count, 0);
+    ServiceReap(service_);
+    EXPECT_EQ(g_onDemandForkCount, 1);
+    EXPECT_STREQ(service_->pathArgs.argv[1], "default");
+}
+
+HWTEST_F(OnDemandServiceTest, OrdinaryStartUnchanged, TestSize.Level1)
+{
+    TestSetServiceControlParamFunc(CaptureOnDemandParameter);
+    const char *args[] = {"event"};
+    EXPECT_EQ(ServiceControlWithExtra(ONDEMAND_TEST_NAME, START, args, 1), 0);
+    EXPECT_EQ(g_onDemandParamName, "ohos.ctl.start");
+    EXPECT_EQ(g_onDemandParamValue, "test_sa_ondemand|event");
+    EXPECT_EQ(ServiceControl(ONDEMAND_TEST_NAME, START_ONDEMAND), 0);
+    EXPECT_EQ(g_onDemandParamName, "ohos.ctl.start_ondemand");
+    EXPECT_EQ(g_onDemandParamValue, ONDEMAND_TEST_NAME);
+    TestSetServiceControlParamFunc(nullptr);
+
+    service_->pid = 1234;
+    DoCmdByName("start ", ONDEMAND_TEST_NAME);
+    EXPECT_EQ(service_->pid, 1234);
+    EXPECT_EQ(g_onDemandForkCount, 0);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+}
+
+HWTEST_F(OnDemandServiceTest, NoRequestNoRestart, TestSize.Level1)
+{
+    service_->pid = 1234;
+    ServiceReap(service_);
+    EXPECT_EQ(service_->pid, -1);
+    EXPECT_EQ(g_onDemandForkCount, 0);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+}
+
+HWTEST_F(OnDemandServiceTest, StopCancelsRequest, TestSize.Level1)
+{
+    service_->pid = 1234;
+    DoCmdByName("start_ondemand ", "test_sa_ondemand|event");
+    ASSERT_NE(service_->onDemandArgs.argv, nullptr);
+    service_->pid = -1; // Exercise cancellation without sending any process signal.
+    EXPECT_EQ(ServiceStop(service_), 0);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+    ServiceReap(service_);
+    EXPECT_EQ(g_onDemandForkCount, 0);
+}
+
+HWTEST_F(OnDemandServiceTest, TermCancelsRequest, TestSize.Level1)
+{
+    service_->pid = 1234;
+    DoCmdByName("start_ondemand ", "test_sa_ondemand|event");
+    ASSERT_NE(service_->onDemandArgs.argv, nullptr);
+    service_->pid = -1;
+    EXPECT_EQ(ServiceTerm(service_), 0);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+    ServiceReap(service_);
+    EXPECT_EQ(g_onDemandForkCount, 0);
+}
+
+HWTEST_F(OnDemandServiceTest, InvalidClientArguments, TestSize.Level1)
+{
+    TestSetServiceControlParamFunc(CaptureOnDemandParameter);
+    const char *args[] = {nullptr};
+    EXPECT_EQ(ServiceControl(nullptr, START_ONDEMAND), -1);
+    EXPECT_EQ(ServiceControlWithExtra(ONDEMAND_TEST_NAME, START_ONDEMAND, args, 1), -1);
+    EXPECT_EQ(g_onDemandSendCount, 0);
+}
+
+HWTEST_F(OnDemandServiceTest, OnceWithoutRequestDoesNotRestart, TestSize.Level1)
+{
+    service_->pid = MOCK_FORK_BASE_PID;
+    service_->attribute |= SERVICE_ATTR_ONCE;
+
+    ServiceReap(service_);
+
+    EXPECT_EQ(g_onDemandForkCount, 0);
+    EXPECT_EQ(service_->pid, -1);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+}
+
+HWTEST_F(OnDemandServiceTest, OnceWithPendingRequestRestarts, TestSize.Level1)
+{
+    service_->pid = MOCK_FORK_BASE_PID;
+    service_->attribute |= SERVICE_ATTR_ONCE;
+    DoCmdByName("start_ondemand ", "test_sa_ondemand|event");
+
+    ServiceReap(service_);
+
+    EXPECT_EQ(g_onDemandForkCount, 1);
+    EXPECT_EQ(service_->pid, MOCK_FORK_BASE_PID + 1);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+    EXPECT_EQ(service_->onDemandArgs.count, 0);
+}
+
+HWTEST_F(OnDemandServiceTest, EarlyReturnReleasesArguments, TestSize.Level1)
+{
+    service_->pid = 1234;
+    DoCmdByName("start_ondemand ", "test_sa_ondemand|event");
+    service_->attribute |= SERVICE_ATTR_INVALID;
+    ServiceReap(service_);
+    EXPECT_EQ(g_onDemandForkCount, 0);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+    EXPECT_EQ(service_->onDemandArgs.count, 0);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+}
+
+HWTEST_F(OnDemandServiceTest, ImmediateInvalidServiceClearsRestart, TestSize.Level1)
+{
+    service_->attribute |= SERVICE_ATTR_INVALID | SERVICE_ATTR_NEED_RESTART;
+    DoCmdByName("start_ondemand ", ONDEMAND_TEST_NAME);
+    EXPECT_EQ(g_onDemandForkCount, 0);
+    EXPECT_EQ(service_->pid, -1);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+}
+
+HWTEST_F(OnDemandServiceTest, ImmediateEmptyPathClearsRestart, TestSize.Level1)
+{
+    int savedCount = service_->pathArgs.count;
+    service_->pathArgs.count = 0;
+    service_->attribute |= SERVICE_ATTR_NEED_RESTART;
+    DoCmdByName("start_ondemand ", ONDEMAND_TEST_NAME);
+    service_->pathArgs.count = savedCount; // Restore ownership for TearDown.
+    EXPECT_EQ(g_onDemandForkCount, 0);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+}
+
+HWTEST_F(OnDemandServiceTest, TimerReapClearsPendingRequest, TestSize.Level1)
+{
+    service_->pid = 1234;
+    DoCmdByName("start_ondemand ", "test_sa_ondemand|event");
+    service_->attribute |= SERVICE_ATTR_TIMERSTART;
+    ServiceReap(service_);
+    EXPECT_EQ(g_onDemandForkCount, 0);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+    EXPECT_EQ(service_->onDemandArgs.count, 0);
+    service_->attribute &= ~SERVICE_ATTR_TIMERSTART;
+}
+
+HWTEST_F(OnDemandServiceTest, StopFlagReapClearsPendingRequest, TestSize.Level1)
+{
+    service_->pid = 1234;
+    service_->attribute |= SERVICE_ATTR_NEED_STOP;
+    DoCmdByName("start_ondemand ", "test_sa_ondemand|event");
+    ServiceReap(service_);
+    EXPECT_EQ(g_onDemandForkCount, 0);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+    EXPECT_EQ(service_->onDemandArgs.count, 0);
+}
+
+HWTEST_F(OnDemandServiceTest, ForkFailureClearsArguments, TestSize.Level1)
+{
+    service_->pid = 1234;
+    DoCmdByName("start_ondemand ", "test_sa_ondemand|event");
+    g_onDemandForkFailure = true;
+    ServiceReap(service_);
+    EXPECT_EQ(g_onDemandForkCount, 1);
+    EXPECT_EQ(service_->pid, -1);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+}
+
+HWTEST_F(OnDemandServiceTest, ParamToCommandChain, TestSize.Level1)
+{
+    ServiceCtrlInfo *ctrlInfo = nullptr;
+    int ret = GetServiceCtrlInfo("ohos.ctl.start_ondemand", ONDEMAND_TEST_NAME, &ctrlInfo);
+    ASSERT_EQ(ret, 0);
+    ASSERT_NE(ctrlInfo, nullptr);
+    EXPECT_STREQ(ctrlInfo->cmdName, "start_ondemand ");
+    EXPECT_NE(ctrlInfo->ctrlParam, 0);
+
+    int cmdIndex = -1;
+    const char *matchName = GetMatchCmd(ctrlInfo->cmdName, &cmdIndex);
+    EXPECT_NE(matchName, nullptr);
+    EXPECT_STREQ(matchName, "start_ondemand ");
+    EXPECT_GE(cmdIndex, 0);
+
+    const char *serviceArg = ctrlInfo->realKey + ctrlInfo->valueOffset;
+    EXPECT_STREQ(serviceArg, ONDEMAND_TEST_NAME);
+
+    service_->pid = -1;
+    DoCmdByIndex(cmdIndex, serviceArg, nullptr);
+    EXPECT_EQ(g_onDemandForkCount, 1);
+    EXPECT_EQ(service_->pid, 31001);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+
+    free(ctrlInfo);
+}
+
+HWTEST_F(OnDemandServiceTest, ParamChainRequestBeforeReap, TestSize.Level1)
+{
+    ServiceCtrlInfo *ctrlInfo = nullptr;
+    int ret = GetServiceCtrlInfo("ohos.ctl.start_ondemand", ONDEMAND_TEST_NAME, &ctrlInfo);
+    ASSERT_EQ(ret, 0);
+    ASSERT_NE(ctrlInfo, nullptr);
+
+    int cmdIndex = -1;
+    (void)GetMatchCmd(ctrlInfo->cmdName, &cmdIndex);
+    const char *serviceArg = ctrlInfo->realKey + ctrlInfo->valueOffset;
+
+    service_->pid = 1234;
+    DoCmdByIndex(cmdIndex, serviceArg, nullptr);
+    EXPECT_EQ(g_onDemandForkCount, 0);
+    EXPECT_NE(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+
+    ServiceReap(service_);
+    EXPECT_EQ(g_onDemandForkCount, 1);
+    EXPECT_EQ(service_->pid, 31001);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_NEED_RESTART, 0);
+    EXPECT_EQ(service_->onDemandArgs.argv, nullptr);
+
+    free(ctrlInfo);
+}
+
+HWTEST_F(OnDemandServiceTest, NonOndemandServiceRejected, TestSize.Level1)
+{
+    service_->pid = 1234;
+    DoCmdByName("start_ondemand ", "test_sa_ondemand|event");
+    ASSERT_NE(service_->onDemandArgs.argv, nullptr);
+    uint32_t savedAttr = service_->attribute;
+
+    service_->attribute &= ~SERVICE_ATTR_ONDEMAND;
+    DoCmdByName("start_ondemand ", "test_sa_ondemand|newarg");
+    service_->attribute |= SERVICE_ATTR_ONDEMAND;
+
+    EXPECT_EQ(g_onDemandForkCount, 0);
+    EXPECT_EQ(service_->pid, 1234);
+    EXPECT_EQ(service_->attribute, savedAttr);
+    ASSERT_NE(service_->onDemandArgs.argv, nullptr);
+    EXPECT_STREQ(service_->onDemandArgs.argv[0], ONDEMAND_TEST_PATH);
+    EXPECT_STREQ(service_->onDemandArgs.argv[1], "default");
+    EXPECT_STREQ(service_->onDemandArgs.argv[2], "event");
+}
+
 } // namespace init_ut
