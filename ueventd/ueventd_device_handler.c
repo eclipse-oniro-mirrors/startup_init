@@ -573,7 +573,7 @@ void HandleOtherDeviceEvent(const struct Uevent *uevent)
                 INIT_LOGE("Make usb device node for device [%d : %d]", uevent->busNum, uevent->devNum);
             }
         }
-    } else if (STARTSWITH(uevent->subsystem, "usb")) {
+    } else if (STARTSWITH(uevent->subsystem, "usb") && (!STARTSWITH(uevent->subsystem, "usbmon"))) {
         // Other usb devies, do not handle it.
         return;
     } else {
