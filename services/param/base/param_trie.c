@@ -38,10 +38,7 @@ INIT_LOCAL_API int ExtendWorkSpace(WorkSpace *workSpace, uint32_t needLen)
     while (newTotal < needTotal) {
         newTotal += PARAM_WORKSPACE_GROW_SIZE;
     }
-    if (newTotal > PARAM_WORKSPACE_MAX) {
-        newTotal = PARAM_WORKSPACE_MAX;
-    }
-    if (newTotal <= currTotal) {
+    if (needTotal > PARAM_WORKSPACE_MAX) {
         PARAM_LOGE("ExtendWorkSpace reached limit %u curr %u need %u",
             PARAM_WORKSPACE_MAX, currTotal, needTotal);
         return -1;
