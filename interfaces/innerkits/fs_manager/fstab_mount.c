@@ -355,7 +355,7 @@ static int BuildResizeArgs(const FstabItem *item, const unsigned long long size,
     return argc;
 }
 
-int DoResizeF2fs(FstabItem *item, const unsigned long long size)
+static int DoResizeF2fs(FstabItem *item, const unsigned long long size)
 {
     char *file = "/system/bin/resize.f2fs";
     char sizeStr[RESIZE_BUFFER_SIZE] = {0};
