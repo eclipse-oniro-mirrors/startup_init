@@ -144,6 +144,7 @@ static bool SpawnHitraceBootTrace(void)
         /* Child transitions init -> hitrace via SELinux domain_auto_transition.
          * hitrace domain needs data_local_tmp access (developer_only policy). */
         (void)execl("/system/bin/hitrace", "hitrace", "boot-trace", (char *)NULL);
+        _exit(EXIT_FAILURE);
     }
     if (pid < 0) {
         PLUGIN_LOGE("SpawnHitraceBootTrace: fork failed, errno:%d", errno);

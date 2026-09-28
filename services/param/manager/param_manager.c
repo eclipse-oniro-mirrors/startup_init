@@ -761,8 +761,47 @@ STATIC_INLINE int ReadParamValue(ParamNode *entry, char *value, uint32_t *length
     return ReadParamValue_(entry, &commitId, value, length);
 }
 
+#ifdef PARAM_CONST_FLASH_ONLY
+static int CopyConstParamValue(const char *flashValue, char *value, uint32_t *len)
+{
+    uint32_t valueLen = strlen(flashValue);
+    if (value == NULL) {
+        *len = valueLen + 1;
+        return 0;
+    }
+    if (*len <= valueLen) {
+        *len = valueLen + 1;
+        return PARAM_CODE_INVALID_VALUE;
+    }
+    if (memcpy_s(value, *len, flashValue, valueLen + 1) != EOK) {
+        return PARAM_CODE_ERROR;
+    }
+    *len = valueLen;
+    return 0;
+}
+#endif
+
 int SystemReadParam(const char *name, char *value, uint32_t *len)
 {
+#if defined(PARAM_WORKSPACE_DYNAMIC_ALLOC) && defined(PARAM_CONST_FLASH_ONLY)
+    PARAM_CHECK(name != NULL && len != NULL, return PARAM_CODE_ERROR,
+        "SystemReadParam failed! name is:%s, errNum is:%d!", name, PARAM_CODE_ERROR);
+    if (IS_READY_ONLY(name)) {
+        if (PARAM_TEST_FLAG(GetParamWorkSpace()->flags, WORKSPACE_FLAGS_FOR_INIT)) {
+            int ret = CheckParamPermission(GetParamSecurityLabel(), name, DAC_READ);
+            if (ret != 0) {
+                return ret;
+            }
+        }
+        const char *flashValue = NULL;
+        if (LookupConstParamFromBuild(name, &flashValue) == 0 && flashValue != NULL) {
+            return CopyConstParamValue(flashValue, value, len);
+        }
+        return PARAM_CODE_NOT_FOUND;
+    }
+    int initRet = EnsureParamServiceInit();
+    PARAM_CHECK(initRet == 0, return initRet, "SystemReadParam lazy init failed %d", initRet);
+#endif
     PARAM_WORKSPACE_CHECK(GetParamWorkSpace(), return PARAM_WORKSPACE_NOT_INIT,
         "SystemReadParam failed! name is:%s, errNum is:%d!", name, PARAM_WORKSPACE_NOT_INIT);
     PARAM_CHECK(name != NULL && len != NULL, return PARAM_CODE_ERROR,
@@ -781,6 +820,12 @@ int SystemReadParam(const char *name, char *value, uint32_t *len)
     node = FindTrieNode(workspace, name, strlen(name), NULL);
 #endif
     if (node == NULL) {
+#ifdef PARAM_CONST_FLASH_ONLY
+        const char *flashValue = NULL;
+        if (LookupConstParamFromBuild(name, &flashValue) == 0 && flashValue != NULL) {
+            return CopyConstParamValue(flashValue, value, len);
+        }
+#endif
         return PARAM_CODE_NOT_FOUND;
     }
     ret =  ReadParamValue((ParamNode *)GetTrieNode(workspace, node->dataIndex), value, len);
@@ -792,6 +837,25 @@ int SystemReadParam(const char *name, char *value, uint32_t *len)
 
 int SystemFindParameter(const char *name, ParamHandle *handle)
 {
+#if defined(PARAM_WORKSPACE_DYNAMIC_ALLOC) && defined(PARAM_CONST_FLASH_ONLY)
+    PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
+    if (IS_READY_ONLY(name)) {
+        if (PARAM_TEST_FLAG(GetParamWorkSpace()->flags, WORKSPACE_FLAGS_FOR_INIT)) {
+            int ret = CheckParamPermission(GetParamSecurityLabel(), name, DAC_READ);
+            if (ret != 0) {
+                return ret;
+            }
+        }
+        const char *flashValue = NULL;
+        if (LookupConstParamFromBuild(name, &flashValue) == 0 && flashValue != NULL) {
+            *handle = PARAM_CONST_EXIST_SENTINEL_HANDLE;
+            return 0;
+        }
+        return PARAM_CODE_NOT_FOUND;
+    }
+    int initRet = EnsureParamServiceInit();
+    PARAM_CHECK(initRet == 0, return initRet, "SystemFindParameter lazy init failed %d", initRet);
+#endif
     PARAM_WORKSPACE_CHECK(GetParamWorkSpace(), return PARAM_WORKSPACE_NOT_INIT, "Param workspace has not init.");
     PARAM_CHECK(name != NULL && handle != NULL, return -1, "The name or handle is null");
     *handle = -1;
@@ -809,6 +873,15 @@ int SystemFindParameter(const char *name, ParamHandle *handle)
     } else if (entry != NULL) {
         return PARAM_CODE_NODE_EXIST;
     }
+#ifdef PARAM_CONST_FLASH_ONLY
+    if (entry == NULL) {
+        const char *flashValue = NULL;
+        if (LookupConstParamFromBuild(name, &flashValue) == 0 && flashValue != NULL) {
+            *handle = PARAM_CONST_EXIST_SENTINEL_HANDLE;
+            return 0;
+        }
+    }
+#endif
     return PARAM_CODE_NOT_FOUND;
 }
 

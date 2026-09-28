@@ -181,7 +181,16 @@ static int CreateWorkSpace(int onlyRead)
     }
     paramSpace->maxLabelIndex++;
 #else
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+#ifdef PARAM_CONST_FLASH_ONLY
+    ret = AddWorkSpace(WORKSPACE_NAME_NORMAL, WORKSPACE_INDEX_DAC, onlyRead, PARAM_WORKSPACE_INIT_SIZE);
+#else
+    // dynamic-only: eager const preload must fit without growing during boot.
+    ret = AddWorkSpace(WORKSPACE_NAME_NORMAL, WORKSPACE_INDEX_DAC, onlyRead, PARAM_WORKSPACE_EAGER_INIT_SIZE);
+#endif
+#else
     ret = AddWorkSpace(WORKSPACE_NAME_NORMAL, WORKSPACE_INDEX_DAC, onlyRead, PARAM_WORKSPACE_MAX);
+#endif
     PARAM_CHECK(ret == 0, return -1, "Failed to add dac workspace");
     ret = OpenWorkSpace(WORKSPACE_INDEX_DAC, onlyRead);
     PARAM_CHECK(ret == 0, return -1, "Failed to open dac workspace");
