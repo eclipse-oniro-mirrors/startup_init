@@ -30,8 +30,6 @@
 #include <sys/mman.h>
 #endif
 
-#define SELINUX_PERMISSION 1002
-
 static DUMP_PRINTF g_printf = printf;
 
 #ifdef PARAM_CONST_FLASH_ONLY
@@ -783,6 +781,25 @@ static int CopyConstParamValue(const char *flashValue, char *value, uint32_t *le
 
 int SystemReadParam(const char *name, char *value, uint32_t *len)
 {
+#if defined(PARAM_WORKSPACE_DYNAMIC_ALLOC) && defined(PARAM_CONST_FLASH_ONLY)
+    PARAM_CHECK(name != NULL && len != NULL, return PARAM_CODE_ERROR,
+        "SystemReadParam failed! name is:%s, errNum is:%d!", name, PARAM_CODE_ERROR);
+    if (IS_READY_ONLY(name)) {
+        if (PARAM_TEST_FLAG(GetParamWorkSpace()->flags, WORKSPACE_FLAGS_FOR_INIT)) {
+            int ret = CheckParamPermission(GetParamSecurityLabel(), name, DAC_READ);
+            if (ret != 0) {
+                return ret;
+            }
+        }
+        const char *flashValue = NULL;
+        if (LookupConstParamFromBuild(name, &flashValue) == 0 && flashValue != NULL) {
+            return CopyConstParamValue(flashValue, value, len);
+        }
+        return PARAM_CODE_NOT_FOUND;
+    }
+    int initRet = EnsureParamServiceInit();
+    PARAM_CHECK(initRet == 0, return initRet, "SystemReadParam lazy init failed %d", initRet);
+#endif
     PARAM_WORKSPACE_CHECK(GetParamWorkSpace(), return PARAM_WORKSPACE_NOT_INIT,
         "SystemReadParam failed! name is:%s, errNum is:%d!", name, PARAM_WORKSPACE_NOT_INIT);
     PARAM_CHECK(name != NULL && len != NULL, return PARAM_CODE_ERROR,
@@ -791,9 +808,7 @@ int SystemReadParam(const char *name, char *value, uint32_t *len)
     WorkSpace *workspace = NULL;
     int ret = CheckParamPermission_(&workspace, &node, GetParamSecurityLabel(), name, DAC_READ);
     if (ret != 0) {
-        if (ret != SELINUX_PERMISSION) {
-            PARAM_DUMPW("SystemReadParam failed!name is:%s,err:%d", name, ret);
-        }
+        PARAM_DUMPW("SystemReadParam failed!name is:%s,err:%d", name, ret);
         return ret;
     }
 #ifdef PARAM_SUPPORT_SELINUX

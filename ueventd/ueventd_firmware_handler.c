@@ -20,18 +20,12 @@
 #include <unistd.h>
 #include <limits.h>
 #include "ueventd.h"
-#include "ueventd_utils.h"
 #define INIT_LOG_TAG "ueventd"
 #include "init_log.h"
 #include "securec.h"
 
 void HandleFimwareDeviceEvent(const struct Uevent *uevent)
 {
-    if (uevent == NULL || uevent->syspath == NULL) {
-        INIT_LOGW("FirmwareEvent: uevent or syspath is NULL");
-        return;
-    }
-    INIT_LOGI("FirmwareEvent: syspath=%s", uevent->syspath);
     char fwLoadingPath[PATH_MAX] = {};
 
     if (snprintf_s(fwLoadingPath, PATH_MAX, PATH_MAX - 1, "/sys%s/loading", uevent->syspath) == -1) {
@@ -39,10 +33,7 @@ void HandleFimwareDeviceEvent(const struct Uevent *uevent)
         return;
     }
     char realPath[PATH_MAX] = { 0 };
-    if (realpath(fwLoadingPath, realPath) == NULL) {
-        INIT_LOGE("Failed to resolve path %s, err = %d", fwLoadingPath, errno);
-        return;
-    }
+    realpath(fwLoadingPath, realPath);
     if (!STARTSWITH(realPath, "/sys/")) {
         INIT_LOGE("Resolved path outside /sys boundary: %s", realPath);
         return;
