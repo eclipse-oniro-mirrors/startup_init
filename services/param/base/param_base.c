@@ -609,9 +609,6 @@ static int CheckParamPermission_(const ParamLabelIndex *labelIndex,
         ret = SelinuxCheckParamPermission(labelIndex, srcLabel, name, mode);
     }
 #endif
-    if (srcLabel->cred.uid >= PUBLIC_APP_BEGIN_UID) {
-        ret = PARAM_CODE_PERMISSION_DENIED;
-    }
     return ret;
 }
 #endif
@@ -665,7 +662,7 @@ CachedHandle CachedParameterCreate(const char *name, const char *defValue)
     param->workspace = workspace;
     param->nameLen = nameLen;
     param->paramValue = &param->data[PARAM_ALIGN(nameLen) + 1];
-    param->bufferLen = valueBufferSize;
+    param->bufferLen = PARAM_VALUE_LEN_MAX;
     param->dataCommitId = (uint32_t)-1;
     if (node != NULL && node->dataIndex != 0) {
         param->dataIndex = node->dataIndex;

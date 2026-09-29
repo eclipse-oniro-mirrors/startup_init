@@ -34,10 +34,6 @@ void HandleFimwareDeviceEvent(const struct Uevent *uevent)
     }
     char realPath[PATH_MAX] = { 0 };
     realpath(fwLoadingPath, realPath);
-    if (!STARTSWITH(realPath, "/sys/")) {
-        INIT_LOGE("Resolved path outside /sys boundary: %s", realPath);
-        return;
-    }
     int fd = open(realPath, O_WRONLY | O_CLOEXEC);
     if (fd < 0) {
         INIT_LOGE("Failed to open %s, err = %d", fwLoadingPath, errno);
