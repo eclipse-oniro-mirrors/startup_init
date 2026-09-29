@@ -843,11 +843,7 @@ static int WrapPath(char *dest, size_t len, char *source, int i)
 
     while (*p != '\0') {
         if (--i <= 0) {
-            size_t remaining = len - (p - dest) - strlen(source);
-            if (strlen(p) + 1 > remaining) {
-                return -1;
-            }
-            int ret = memmove_s(p + strlen(source), remaining, p, strlen(p) + 1);
+            int ret = memmove_s(p + strlen(source), len, p, strlen(p) + 1);
             INIT_ERROR_CHECK(ret == 0, return -1, "Dest is %s, source is %s, ret is %d.", dest, source, ret);
             break;
         }
