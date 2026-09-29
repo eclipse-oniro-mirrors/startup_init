@@ -116,9 +116,11 @@ PLUGIN_STATIC void ReportBootEventComplete(ListNode *events)
     ret = SystemReadParam("boot.time.fstab", fdtabBuffer, &fstabLen);
     if (ret == 0) {
         ret = sprintf_s(fdtabTime, MAX_BUFFER_FOR_EVENT, ";fstab,0,%s", fdtabBuffer);
-        PLUGIN_CHECK((ret > 0) && (ret < MAX_BUFFER_FOR_EVENT), return, "failed sprintf_s");
+        PLUGIN_CHECK((ret > 0) && (ret < MAX_BUFFER_FOR_EVENT), free(buffer);
+            return, "failed sprintf_s");
         ret = strcat_s(buffer, MAX_BUFFER_FOR_EVENT + PARAM_VALUE_LEN_MAX, fdtabTime);
-        PLUGIN_CHECK(ret == 0, return, "Failed to format boot time");
+        PLUGIN_CHECK(ret == 0, free(buffer);
+            return, "failed format boot time");
     } else {
         PLUGIN_LOGE("Failed to read boot.time.fstab");
     }

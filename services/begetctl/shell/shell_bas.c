@@ -718,6 +718,7 @@ const char *BShellEnvGetStringParam(BShellHandle handle, const char *name)
         return "";
     }
     BSH_ONLY_CHECK(param->type != PARAM_STRING || param->value.string == NULL, return param->value.string);
+    return "";
 }
 
 const ParamInfo *BShellEnvGetReservedParam(BShellHandle handle, const char *name)

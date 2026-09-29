@@ -443,6 +443,9 @@ INIT_LOCAL_API int AddParamEntry(uint32_t index, uint8_t type, const char *name,
 #endif
         uint32_t offset = AddParamNode(workSpace, type, name, strlen(name), value, strlen(value), 0);
         PARAM_CHECK(offset > 0, return PARAM_CODE_REACHED_MAX, "Failed to allocate name %s", name);
+#ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
+        node = (ParamTrieNode *)(workSpace->area->data + nodeOff);
+#endif
         SaveIndex(&node->dataIndex, offset);
     }
     return 0;
