@@ -28,7 +28,6 @@
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
 #include <sys/mman.h>
 #endif
-
 static DUMP_PRINTF g_printf = printf;
 
 #ifdef PARAM_CONST_FLASH_ONLY
