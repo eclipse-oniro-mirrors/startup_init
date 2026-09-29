@@ -18,7 +18,6 @@
 #include <ctype.h>
 #include <inttypes.h>
 #include <limits.h>
-
 #include "init_cmds.h"
 #include "init_hook.h"
 #include "init_param.h"
