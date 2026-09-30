@@ -16,6 +16,7 @@
 #include "device_info_service.h"
 
 #include <thread>
+#include <atomic>
 
 #ifdef INIT_SUPPORT_ACCESS_TOKEN
 #include "accesstoken_kit.h"
@@ -27,9 +28,14 @@
 #include "system_ability_definition.h"
 #include "param_comm.h"
 #include "parameter.h"
+#include "init_param.h"
 #include "sysparam_errno.h"
 #include "init_utils.h"
 
+#ifdef INIT_SUPPORT_BOARDINFO_HDI
+#include "v1_0/iboard_info.h"
+using namespace OHOS::HDI::Boardinfo::V1_0;
+#endif
 namespace OHOS {
 #ifdef INIT_SUPPORT_ACCESS_TOKEN
 using namespace Security;
@@ -74,7 +80,7 @@ int32_t DeviceInfoService::GetUdid(std::string& result)
     int ret = ERR_FAIL;
     char localDeviceInfo[UDID_LEN] = {0};
     ret = GetDevUdid_(localDeviceInfo, UDID_LEN);
-    DINFO_CHECK(ret == 0, return ret, "failed get dev udid");
+    DINFO_CHECK(ret == 0, return ret, "Failed to get dev udid");
     result = std::string(localDeviceInfo);
     return ret;
 }
@@ -83,7 +89,7 @@ int32_t DeviceInfoService::GetSerialID(std::string& result)
 {
     int ret = ERR_FAIL;
     const char *serialNumber = GetSerial_();
-    DINFO_CHECK(serialNumber != nullptr, return ret, "failed get serialNumber");
+    DINFO_CHECK(serialNumber != nullptr, return ret, "Failed to get serialNumber");
     result = std::string(serialNumber);
     return 0;
 }
@@ -93,9 +99,159 @@ int32_t DeviceInfoService::GetDiskSN(std::string& result)
     int ret = ERR_FAIL;
     char diskSN[DISK_SN_LEN] = {0};
     ret = GetDiskSN_(diskSN, DISK_SN_LEN);
-    DINFO_CHECK(ret == 0, return ret, "failed get disk SN");
+    DINFO_CHECK(ret == 0, return ret, "Failed to get disk SN");
     result = std::string(diskSN);
     return ret;
+}
+
+#ifdef INIT_SUPPORT_BOARDINFO_HDI
+static int32_t CallBoardInfoHdi(const char* name,
+    int32_t (OHOS::HDI::Boardinfo::V1_0::IBoardInfo::*method)(std::string&),
+    std::string& result,
+    std::atomic<std::string*>& cache)
+{
+    auto cached = cache.load(std::memory_order_acquire);
+    if (cached != nullptr) {
+        result = *cached;
+        return 0;
+    }
+    result.clear();
+    int32_t hdiRet = -1;
+    auto hdi = IBoardInfo::Get(true);
+    if (hdi != nullptr) {
+        hdiRet = (hdi->*method)(result);
+    }
+    DINFO_LOGI("boardinfo SA %s hdiRet=%d", name, hdiRet);
+    if (hdiRet != 0) {
+        return hdiRet;
+    }
+    cache.store(new std::string(result), std::memory_order_release);
+    return 0;
+}
+#endif
+
+int32_t DeviceInfoService::GetBoardSerial(std::string& result)
+{
+    DINFO_LOGI("GetBoardSerial");
+#ifdef INIT_SUPPORT_BOARDINFO_HDI
+    static std::atomic<std::string*> cache{nullptr};
+    return CallBoardInfoHdi("GetBoardSerial", &IBoardInfo::GetBoardSn, result, cache);
+#else
+    result.clear();
+    return 0;
+#endif
+}
+
+int32_t DeviceInfoService::GetCpuId(std::string& result)
+{
+    DINFO_LOGI("GetCpuId");
+#ifdef INIT_SUPPORT_BOARDINFO_HDI
+    static std::atomic<std::string*> cache{nullptr};
+    return CallBoardInfoHdi("GetCpuId", &IBoardInfo::GetCpuId, result, cache);
+#else
+    result.clear();
+    return 0;
+#endif
+}
+
+int32_t DeviceInfoService::GetCpuArchitecture(std::string& result)
+{
+    DINFO_LOGI("GetCpuArchitecture");
+#ifdef INIT_SUPPORT_BOARDINFO_HDI
+    static std::atomic<std::string*> cache{nullptr};
+    return CallBoardInfoHdi("GetCpuArchitecture", &IBoardInfo::GetCpuArch, result, cache);
+#else
+    result.clear();
+    return 0;
+#endif
+}
+
+int32_t DeviceInfoService::GetCpuVendor(std::string& result)
+{
+    DINFO_LOGI("GetCpuVendor");
+#ifdef INIT_SUPPORT_BOARDINFO_HDI
+    static std::atomic<std::string*> cache{nullptr};
+    return CallBoardInfoHdi("GetCpuVendor", &IBoardInfo::GetCpuVendor, result, cache);
+#else
+    result.clear();
+    return 0;
+#endif
+}
+
+int32_t DeviceInfoService::GetBoardVendor(std::string& result)
+{
+    DINFO_LOGI("GetBoardVendor");
+#ifdef INIT_SUPPORT_BOARDINFO_HDI
+    static std::atomic<std::string*> cache{nullptr};
+    return CallBoardInfoHdi("GetBoardVendor", &IBoardInfo::GetBoardVendor, result, cache);
+#else
+    result.clear();
+    return 0;
+#endif
+}
+
+int32_t DeviceInfoService::GetBoardProductName(std::string& result)
+{
+    DINFO_LOGI("GetBoardProductName");
+#ifdef INIT_SUPPORT_BOARDINFO_HDI
+    static std::atomic<std::string*> cache{nullptr};
+    return CallBoardInfoHdi("GetBoardProductName", &IBoardInfo::GetBoardName, result, cache);
+#else
+    result.clear();
+    return 0;
+#endif
+}
+
+int32_t DeviceInfoService::GetBiosVendor(std::string& result)
+{
+    DINFO_LOGI("GetBiosVendor");
+#ifdef INIT_SUPPORT_BOARDINFO_HDI
+    static std::atomic<std::string*> cache{nullptr};
+    return CallBoardInfoHdi("GetBiosVendor", &IBoardInfo::GetBiosVendor, result, cache);
+#else
+    result.clear();
+    return 0;
+#endif
+}
+
+int32_t DeviceInfoService::GetBiosVersion(std::string& result)
+{
+    DINFO_LOGI("GetBiosVersion");
+#ifdef INIT_SUPPORT_BOARDINFO_HDI
+    static std::atomic<std::string*> cache{nullptr};
+    return CallBoardInfoHdi("GetBiosVersion", &IBoardInfo::GetBiosVersion, result, cache);
+#else
+    result.clear();
+    return 0;
+#endif
+}
+
+int32_t DeviceInfoService::GetBiosReleaseDate(std::string& result)
+{
+    DINFO_LOGI("GetBiosReleaseDate");
+    static std::atomic<std::string*> cache{nullptr};
+    auto cached = cache.load(std::memory_order_acquire);
+    if (cached != nullptr) {
+        result = *cached;
+        return 0;
+    }
+    result.clear();
+#ifdef INIT_SUPPORT_BOARDINFO_HDI
+#define BOARD_INFO_PARAM_LEN 256
+    char value[BOARD_INFO_PARAM_LEN] = {0};
+    uint32_t len = sizeof(value);
+    int ret = SystemReadParam("const.build.vendor.date", value, &len);
+    if (ret == 0) {
+        result = std::string(value);
+    }
+    DINFO_LOGI("boardinfo SA biosDate paramRet=%d", ret);
+    if (ret != 0) {
+        return ret;
+    }
+    cache.store(new std::string(result), std::memory_order_release);
+    return 0;
+#endif
+    return 0;
 }
 
 int32_t DeviceInfoService::CallbackEnter(uint32_t code)
@@ -114,6 +270,21 @@ int32_t DeviceInfoService::CallbackEnter(uint32_t code)
         case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_DISK_S_N): {
             bool ret = CheckPermission("ohos.permission.ACCESS_DISK_PHY_INFO");
             BEGET_CHECK_RETURN_VALUE(ret, SYSPARAM_PERMISSION_DENIED);
+            break;
+        }
+        case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_BOARD_SERIAL): {
+            bool ret = CheckPermission("ohos.permission.ACCESS_BOARD_INFO");
+            BEGET_CHECK_RETURN_VALUE(ret, SYSPARAM_PERMISSION_DENIED);
+            break;
+        }
+        case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_CPU_ID):
+        case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_CPU_ARCHITECTURE):
+        case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_CPU_VENDOR):
+        case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_BOARD_VENDOR):
+        case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_BOARD_PRODUCT_NAME):
+        case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_BIOS_VENDOR):
+        case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_BIOS_VERSION):
+        case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_BIOS_RELEASE_DATE): {
             break;
         }
         default: {
@@ -188,4 +359,5 @@ void DeviceInfoService::ThreadForUnloadSa(void)
     }
 }
 } // namespace device_info
+
 } // namespace OHOS

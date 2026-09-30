@@ -74,8 +74,16 @@ if (!defined(ohos_lite)) {
     ]
     if (defined(global_parts_info) &&
         defined(global_parts_info.security_access_token)) {
-      external_deps += [ "access_token:libaccesstoken_sdk" ]
-      defines += [ "INIT_SUPPORT_ACCESS_TOKEN" ]
+        external_deps += [ "access_token:libaccesstoken_sdk" ]
+        defines += [ "INIT_SUPPORT_ACCESS_TOKEN" ]
+    }
+    if (defined(global_parts_info) &&
+        defined(global_parts_info.hdf_drivers_interface_boardinfo)) {
+        external_deps += [
+          "drivers_interface_boardinfo:libboardinfo_proxy_1.0",
+          "hdf_core:libhdf_utils",
+        ]
+        defines += [ "INIT_SUPPORT_BOARDINFO_HDI" ]
     }
     install_images = [ "system" ]
     part_name = "init"

@@ -19,4 +19,13 @@ interface OHOS.device_info.IDeviceInfo {
     void GetUdid([out] String udid);
     void GetSerialID([out] String serialid);
     void GetDiskSN([out] String disksn);
+    void GetCpuId([out] String cpuid);
+    void GetCpuArchitecture([out] String cpuarchitecture);
+    void GetCpuVendor([out] String cpuvendor);
+    void GetBoardSerial([out] String boardserial);
+    void GetBoardVendor([out] String boardvendor);
+    void GetBoardProductName([out] String boardproductname);
+    void GetBiosVendor([out] String biosvendor);
+    void GetBiosVersion([out] String biosversion);
+    void GetBiosReleaseDate([out] String biosreleasedate);
 }

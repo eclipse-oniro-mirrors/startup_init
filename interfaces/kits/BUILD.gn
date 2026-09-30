@@ -27,6 +27,7 @@ group("kitsgroup") {
         "jskits:deviceinfo",
         "jskits:systemparameter",
         "jskits:systemparameterenhance",
+        "jskits:boardinfo",
       ]
     }
   }

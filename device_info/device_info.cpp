@@ -84,6 +84,166 @@ int AclGetDiskSN(char *diskSN, int size)
     return ret;
 }
 
+#define ACL_BOARDINFO_LEN 256
+#define ACL_LOGV(fmt, ...) STARTUP_LOGV(BASE_DOMAIN + 8, "BOARDINFO_ACL", fmt, ##__VA_ARGS__)
+
+const char *AclGetCpuId(void)
+{
+#ifdef PARAM_FEATURE_DEVICEINFO
+    static char buf[ACL_BOARDINFO_LEN] = {0};
+    std::string result;
+    (void)OHOS::device_info::DeviceInfoKits::GetInstance().GetCpuId(result);
+    if (strcpy_s(buf, sizeof(buf), result.c_str()) != 0) {
+        buf[0] = '\0';
+    }
+    ACL_LOGV("Acl boardinfo feature=ON");
+    return buf;
+#else
+    ACL_LOGV("Acl boardinfo feature=OFF");
+    return "";
+#endif
+}
+
+const char *AclGetCpuArchitecture(void)
+{
+#ifdef PARAM_FEATURE_DEVICEINFO
+    static char buf[ACL_BOARDINFO_LEN] = {0};
+    std::string result;
+    (void)OHOS::device_info::DeviceInfoKits::GetInstance().GetCpuArchitecture(result);
+    if (strcpy_s(buf, sizeof(buf), result.c_str()) != 0) {
+        buf[0] = '\0';
+    }
+    ACL_LOGV("Acl boardinfo feature=ON");
+    return buf;
+#else
+    ACL_LOGV("Acl boardinfo feature=OFF");
+    return "";
+#endif
+}
+
+const char *AclGetCpuVendor(void)
+{
+#ifdef PARAM_FEATURE_DEVICEINFO
+    static char buf[ACL_BOARDINFO_LEN] = {0};
+    std::string result;
+    (void)OHOS::device_info::DeviceInfoKits::GetInstance().GetCpuVendor(result);
+    if (strcpy_s(buf, sizeof(buf), result.c_str()) != 0) {
+        buf[0] = '\0';
+    }
+    ACL_LOGV("Acl boardinfo feature=ON");
+    return buf;
+#else
+    ACL_LOGV("Acl boardinfo feature=OFF");
+    return "";
+#endif
+}
+
+int AclGetBoardSerial(char *value, int size)
+{
+    if (value == nullptr || size <= 0) {
+        return SYSPARAM_INVALID_INPUT;
+    }
+    (void)memset_s(value, size, 0, size);
+#ifdef PARAM_FEATURE_DEVICEINFO
+    std::string result;
+    int ret = OHOS::device_info::DeviceInfoKits::GetInstance().GetBoardSerial(result);
+    if (ret == 0) {
+        DINFO_CHECK(strcpy_s(value, size, result.c_str()) == 0, return SYSPARAM_INVALID_INPUT,
+            "AclGetBoardSerial strcpy_s failed");
+    }
+    ACL_LOGV("AclGetBoardSerial ret=%d", ret);
+    return ret;
+#else
+    ACL_LOGV("Acl boardinfo feature=OFF");
+    return 0;
+#endif
+}
+
+const char *AclGetBoardVendor(void)
+{
+#ifdef PARAM_FEATURE_DEVICEINFO
+    static char buf[ACL_BOARDINFO_LEN] = {0};
+    std::string result;
+    (void)OHOS::device_info::DeviceInfoKits::GetInstance().GetBoardVendor(result);
+    if (strcpy_s(buf, sizeof(buf), result.c_str()) != 0) {
+        buf[0] = '\0';
+    }
+    ACL_LOGV("Acl boardinfo feature=ON");
+    return buf;
+#else
+    ACL_LOGV("Acl boardinfo feature=OFF");
+    return "";
+#endif
+}
+
+const char *AclGetBoardProductName(void)
+{
+#ifdef PARAM_FEATURE_DEVICEINFO
+    static char buf[ACL_BOARDINFO_LEN] = {0};
+    std::string result;
+    (void)OHOS::device_info::DeviceInfoKits::GetInstance().GetBoardProductName(result);
+    if (strcpy_s(buf, sizeof(buf), result.c_str()) != 0) {
+        buf[0] = '\0';
+    }
+    ACL_LOGV("Acl boardinfo feature=ON");
+    return buf;
+#else
+    ACL_LOGV("Acl boardinfo feature=OFF");
+    return "";
+#endif
+}
+
+const char *AclGetBiosVendor(void)
+{
+#ifdef PARAM_FEATURE_DEVICEINFO
+    static char buf[ACL_BOARDINFO_LEN] = {0};
+    std::string result;
+    (void)OHOS::device_info::DeviceInfoKits::GetInstance().GetBiosVendor(result);
+    if (strcpy_s(buf, sizeof(buf), result.c_str()) != 0) {
+        buf[0] = '\0';
+    }
+    ACL_LOGV("Acl boardinfo feature=ON");
+    return buf;
+#else
+    ACL_LOGV("Acl boardinfo feature=OFF");
+    return "";
+#endif
+}
+
+const char *AclGetBiosVersion(void)
+{
+#ifdef PARAM_FEATURE_DEVICEINFO
+    static char buf[ACL_BOARDINFO_LEN] = {0};
+    std::string result;
+    (void)OHOS::device_info::DeviceInfoKits::GetInstance().GetBiosVersion(result);
+    if (strcpy_s(buf, sizeof(buf), result.c_str()) != 0) {
+        buf[0] = '\0';
+    }
+    ACL_LOGV("Acl boardinfo feature=ON");
+    return buf;
+#else
+    ACL_LOGV("Acl boardinfo feature=OFF");
+    return "";
+#endif
+}
+
+const char *AclGetBiosReleaseDate(void)
+{
+#ifdef PARAM_FEATURE_DEVICEINFO
+    static char buf[ACL_BOARDINFO_LEN] = {0};
+    std::string result;
+    (void)OHOS::device_info::DeviceInfoKits::GetInstance().GetBiosReleaseDate(result);
+    if (strcpy_s(buf, sizeof(buf), result.c_str()) != 0) {
+        buf[0] = '\0';
+    }
+    ACL_LOGV("Acl boardinfo feature=ON");
+    return buf;
+#else
+    ACL_LOGV("Acl boardinfo feature=OFF");
+    return "";
+#endif
+}
+
 #ifdef __cplusplus
 #if __cplusplus
 }

@@ -39,6 +39,15 @@ public:
     int32_t GetUdid(std::string& result) override;
     int32_t GetSerialID(std::string& result) override;
     int32_t GetDiskSN(std::string& result) override;
+    int32_t GetCpuId(std::string& result) override;
+    int32_t GetCpuArchitecture(std::string& result) override;
+    int32_t GetCpuVendor(std::string& result) override;
+    int32_t GetBoardSerial(std::string& result) override;
+    int32_t GetBoardVendor(std::string& result) override;
+    int32_t GetBoardProductName(std::string& result) override;
+    int32_t GetBiosVendor(std::string& result) override;
+    int32_t GetBiosVersion(std::string& result) override;
+    int32_t GetBiosReleaseDate(std::string& result) override;
     int32_t CallbackEnter(uint32_t code) override;
     int32_t CallbackExit(uint32_t code, int32_t result) override;
 
