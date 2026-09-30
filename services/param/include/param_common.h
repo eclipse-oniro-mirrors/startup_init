@@ -21,6 +21,9 @@
 #ifndef __LITEOS_M__
 #include <pthread.h>
 #endif
+#ifdef __LITEOS_M__
+#include "cmsis_os2.h"
+#endif
 #include "param_atomic.h"
 #ifdef __cplusplus
 #if __cplusplus
@@ -39,11 +42,11 @@ typedef struct {
 } ParamMutex;
 #else
 typedef struct {
-    uint32_t mutex;
+    osMutexId_t mutex;
 } ParamRWMutex;
 
 typedef struct {
-    uint32_t mutex;
+    osMutexId_t mutex;
 } ParamMutex;
 #endif
 
