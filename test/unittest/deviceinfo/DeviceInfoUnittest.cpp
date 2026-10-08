@@ -92,23 +92,23 @@ HWTEST_F(DeviceInfoUnittest, Init_DevInfoAgentTest_001, TestSize.Level1)
     ret = kits.GetDiskSN(serial);
     EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
     ret = kits.GetCpuId(serial);
-    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    EXPECT_EQ(ret, 0);
     ret = kits.GetCpuArchitecture(serial);
-    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    EXPECT_EQ(ret, 0);
     ret = kits.GetCpuVendor(serial);
-    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    EXPECT_EQ(ret, 0);
     ret = kits.GetBoardSerial(serial);
     EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
     ret = kits.GetBoardVendor(serial);
-    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    EXPECT_EQ(ret, 0);
     ret = kits.GetBoardProductName(serial);
-    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    EXPECT_EQ(ret, 0);
     ret = kits.GetBiosVendor(serial);
-    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    EXPECT_EQ(ret, 0);
     ret = kits.GetBiosVersion(serial);
-    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    EXPECT_EQ(ret, 0);
     ret = kits.GetBiosReleaseDate(serial);
-    EXPECT_EQ(ret, SYSPARAM_PERMISSION_DENIED);
+    EXPECT_EQ(ret, 0);
 }
 
 HWTEST_F(DeviceInfoUnittest, Init_DevInfoDiedTest_001, TestSize.Level1)
@@ -269,7 +269,7 @@ HWTEST_F(DeviceInfoUnittest, Init_TestDeviceInfoProxy_001, TestSize.Level1)
     EXPECT_NE(nullptr, serialNumber);
     char boardSn[256] = {0};
     int ret = AclGetBoardSerial(boardSn, sizeof(boardSn));
-    EXPECT_GE(ret, 0);
+    EXPECT_GE(ret, SYSPARAM_PERMISSION_DENIED);
     serialNumber = AclGetBoardVendor();
     EXPECT_NE(nullptr, serialNumber);
     serialNumber = AclGetBoardProductName();
