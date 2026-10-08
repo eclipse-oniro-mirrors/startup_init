@@ -213,6 +213,7 @@ uint32_t GetUintParameter(const char *key, uint32_t def);
 
 const char *GetChipType(void);
 int GetBootCount(void);
+const char *GetKernelVersionInner(void);
 const char *GetDeviceColor(void);
 const char *GetDistributionOSName(void);
 const char *GetDistributionOSVersion(void);
