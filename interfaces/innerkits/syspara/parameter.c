@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <dlfcn.h>
 #include <string.h>
+#include <sys/utsname.h>
 
 #include "param_comm.h"
 #include "init_param.h"
@@ -525,4 +526,20 @@ const char *GetDeviceColor(void)
         deviceColor = EMPTY_STR;
     }
     return deviceColor;
+}
+ 
+const char *GetKernelVersionInner(void)
+{
+    static char kernelVersion[MAX_BUFFER_LEN] = {0};
+    if (kernelVersion[0] != '\0') {
+        return kernelVersion;
+    }
+    struct utsname buf;
+    if (uname(&buf) != 0) {
+        return EMPTY_STR;
+    }
+    if (strcpy_s(kernelVersion, sizeof(kernelVersion), buf.release) != EOK) {
+        return EMPTY_STR;
+    }
+    return kernelVersion;
 }
