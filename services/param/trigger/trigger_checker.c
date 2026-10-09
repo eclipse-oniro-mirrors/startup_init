@@ -276,7 +276,8 @@ int ConvertInfixToPrefix(const char *condition, char *prefix, uint32_t prefixLen
     uint32_t prefixIndex = 0;
     size_t conditionLen = strlen(condition);
     LogicCalculator calculator;
-    PARAM_CHECK(CalculatorInit(&calculator, MAX_CALC_PARAM, 1, 0) == 0, return -1, "Failed to init calculator");
+    PARAM_CHECK(CalculatorInit(&calculator, MAX_CALC_PARAM, 1, 0) == 0, CalculatorFree(&calculator);
+        return -1, "Failed to init calculator");
 
     while (curr < conditionLen) {
         if (condition[curr] == ')') {

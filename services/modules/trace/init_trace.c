@@ -264,7 +264,7 @@ static bool SetTraceEnabled(const char *path, bool enabled)
 static bool SetBufferSize(int bufferSize)
 {
     if (!WriteStrToFile(TRACE_CURRENT_TRACER, "nop")) {
-        PLUGIN_LOGE("%s", "Error: write \"nop\" to %s\n", TRACE_CURRENT_TRACER);
+        PLUGIN_LOGE("Error: write \"nop\" to %s", TRACE_CURRENT_TRACER);
     }
     char buffer[20] = {0}; // 20 max int number
     int len = sprintf_s((char *)buffer, sizeof(buffer), "%d", bufferSize);
