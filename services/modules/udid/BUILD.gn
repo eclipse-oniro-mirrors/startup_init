@@ -76,11 +76,6 @@ if (defined(ohos_lite)) {
 } else {
   ohos_shared_library("udidmodule") {
     branch_protector_ret = "pac_ret"
-    sanitize = {
-      cfi = true
-      cfi_cross_dso = true
-      debug = false
-    }
     sources = [
       "udid_adp.c",
       "udid_comm.c",
@@ -115,12 +110,6 @@ if (defined(ohos_lite)) {
 
   ohos_source_set("libudid_static") {
     branch_protector_ret = "pac_ret"
-    sanitize = {
-      cfi = true
-      cfi_cross_dso = true
-      debug = false
-      blocklist = "../../../cfi_blocklist.txt"
-    }
     sources = [ "udid_static.c" ]
     defines = [ "_GNU_SOURCE" ]
     include_dirs = comm_include
@@ -134,12 +123,6 @@ if (defined(ohos_lite)) {
   # for begetutil
   ohos_static_library("libudidcomm") {
     branch_protector_ret = "pac_ret"
-    sanitize = {
-      cfi = true
-      cfi_cross_dso = true
-      debug = false
-      blocklist = "../../../cfi_blocklist.txt"
-    }
     sources = [ "udid_comm.c" ]
     defines = [ "_GNU_SOURCE" ]
     include_dirs = comm_include

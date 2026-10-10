@@ -21,12 +21,6 @@ config("exported_header_files") {
 
 ohos_static_library("sandbox") {
   branch_protector_ret = "pac_ret"
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "../../cfi_blocklist.txt"
-  }
   sources = [
     "sandbox.c",
     "sandbox_namespace.c",

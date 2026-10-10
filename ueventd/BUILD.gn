@@ -93,12 +93,6 @@ if (defined(ohos_lite)) {
   }
   ohos_static_library("libueventd_ramdisk_static") {
     branch_protector_ret = "pac_ret"
-    sanitize = {
-      cfi = true
-      cfi_cross_dso = true
-      debug = false
-      blocklist = "../cfi_blocklist.txt"
-    }
     sources = service_ueventd_sources
     include_dirs = service_ueventd_include
     deps = service_ueventd_deps
@@ -140,11 +134,6 @@ if (defined(ohos_lite)) {
 
   ohos_executable("ueventd") {
     branch_protector_ret = "pac_ret"
-    sanitize = {
-      cfi = true
-      cfi_cross_dso = true
-      debug = false
-    }
     sources = service_ueventd_sources
     sources += [
       "//base/startup/init/ueventd/standard/ueventd_parameter.c",
