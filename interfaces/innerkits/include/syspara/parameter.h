@@ -187,7 +187,9 @@ const char *AclGetBiosVersion(void);
 const char *AclGetBiosReleaseDate(void);
 
 #define BOARD_INFO_PERMISSION_DENIED_CODE 201
-#define BOARD_INFO_PERMISSION_DENIED_MSG "Permission denied. requires ohos.permission.ACCESS_BOARD_INFO"
+#define BOARD_INFO_PERMISSION_DENIED_MSG \
+    "Permission verification failed. The application does not have " \
+    "the permission required to call the API."
 
 int GetPerformanceClass(void);
 
