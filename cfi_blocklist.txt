@@ -1,3 +1,0 @@
-src:*/foundation/communication/ipc/interfaces/innerkits/ipc_core/include/iremote_broker.h
-src:*/foundation/communication/ipc/interfaces/innerkits/ipc_core/include/iremote_object.h
-src:*/commonlibrary/c_utils/base/include/refbase.h

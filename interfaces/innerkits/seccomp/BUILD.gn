@@ -27,11 +27,6 @@ if (defined(build_seccomp) && build_seccomp) {
   if (!defined(ohos_lite)) {
     ohos_shared_library("seccomp") {
       branch_protector_ret = "pac_ret"
-      sanitize = {
-        cfi = true
-        cfi_cross_dso = true
-        debug = false
-      }
       sources = [ "../../../services/modules/seccomp/seccomp_policy.c" ]
 
       public_configs = [ ":seccomp_public_config" ]
