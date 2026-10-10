@@ -46,7 +46,7 @@ ParamNode *SystemCheckMatchParamWait(const char *name, const char *value)
     PARAM_WORKSPACE_CHECK(paramSpace, return NULL, "Invalid space");
 
     WorkSpace *workspace = GetWorkSpaceByName(name);
-    PARAM_CHECK_DUMPE(workspace != NULL, return NULL, "failed get workspace %s", name);
+    PARAM_CHECK_DUMPE(workspace != NULL, return NULL, "Failed to get workspace %s", name);
     PARAM_LOGV("SystemCheckMatchParamWait name %s", name);
     uint32_t nameLength = strlen(name);
     ParamTrieNode *node = FindTrieNode(workspace, name, nameLength, NULL);
@@ -286,7 +286,7 @@ INIT_INNER_API int GetParamSecurityAuditData(const char *name, int type, ParamAu
     PARAM_CHECK(space != NULL, return -1, "Invalid workSpace");
     FindTrieNode(space, name, strlen(name), &labelIndex);
     ParamSecurityNode *node = (ParamSecurityNode *)GetTrieNode(space, labelIndex);
-    PARAM_CHECK(node != NULL, return DAC_RESULT_FORBIDED, "cannot get security label %d", labelIndex);
+    PARAM_CHECK(node != NULL, return DAC_RESULT_FORBIDED, "Can not get security label %d", labelIndex);
 
     auditData->name = name;
     auditData->dacData.uid = node->uid;
@@ -297,7 +297,7 @@ INIT_INNER_API int GetParamSecurityAuditData(const char *name, int type, ParamAu
         paramSpace->selinuxSpace.getParamLabel(name) : NULL;
     if (tmpName != NULL) {
         int ret = strcpy_s(auditData->label, sizeof(auditData->label), tmpName);
-        PARAM_CHECK(ret == 0, return 0, "failed copy label for %s", name);
+        PARAM_CHECK(ret == 0, return 0, "Failed to copy label for %s", name);
     }
 #endif
     return 0;
@@ -307,7 +307,7 @@ static int CreateCtrlInfo(ServiceCtrlInfo **ctrlInfo, const char *cmd, uint32_t 
     uint8_t ctrlParam, const char *format, ...)
 {
     *ctrlInfo = calloc(1, sizeof(ServiceCtrlInfo));
-    PARAM_CHECK(*ctrlInfo != NULL, return -1, "failed alloc memory %s", cmd);
+    PARAM_CHECK(*ctrlInfo != NULL, return -1, "Failed to alloc memory %s", cmd);
     va_list vargs;
     va_start(vargs, format);
     int len = vsnprintf_s((*ctrlInfo)->realKey,
@@ -466,8 +466,8 @@ static int AddParam(WorkSpace *workSpace, ParamInfos paramInfos, uint32_t *dataI
 static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const char *name, const char *value, int mode)
 {
     ParamNode *entry = (ParamNode *)GetTrieNode(workSpace, *dataIndex);
-    PARAM_CHECK(entry != NULL, return PARAM_CODE_REACHED_MAX, "failed update param value %s %u", name, *dataIndex);
-    PARAM_CHECK(entry->keyLength == strlen(name), return PARAM_CODE_INVALID_NAME, "failed check name len %s", name);
+    PARAM_CHECK(entry != NULL, return PARAM_CODE_REACHED_MAX, "Failed to update param value %s %u", name, *dataIndex);
+    PARAM_CHECK(entry->keyLength == strlen(name), return PARAM_CODE_INVALID_NAME, "Failed to check name len %s", name);
 
     uint32_t valueLen = strlen(value);
     uint32_t commitId = ATOMIC_LOAD_EXPLICIT(&entry->commitId, MEMORY_ORDER_RELAXED);
@@ -480,12 +480,12 @@ static int UpdateParam(const WorkSpace *workSpace, uint32_t *dataIndex, const ch
         }
         if (entry->valueLength < PARAM_CONST_VALUE_LEN_MAX && valueLen < PARAM_CONST_VALUE_LEN_MAX) {
             int ret = PARAM_MEMCPY(entry->data + entry->keyLength + 1, PARAM_CONST_VALUE_LEN_MAX, value, valueLen + 1);
-            PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_VALUE, "failed copy value");
+            PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_VALUE, "Failed to copy value");
             entry->valueLength = valueLen;
         }
     } else if (entry->valueLength < PARAM_VALUE_LEN_MAX && valueLen < PARAM_VALUE_LEN_MAX) {
         int ret = PARAM_MEMCPY(entry->data + entry->keyLength + 1, PARAM_VALUE_LEN_MAX, value, valueLen + 1);
-        PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_VALUE, "failed copy value");
+        PARAM_CHECK(ret == 0, return PARAM_CODE_INVALID_VALUE, "Failed to copy value");
         entry->valueLength = valueLen;
     }
 

@@ -77,9 +77,9 @@ static void InsertBootTimeParam(char *buffer, const char *name)
     uint32_t bufLen = MAX_BUFFER_LEN;
     uint32_t kernelLen = MAX_BUFFER_LEN;
     int len = sprintf_s(bootName, MAX_BUFFER_LEN, "ohos.boot.time.%s", name);
-    PLUGIN_CHECK(len > 0 && ((uint32_t)len < MAX_BUFFER_LEN), return, "failed format boot name ");
+    PLUGIN_CHECK(len > 0 && ((uint32_t)len < MAX_BUFFER_LEN), return, "Failed to format boot name ");
     int ret = SystemReadParam(bootName, buf, &bufLen);
-    PLUGIN_CHECK(ret == 0, return, "failed read boot time ");
+    PLUGIN_CHECK(ret == 0, return, "Failed to read boot time ");
     char time[MAX_BUFFER_LEN] = {0};
     if (strcmp(name, "kernel") == 0) {
         len = sprintf_s(time, MAX_BUFFER_LEN, ";kernel,0,%s", buf);
@@ -89,9 +89,9 @@ static void InsertBootTimeParam(char *buffer, const char *name)
             len = sprintf_s(time, MAX_BUFFER_LEN, ";init,%s,%s", bufKernel, buf);
         }
     }
-    PLUGIN_CHECK(len > 0 && ((uint32_t)len < MAX_BUFFER_LEN), return, "failed format boot time ");
+    PLUGIN_CHECK(len > 0 && ((uint32_t)len < MAX_BUFFER_LEN), return, "Failed to format boot time ");
     ret = strcat_s(buffer, MAX_BUFFER_FOR_EVENT + PARAM_VALUE_LEN_MAX + MAX_BUFFER_LEN + 1, time);
-    PLUGIN_CHECK(ret == 0, return, "failed format boot time ");
+    PLUGIN_CHECK(ret == 0, return, "Failed to format boot time ");
 }
 
 PLUGIN_STATIC void ReportBootEventComplete(ListNode *events)
@@ -102,7 +102,7 @@ PLUGIN_STATIC void ReportBootEventComplete(ListNode *events)
     PLUGIN_CHECK(ret == 0, return);
 
     char *buffer = (char *)calloc(MAX_BUFFER_FOR_EVENT + PARAM_VALUE_LEN_MAX, 1);
-    PLUGIN_CHECK(buffer != NULL, return, "failed get memory for sys event ");
+    PLUGIN_CHECK(buffer != NULL, return, "Failed to get memory for sys event ");
     EventArgs args = { buffer, MAX_BUFFER_FOR_EVENT, 0 };
     OH_ListTraversal(events, (void *)&args, TraversalEvent, 0);
     if ((args.currLen > 1) && (args.currLen < MAX_BUFFER_FOR_EVENT)) {
@@ -122,7 +122,7 @@ PLUGIN_STATIC void ReportBootEventComplete(ListNode *events)
         PLUGIN_CHECK(ret == 0, free(buffer);
             return, "failed format boot time");
     } else {
-        PLUGIN_LOGE("failed read boot.time.fstab");
+        PLUGIN_LOGE("Failed to read boot.time.fstab");
     }
 
     StartupTimeEvent startupTime = {};

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,10 +47,10 @@ static int DoRebootByInitPlugin(const char *mode, const char *option)
             ret = snprintf_s(value, MAX_REBOOT_OPTION_SIZE, MAX_REBOOT_OPTION_SIZE - 1, "%s", "reboot");
         }
     }
-    BEGET_ERROR_CHECK(ret >= 0, return -1, "failed format boot mode");
+    BEGET_ERROR_CHECK(ret >= 0, return -1, "Failed to format boot mode");
     BEGET_LOGI("Reboot cmd %s", value);
     ret = SystemSetParameter(STARTUP_DEVICE_CTL, DEVICE_CMD_STOP);
-    BEGET_ERROR_CHECK(ret == 0, return -1, "failed set stop param");
+    BEGET_ERROR_CHECK(ret == 0, return -1, "Failed to set stop param");
     ret = SystemSetParameter(DOREBOOT_PARAM, value);
     BEGET_ERROR_CHECK(ret == 0, return -1, "Set parameter to trigger reboot command \" %s \" failed", value);
     return 0;
@@ -79,7 +79,7 @@ static int ExecReboot(const char *mode, const char *option)
         count++;
         status = DoRebootByInitPlugin(mode, option);
     }
-    BEGET_LOGE("failed reboot system");
+    BEGET_LOGE("Failed to reboot system");
     return status;
 }
 
