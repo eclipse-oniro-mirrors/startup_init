@@ -64,13 +64,26 @@ static napi_value GetCpuVendor(napi_env env, napi_callback_info info)
     return MakeString(env, v);
 }
 
+static napi_value BusinessErrorCreate(napi_env env, int status)
+{
+    std::string errMsg = BOARD_INFO_PERMISSION_DENIED_MSG;
+    napi_value code = nullptr;
+    napi_create_int32(env, status, &code);
+    napi_value msg = nullptr;
+    napi_create_string_utf8(env, errMsg.c_str(), NAPI_AUTO_LENGTH, &msg);
+    napi_value businessError = nullptr;
+    napi_create_error(env, nullptr, msg, &businessError);
+    napi_set_named_property(env, businessError, "code", code);
+    return businessError;
+}
+
 static napi_value GetBoardSerial(napi_env env, napi_callback_info info)
 {
     char buf[BOARD_INFO_VALUE_LEN] = {0};
     int ret = AclGetBoardSerial(buf, BOARD_INFO_VALUE_LEN);
     if (ret == SYSPARAM_PERMISSION_DENIED) {
-        napi_throw_error(env, std::to_string(BOARD_INFO_PERMISSION_DENIED_CODE).c_str(),
-            BOARD_INFO_PERMISSION_DENIED_MSG);
+        napi_value err = BusinessErrorCreate(env, BOARD_INFO_PERMISSION_DENIED_CODE);
+        napi_throw(env, err);
         return nullptr;
     }
     return MakeString(env, std::string(buf));
