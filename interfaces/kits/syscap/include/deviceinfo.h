@@ -279,7 +279,7 @@ const char *OH_GetDistributionOSReleaseType(void);
 
 /**
  * Obtains the Disk Serial Number.
- * 
+ *
  * @param diskSn [out] Disk Serial Number.
  * @syscap SystemCapability.Startup.SystemInfo
  * @return **0**:Success.**201**:Missing permissions.
@@ -290,7 +290,7 @@ int32_t OH_GetDiskSN(void);
  
 /**
  * Obtains the Open device identifier.
- * 
+ *
  * @syscap SystemCapability.Startup.SystemInfo
  * @return Return the Open device identifier.
  * @since 26.2.0
