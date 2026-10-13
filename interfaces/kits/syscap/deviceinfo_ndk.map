@@ -32,6 +32,6 @@
       OH_GetVersionId;
       OH_IsApiVersionGreaterOrEqual;
       canIUse;
-    local;
+    local:
       *;
 };

@@ -3,6 +3,6 @@
       FfiOHOSSysTemParameterGet;
       FfiOHOSSysTemParameterSet;
       MallocCString;
-    local;
+    local:
       *;
 };

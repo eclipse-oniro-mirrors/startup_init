@@ -40,6 +40,6 @@
       FfiOHOSDeviceInfoSoftwareModel;
       FfiOHOSDeviceInfoUdid;
       FfiOHOSDeviceInfoVersionId;
-    local;
+    local:
       *;
 };
