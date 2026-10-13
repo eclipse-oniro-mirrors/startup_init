@@ -16,6 +16,8 @@
 #ifndef DEVICEINFO_CSDK_H
 #define DEVICEINFO_CSDK_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -284,7 +286,7 @@ const char *OH_GetDistributionOSReleaseType(void);
  * @permission ohos.permission.ACCESS_DISK_PHY_INFO
  * @since 26.2.0
  */
-const char *OH_GetDiskSN(void);
+int32_t OH_GetDiskSN(void);
  
 /**
  * Obtains the Open device identifier.
