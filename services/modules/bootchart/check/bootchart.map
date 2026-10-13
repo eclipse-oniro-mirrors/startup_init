@@ -1,6 +1,6 @@
 {
     global;
       ReadFileToBuffer;
-    local;
+    local:
       *;
 };
