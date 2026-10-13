@@ -166,9 +166,7 @@ const char *OH_GetDistributionOSReleaseType(void)
     return GetDistributionOSReleaseType();
 }
 
-int32_t OH_GetDiskSN(void)
+int32_t OH_GetDiskSN(char *diskSn)
 {
-    static char diskSN[DISK_SN_LEN] = {0};
-    AclGetDiskSN(diskSN, DISK_SN_LEN);
-    return diskSN;
+    return AclGetDiskSN(diskSn, DISK_SN_LEN);
 }
