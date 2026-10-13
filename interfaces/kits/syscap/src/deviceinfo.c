@@ -14,6 +14,8 @@
  */
 #include "parameter.h"
 
+#define DISK_SN_LEN 65
+
 const char *OH_GetDeviceType(void)
 {
     return GetDeviceType();
@@ -162,4 +164,11 @@ int OH_GetDistributionOSApiVersion(void)
 const char *OH_GetDistributionOSReleaseType(void)
 {
     return GetDistributionOSReleaseType();
+}
+
+const char *OH_GetDiskSN(void)
+{
+    static char diskSN[DISK_SN_LEN] = {0};
+    AclGetDiskSN(diskSN, DISK_SN_LEN);
+    return diskSN;
 }
