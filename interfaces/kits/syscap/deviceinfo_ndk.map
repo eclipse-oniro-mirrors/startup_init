@@ -20,7 +20,7 @@
       OH_GetManufacture;
       OH_GetMarketName;
       OH_GetOSFullName;
-      OH_GetOSReleaseType;
+      OH_GetOsReleaseType;
       OH_GetProductModel;
       OH_GetProductModelAlias;
       OH_GetProductSeries;

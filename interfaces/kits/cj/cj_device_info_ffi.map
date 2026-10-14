@@ -22,7 +22,7 @@
       FfiOHOSDeviceInfoFeatureVersion;
       FfiOHOSDeviceInfoFirstApiVersion;
       FfiOHOSDeviceInfoGetHardwareProfile;
-      FfiOHOSDeviceInfoGetHardwareModel;
+      FfiOHOSDeviceInfoHardwareModel;
       FfiOHOSDeviceInfoIncrementalVersion;
       FfiOHOSDeviceInfoMajorVersion;
       FfiOHOSDeviceInfoManufacture;
