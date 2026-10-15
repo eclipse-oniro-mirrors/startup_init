@@ -408,6 +408,15 @@ static DevInfoError AclGetDevOdid(char *odid, int size)
     return value;
 }
 
+::taihe::string getinstallTime()
+{
+    const char *value = GetInstallTime();
+    if (value == nullptr) {
+        value = "";
+    }
+    return value;
+}
+
 ::ohos::deviceInfo::PerformanceClassLevel getperformanceClass()
 {
     int value = GetPerformanceClass();
@@ -785,5 +794,6 @@ TH_EXPORT_CPP_API_getbootCount(getbootCount);
 TH_EXPORT_CPP_API_getchipType(getchipType);
 TH_EXPORT_CPP_API_getdeviceColor(getdeviceColor);
 TH_EXPORT_CPP_API_getkernelVersion(getkernelVersion);
+TH_EXPORT_CPP_API_getinstallTime(getinstallTime);
 TH_EXPORT_CPP_API_getperformanceClass(getperformanceClass);
 TH_EXPORT_CPP_API_apiAvailable(apiAvailable);

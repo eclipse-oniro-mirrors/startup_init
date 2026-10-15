@@ -717,6 +717,18 @@ static napi_value GetBuildTime(napi_env env, napi_callback_info info)
     return napiValue;
 }
 
+static napi_value GetInstallTime(napi_env env, napi_callback_info info)
+{
+    napi_value napiValue = nullptr;
+    const char *installTime = GetInstallTime();
+    if (installTime == nullptr) {
+        installTime = "";
+    }
+
+    NAPI_CALL(env, napi_create_string_utf8(env, installTime, strlen(installTime), &napiValue));
+    return napiValue;
+}
+
 static napi_value GetBuildRootHash(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
@@ -1011,6 +1023,7 @@ static napi_value Init(napi_env env, napi_value exports)
         {"buildUser", nullptr, nullptr, GetBuildUser, nullptr, nullptr, napi_default, nullptr},
         {"buildHost", nullptr, nullptr, GetBuildHost, nullptr, nullptr, napi_default, nullptr},
         {"buildTime", nullptr, nullptr, GetBuildTime, nullptr, nullptr, napi_default, nullptr},
+        {"installTime", nullptr, nullptr, GetInstallTime, nullptr, nullptr, napi_default, nullptr},
         {"buildRootHash", nullptr, nullptr, GetBuildRootHash, nullptr, nullptr, napi_default, nullptr},
         {"udid", nullptr, nullptr, GetDevUdid, nullptr, nullptr, napi_default, nullptr},
         {"distributionOSName", nullptr, nullptr, NAPI_GetDistributionOSName, nullptr, nullptr, napi_default, nullptr},

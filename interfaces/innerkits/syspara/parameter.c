@@ -543,3 +543,9 @@ const char *GetKernelVersionInner(void)
     }
     return kernelVersion;
 }
+
+const char *GetInstallTime(void)
+{
+    static const char *installTime = NULL;
+    return GetProperty("persist.dupdate_engine.lastHotaInstallTime", &installTime);
+}

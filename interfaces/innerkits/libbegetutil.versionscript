@@ -118,6 +118,7 @@
     GetMarketName;
     GetOSFullName;
     GetKernelVersionInner;
+    GetInstallTime;
     GetOsReleaseType;
     GetParameterCommitId;
     GetParameterName;
