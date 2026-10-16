@@ -16,10 +16,12 @@ import("//build/ohos.gni")
 
 ohos_shared_library("rebootmodule") {
   branch_protector_ret = "pac_ret"
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
+  if (!defined(ohos_lite)) {
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
   }
   sources = [ "reboot.c" ]
   cflags = [ "-fstack-protector-all" ]
@@ -87,7 +89,7 @@ ohos_source_set("libreboot_static") {
   branch_protector_ret = "pac_ret"
   part_name = "init"
   subsystem_name = "startup"
-  external_deps = [ 
+  external_deps = [
     "cJSON:cjson",
     "bounds_checking_function:libsec_shared",
   ]
