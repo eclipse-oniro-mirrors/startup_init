@@ -18,11 +18,13 @@ config("exported_header_files") {
 
 ohos_static_library("libfile") {
   branch_protector_ret = "pac_ret"
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "../../../cfi_blocklist.txt"
+  if (!defined(ohos_lite)) {
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+      blocklist = "../../../cfi_blocklist.txt"
+    }
   }
   sources = [ "init_file.c" ]
   include_dirs = [
