@@ -761,9 +761,9 @@ HWTEST_F(ServiceByUserIdUnitTest, KeyAndMcsBuilders, TestSize.Level0)
     EXPECT_EQ(TestBuildByUserPidKey(buffer, sizeof(buffer), "svc", 100), 0);
     EXPECT_STREQ(buffer, "startup.service.ctl.svc.userid.100.pid");
     EXPECT_EQ(TestComputeMcsByUserId(100, buffer, sizeof(buffer)), 0);
-    EXPECT_STREQ(buffer, "s0:c868");
+    EXPECT_STREQ(buffer, "s0:x868");
     EXPECT_EQ(TestComputeMcsByUserId(256, buffer, sizeof(buffer)), 0);
-    EXPECT_STREQ(buffer, "s0:c768");
+    EXPECT_STREQ(buffer, "s0:x768");
 
     EXPECT_NE(TestBuildInstanceKey(nullptr, sizeof(buffer), "svc", 100), 0);
     EXPECT_NE(TestBuildInstanceKey(buffer, 0, "svc", 100), 0);

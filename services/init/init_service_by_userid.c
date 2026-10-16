@@ -314,7 +314,7 @@ static int ComputeMcsByUserId(int32_t userId, char *buffer, size_t size)
 {
     INIT_ERROR_CHECK(userId >= 0 && buffer != NULL && size > 0, return -1, "Invalid MCS input");
     int category = CATEGORY_SEG3_OFFSET + (userId & CATEGORY_MASK);
-    int ret = snprintf_s(buffer, size, size - 1, "s0:c%d", category);
+    int ret = snprintf_s(buffer, size, size - 1, "s0:x%d", category);
     if (ret <= 0) {
         INIT_LOGE("Failed to compute MCS label");
         return -1;
