@@ -24,6 +24,7 @@
 #include "parameter.h"
 #include "system_ability_definition.h"
 #include "sysparam_errno.h"
+#include "deviceinfo.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -116,4 +117,48 @@ HWTEST_F(DeviceInfoModuleTest, DeviceInfoGetDiskSN_001, TestSize.Level0)
     GTEST_LOG_(INFO) << "DeviceInfoGetDiskSN_001 end";
 }
 #endif
+
+#ifdef PARAM_FEATURE_GET_DEVICE_SN
+HWTEST_F(DeviceInfoModuleTest, DeviceInfoOHGetDiskSN_001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DeviceInfoOHGetDiskSN_001 start";
+    char diskSN[65] = {0};
+    int32_t ret = OH_GetDiskSN(diskSN);
+    EXPECT_EQ(ret, BOARD_INFO_PERMISSION_DENIED_CODE);
+
+    sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    BEGET_ERROR_CHECK(samgr != nullptr, return, "Get samgr failed");
+    sptr<IRemoteObject> object = samgr->GetSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
+    BEGET_ERROR_CHECK(object != nullptr, return, "Get deviceinfo manager object from samgr failed");
+
+    std::this_thread::sleep_for(std::chrono::seconds(20)); // wait sa died 20s
+
+    object = samgr->GetSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
+    BEGET_ERROR_CHECK(object == nullptr, return, "Get deviceinfo manager object from samgr failed");
+
+    ret = OH_GetDiskSN(diskSN);
+    EXPECT_EQ(ret, BOARD_INFO_PERMISSION_DENIED_CODE);
+
+    object = samgr->GetSystemAbility(SYSPARAM_DEVICE_SERVICE_ID);
+    BEGET_ERROR_CHECK(object != nullptr, return, "Get deviceinfo manager object from samgr failed");
+
+    GTEST_LOG_(INFO) << "DeviceInfoOHGetDiskSN_001 end";
+}
+
+HWTEST_F(DeviceInfoModuleTest, DeviceInfoOHGetDiskSN_002, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DeviceInfoOHGetDiskSN_002 start";
+    int32_t ret = OH_GetDiskSN(nullptr);
+    EXPECT_NE(ret, 0);
+    GTEST_LOG_(INFO) << "DeviceInfoOHGetDiskSN_002 end";
+}
+#endif
+
+HWTEST_F(DeviceInfoModuleTest, DeviceInfoOHGetOdid_001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DeviceInfoOHGetOdid_001 start";
+    const char *odid = OH_GetOdid();
+    EXPECT_NE(odid, nullptr);
+    GTEST_LOG_(INFO) << "DeviceInfoOHGetOdid_001 end";
+}
 }

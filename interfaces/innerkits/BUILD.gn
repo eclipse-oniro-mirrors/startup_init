@@ -481,6 +481,14 @@ if (defined(ohos_lite)) {
       "ipc:ipc_single",
       "samgr:samgr_proxy",
     ]
+    if (defined(global_parts_info) &&
+        defined(global_parts_info.bundlemanager_bundle_framework)) {
+      external_deps += [
+        "bundle_framework:appexecfwk_base",
+        "bundle_framework:appexecfwk_core",
+      ]
+      defines += [ "DEPENDENT_APPEXECFWK_BASE" ]
+    }
     public_configs = [ ":exported_header_files" ]
     innerapi_tags = [
       "chipsetsdk_sp",
