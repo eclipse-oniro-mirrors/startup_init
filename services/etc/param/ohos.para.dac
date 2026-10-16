@@ -51,3 +51,4 @@ persist.window.boot. = root:system:0775
 #permission for log
 debug.bytrace.   = root:system:0775
 persist.distributed_hardware.device_manager. = system:system:0775
+persist.dupdate_engine.      = root:root:0775
