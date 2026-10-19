@@ -36,6 +36,8 @@ ohos_shared_library("bootchart") {
   } else {
     module_install_dir = "lib/init"
   }
+  version_script = "check/bootchart.map"
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
 }
 
 config("libbootchart_static_config") {
