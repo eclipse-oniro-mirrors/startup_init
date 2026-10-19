@@ -126,7 +126,7 @@ static uint32_t BuildNotifyMessage(std::vector<char> &buffer,
 class TestWatcherForBuffer final : public Watcher {
 public:
     TestWatcherForBuffer() {}
-    ~TestWatcherForBuffer = default;
+    ~TestWatcherForBuffer() = default;
 
     int32_t OnParameterChange(const std::string &prefix, const std::string &name,
                               const std::string &value) override
@@ -485,7 +485,7 @@ HWTEST_F(WatcherBufferOverflowUnitTest, WatchParameterBatch_001, TestSize.Level0
 HWTEST_F(WatcherBufferOverflowUnitTest, WatchParameterBatch_002, TestSize.Level0)
 {
     std::vector<char> msgBuf;
-    uint32_t singleMsgSize = BuildNotifyMessage(msgBuf, "test.watch.k", "Val", 1);
+    uint32_t singleMsgSize = BuildNotifyMessage(msgBuf, "test.watch.k", "val", 1);
     EXPECT_GT(singleMsgSize, 0);
 
     uint32_t maxCount = RECV_BUFFER_MAX / singleMsgSize;
