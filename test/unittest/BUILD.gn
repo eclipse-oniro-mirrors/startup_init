@@ -437,6 +437,7 @@ ohos_unittest("init_unittest") {
     sources += [
       "param/watcher_agent_unittest.cpp",
       "param/watcher_proxy_unittest.cpp",
+      "param/watcher_buffer_overflow_unittest.cpp",
     ]
     external_deps += [
       "ipc:ipc_single",
