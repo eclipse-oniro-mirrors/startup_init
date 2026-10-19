@@ -56,6 +56,8 @@ ohos_shared_library("init_context") {
   } else {
     module_install_dir = "lib/init"
   }
+  version_script = "check/libinit_context.map"
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
 }
 
 config("initcontext_static_config") {

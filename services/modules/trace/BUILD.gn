@@ -39,6 +39,8 @@ ohos_shared_library("inittrace") {
   } else {
     module_install_dir = "lib/init"
   }
+  version_script = "check/libinittrace.map"
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
 }
 
 config("inittrace_static_config") {

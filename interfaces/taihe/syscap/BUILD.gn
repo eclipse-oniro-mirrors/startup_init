@@ -50,6 +50,7 @@ taihe_shared_library("global_taihe_native") {
     ":run_taihe",
     "${init_innerkits_path}:libbegetutil",
   ]
+  version_script = "libglobal_taihe_native.map"
 }
 
 generate_static_abc("global") {
