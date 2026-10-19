@@ -78,8 +78,7 @@ constexpr mode_t FAULT_INJECT_DIR_MODE = 0755;
  * 返回成功处理的消息数量，processedMsgs 收集被处理的消息指针
  */
 static int SimulateRunLoopParsing(char *buffer,
-                                  uint32_t dataLen,
-                                  std::vector<ParamMessage *> &processedMsgs)
+                                  uint32_t dataLen, std::vector<ParamMessage *> &processedMsgs)
 {
     uint32_t curr = 0;
     int processed = 0;
@@ -102,9 +101,7 @@ static int SimulateRunLoopParsing(char *buffer,
 
 /* 辅助函数：构造一个完整的 ParamMessage (MSG_NOTIFY_PARAM) */
 static uint32_t BuildNotifyMessage(std::vector<char> &buffer,
-                                   const std::string &key,
-                                   const std::string &value,
-                                   uint32_t watcherId)
+                                   const std::string &key, const std::string &value, uint32_t watcherId)
 {
     uint32_t msgSize = sizeof(ParamMessage) + sizeof(ParamMsgContent) + value.size();
     msgSize = PARAM_ALIGN(msgSize);
