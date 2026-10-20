@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <dlfcn.h>
 #include <string.h>
+#include <time.h>
 #include <sys/utsname.h>
 
 #include "param_comm.h"
@@ -546,6 +547,18 @@ const char *GetKernelVersionInner(void)
 
 const char *GetInstallTime(void)
 {
-    static const char *installTime = NULL;
-    return GetProperty("persist.dupdate_engine.lastHotaInstallTime", &installTime);
+    static char installTime[MAX_BUFFER_LEN] = {0};
+    if (installTime[0] != '\0') {
+        return installTime;
+    }
+    static const char *rawTime = NULL;
+    const char *value = GetProperty("persist.dupdate_engine.lastHotaInstallTime", &rawTime);
+    if (value == NULL) {
+        return EMPTY_STR;
+    }
+    time_t tt = (time_t)(atoll(value) / 1000);
+    struct tm tmResult = {0};
+    localtime_r(&tt, &tmResult);
+    strftime(installTime, sizeof(installTime), "%Y-%m-%d %H:%M:%S", &tmResult);
+    return installTime;
 }
