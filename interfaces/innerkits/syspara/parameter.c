@@ -553,12 +553,20 @@ const char *GetInstallTime(void)
     }
     static const char *rawTime = NULL;
     const char *value = GetProperty("persist.dupdate_engine.lastHotaInstallTime", &rawTime);
-    if (value == NULL) {
+    if (value == NULL || value[0] == '\0') {
         return EMPTY_STR;
     }
-    time_t tt = (time_t)(atoll(value) / 1000);
+    long long timestamp = atoll(value);
+    if (timestamp <= 0) {
+        return EMPTY_STR;
+    }
+    time_t tt = (time_t)(timestamp / 1000);
     struct tm tmResult = {0};
-    localtime_r(&tt, &tmResult);
-    strftime(installTime, sizeof(installTime), "%Y-%m-%d %H:%M:%S", &tmResult);
+    if (localtime_r(&tt, &tmResult) == NULL) {
+        return EMPTY_STR;
+    }
+    if (strftime(installTime, sizeof(installTime), "%Y-%m-%d %H:%M:%S", &tmResult) == 0) {
+        return EMPTY_STR;
+    }
     return installTime;
 }
