@@ -16,13 +16,13 @@
 /*
  * 单元测试：Watcher IPC 接收缓冲区超限（RECV_BUFFER_MAX = 20*1024）
  *
- * 故障模式：param_wather 的 WatcherManager::RunLoop() 使用固定大小 (20KB) 的
+ * 故障模式：param_watcher 的 WatcherManager::RunLoop() 使用固定大小 (20KB) 的
  * 接收缓冲区 recv() IPC 消息。当单条 ParamMessage 被截断 (故障注入 recvMax=64,
  * 小于 sizeof(ParamMessage)) 或多条消息拼接后末尾消息不完整时， RunLoop 的
  * 校验逻辑会拒绝该消息并打印 WATCHER_LOGE，被截断的消息不会被
  * ProcessWatcherMessage 处理，对应参数变更通知丢失。
  *
- * 故障注入：FaultInjrctEnabled("watcher_recv_buffera_max") 将 recvMax 从
+ * 故障注入：FaultInjectEnabled("watcher_recv_buffer_max") 将 recvMax 从
  * 20480 降为 64，远小于 sizeof(ParamMessage)=112，recv() 截断触发校验失败。
  * 标志文件：/data/startup_fault/watcher_recv_buffer_max
  *
@@ -67,7 +67,7 @@ using namespace OHOS::init_param;
 namespace {
 constexpr int32_t RECV_BUFFER_MAX = 20 * 1024; // 20480bytes, watcher_manager.cpp:39
 constexpr int32_t FAULT_INJECT_RECV_MAX = 64; // 故障注入值， 远小于 sizeof(ParamMessage)
-constexpr const char *FAULT_INJECT_DIR = "data/startup_fault";
+constexpr const char *FAULT_INJECT_DIR = "/data/startup_fault";
 constexpr const char *FAULT_INJECT_PATH = "/data/startup_fault/watcher_recv_buffer_max";
 constexpr mode_t FAULT_INJECT_DIR_MODE = 0755;
 } // namespace
@@ -83,7 +83,7 @@ static int SimulateRunLoopParsing(char *buffer,
     uint32_t curr = 0;
     int processed = 0;
     while (curr < dataLen) {
-        // 校验条件 1：剩余数据不足一个 ParamMessage 头部
+        // 校验条件 1：剩余数据不足或等于一个 ParamMessage 头部
         if (sizeof(ParamMessage) >= dataLen - curr) {
             break; // "paramMessage len is invalid"
         }
@@ -189,8 +189,6 @@ public:
         unlink(FAULT_INJECT_PATH);
     }
 
-    void TestBody() {}
-
     /* 获取 WatcherManager 单例（与现有 watcher_proxy_unittest.cpp 模式一致 */
     WatcherManager *GetWatcherManager()
     {
@@ -206,7 +204,7 @@ public:
     }
 
     /* 添加远程 Watcher （复用现有测试模式） */
-    int AddRemoteWatcher(uint32_t agentId, uint32_t &watcherId)
+    int AddRemoteWatcher(uint32_t agentId, uint32_t &watcherId, sptr<IWatcher> &watcherOut)
     {
         WatcherManager *mgr = GetWatcherManager();
         if (mgr == nullptr) {
@@ -227,6 +225,7 @@ public:
             data, reply, option);
         reply.ReadInt32();
         watcherId = reply.ReadUint32();
+        watcherOut = watcher;
         return (watcherId != 0) ? 0 : -1;
     }
 
@@ -274,7 +273,7 @@ public:
 /*
  * 测试用例：FaultInjectFlag_001
  * 验证跟FaultInjectEnabled("watcher_recv_buffer_max") 标志文件机制
- * 前置条件：/data/statup_fault/ 目录可创建
+ * 前置条件：/data/startup_fault/ 目录可创建
  * 预期结果：标志文件存在时返回 1，不存在时返回 0
  */
 HWTEST_F(WatcherBufferOverflowUnitTest, FaultInjectFlag_001, TestSize.Level0)
@@ -467,12 +466,18 @@ HWTEST_F(WatcherBufferOverflowUnitTest, SocketPairNormalRecv_001, TestSize.Level
 HWTEST_F(WatcherBufferOverflowUnitTest, WatchParameterBatch_001, TestSize.Level0)
 {
     uint32_t watcherId = 0;
-    int ret = AddRemoteWatcher(getpid(), watcherId);
+    sptr<IWatcher> watcher = nullptr;
+    int ret = AddRemoteWatcher(getpid(), watcherId, watcher);
     EXPECT_EQ(ret, 0);
     EXPECT_NE(watcherId, 0u);
+    ASSERT_NE(watcher, nullptr);
 
     ret = AddWatcherGroup("test.watch.batch*", watcherId);
     EXPECT_EQ(ret, 0);
+
+    auto *testWatcher = static_cast<TestWatcherForBuffer *>(watcher.GetRefPtr());
+    ASSERT_NE(testWatcher, nullptr);
+    testWatcher->Reset();
 
     for (int i = 0; i < 10; i++) {
         std::string key = "test.watch.batch.param" + std::to_string(i);
@@ -480,6 +485,10 @@ HWTEST_F(WatcherBufferOverflowUnitTest, WatchParameterBatch_001, TestSize.Level0
         ret = SendNotifyMessage(key, value, watcherId);
         EXPECT_EQ(ret, 0);
     }
+
+    EXPECT_EQ(testWatcher->GetNotifyCount(), 10u);
+    EXPECT_EQ(testWatcher->GetLastName(), "test.watch.batch.param9");
+    EXPECT_EQ(testWatcher->GetLastValue(), "val9");
 }
 
 HWTEST_F(WatcherBufferOverflowUnitTest, WatchParameterBatch_002, TestSize.Level0)
