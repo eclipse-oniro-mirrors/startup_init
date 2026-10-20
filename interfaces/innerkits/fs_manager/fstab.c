@@ -461,7 +461,10 @@ unsigned long GetMountFlags(char *mountFlag, char *fsSpecificData, size_t fsSpec
     // If the item configured in fstab contains flag over than 15,
     // @SplitStringExt can handle it and parse them all. but the parse function will drop it.
     const int maxCount = 15;
-    char **flagsVector = SplitStringExt(mountFlag, ",", &flagCount, maxCount);
+    char *mountFlagCopy = strdup(mountFlag);
+    BEGET_CHECK_RETURN_VALUE(mountFlagCopy != NULL, 0);
+    char **flagsVector = SplitStringExt(mountFlagCopy, ",", &flagCount, maxCount);
+    free(mountFlagCopy);
 
     if (flagsVector == NULL || flagCount == 0) {
         // No flags or something wrong in SplitStringExt，just return.
