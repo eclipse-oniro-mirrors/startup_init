@@ -18,6 +18,7 @@ ohos_shared_library("deviceinfo_ndk") {
   sources = [
     "src/deviceinfo.c",
     "src/syscap_ndk.c",
+    "src/deviceinfo_odid.cpp",
   ]
   include_dirs = [ "./include" ]
   deps = [
@@ -31,6 +32,14 @@ ohos_shared_library("deviceinfo_ndk") {
     "samgr:samgr_proxy",
   ]
   defines = []
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.bundlemanager_bundle_framework)) {
+    external_deps += [
+      "bundle_framework:appexecfwk_base",
+      "bundle_framework:appexecfwk_core",
+    ]
+    defines += [ "DEPENDENT_APPEXECFWK_BASE" ]
+  }
   innerapi_tags = [ "ndk" ]
   part_name = "init"
   subsystem_name = "startup"

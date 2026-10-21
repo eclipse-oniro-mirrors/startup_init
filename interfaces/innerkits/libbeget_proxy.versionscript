@@ -16,7 +16,6 @@
     AclGetDevUdid;
     AclGetSerial;
     AclGetDiskSN;
-    AclGetDevOdid;
     AclGetCpuId;
     AclGetCpuArchitecture;
     AclGetCpuVendor;

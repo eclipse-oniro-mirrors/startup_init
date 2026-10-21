@@ -16,7 +16,6 @@
 #include "sysparam_errno.h"
 
 #define DISK_SN_LEN 65
-#define ODID_LEN 37
 
 const char *OH_GetDeviceType(void)
 {
@@ -175,11 +174,4 @@ int32_t OH_GetDiskSN(char *diskSn)
         return BOARD_INFO_PERMISSION_DENIED_CODE;
     }
     return ret;
-}
-
-const char *OH_GetOdid(void)
-{
-    static char odid[ODID_LEN] = {0};
-    (void)AclGetDevOdid(odid, ODID_LEN);
-    return odid;
 }

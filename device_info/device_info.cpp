@@ -19,12 +19,6 @@
 #include "param_comm.h"
 #include "securec.h"
 #include "sysparam_errno.h"
-#include "iservice_registry.h"
-#include "if_system_ability_manager.h"
-#include "system_ability_definition.h"
-#ifdef DEPENDENT_APPEXECFWK_BASE
-#include "bundlemgr/bundle_mgr_proxy.h"
-#endif
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -87,54 +81,6 @@ int AclGetDiskSN(char *diskSN, int size)
         ret = strcpy_s(diskSN, size, result.c_str());
     }
 #endif
-    return ret;
-}
-
-typedef enum {
-    DEV_INFO_OK,
-    DEV_INFO_ENULLPTR,
-    DEV_INFO_EGETODID,
-    DEV_INFO_ESTRCOPY
-} DevInfoError;
-
-int AclGetDevOdid(char *odid, int size)
-{
-    if (odid == nullptr) {
-        return DEV_INFO_ENULLPTR;
-    }
-    DevInfoError ret = DEV_INFO_OK;
-    if (odid[0] != '\0') {
-        return ret;
-    }
-    auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (!systemAbilityManager) {
-        return DEV_INFO_ENULLPTR;
-    }
-
-    auto remoteObject = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    if (!remoteObject) {
-        return DEV_INFO_ENULLPTR;
-    }
-
-#ifdef DEPENDENT_APPEXECFWK_BASE
-    auto bundleMgr = OHOS::iface_cast<OHOS::AppExecFwk::IBundleMgr>(remoteObject);
-    if (!bundleMgr) {
-        return DEV_INFO_ENULLPTR;
-    }
-
-    std::string odidStr;
-    if (bundleMgr->GetOdid(odidStr) != 0) {
-        return DEV_INFO_EGETODID;
-    }
-
-    if (strcpy_s(odid, size, odidStr.c_str()) != EOK) {
-        return DEV_INFO_ESTRCOPY;
-    }
-#else
-    BEGET_LOGE("DEPENDENT_APPEXECFWK_BASE does not exist, The ODID could not be obtained");
-    ret = DEV_INFO_EGETODID;
-#endif
-
     return ret;
 }
 

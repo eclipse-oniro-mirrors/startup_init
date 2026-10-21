@@ -175,7 +175,6 @@ int GetDevUdid(char *udid, int size);
 const char *AclGetSerial(void);
 int AclGetDevUdid(char *udid, int size);
 int AclGetDiskSN(char *diskSN, int size);
-int AclGetDevOdid(char *odid, int size);
 
 const char *AclGetCpuId(void);
 const char *AclGetCpuArchitecture(void);
