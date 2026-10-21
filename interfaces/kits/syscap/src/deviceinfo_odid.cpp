@@ -74,7 +74,7 @@ static DevInfoError AclGetDevOdid(char *odid, int size)
  
 const char *OH_GetOdid(void)
 {
-    static char odid[ODID_LEN] = {0};
+    thread_local char odid[ODID_LEN] = {0};
     DevInfoError ret = AclGetDevOdid(odid, ODID_LEN);
     if (ret != DEV_INFO_OK) {
         BEGET_LOGE("GetODID ret:%d", ret);
