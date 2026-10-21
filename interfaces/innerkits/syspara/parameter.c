@@ -19,7 +19,6 @@
 #include <stdlib.h>
 #include <dlfcn.h>
 #include <string.h>
-#include <time.h>
 #include <sys/utsname.h>
 
 #include "param_comm.h"
@@ -547,26 +546,9 @@ const char *GetKernelVersionInner(void)
 
 const char *GetInstallTime(void)
 {
-    static char installTime[MAX_BUFFER_LEN] = {0};
-    if (installTime[0] != '\0') {
-        return installTime;
-    }
-    static const char *rawTime = NULL;
-    const char *value = GetProperty("persist.dupdate_engine.lastHotaInstallTime", &rawTime);
-    if (value == NULL || value[0] == '\0') {
-        return EMPTY_STR;
-    }
-    long long timestamp = atoll(value);
-    if (timestamp <= 0) {
-        return EMPTY_STR;
-    }
-    time_t tt = (time_t)(timestamp / 1000);
-    struct tm tmResult = {0};
-    if (localtime_r(&tt, &tmResult) == NULL) {
-        return EMPTY_STR;
-    }
-    if (strftime(installTime, sizeof(installTime), "%Y-%m-%d %H:%M:%S", &tmResult) == 0) {
-        return EMPTY_STR;
-    }
-    return installTime;
+    static const char *installTime = NULL;
+#ifndef OHOS_LITE
+    return GetPropertyAtomic("persist.dupdate_engine.lastHotaInstallTime", &installTime);
+#endif
+    return GetProperty("persist.dupdate_engine.lastHotaInstallTime", &installTime);
 }
