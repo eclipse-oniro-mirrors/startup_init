@@ -38,12 +38,14 @@
 #include "bootstage.h"
 #include "parameter.h"
 #include "fs_dm_linear.h"
+#include "func_wrapper.h"
 
 using namespace testing::ext;
 using namespace std;
 
 extern "C" {
 INIT_STATIC void ProcessSignal(const struct signalfd_siginfo *siginfo);
+INIT_STATIC int SetRootAppid(void);
 }
 
 namespace init_ut {
@@ -64,6 +66,17 @@ static int TestProcessSignal(struct signalfd_siginfo *siginfo)
     siginfo->ssi_signo = SIGUSR1;
     ProcessSignal(siginfo);
     return 0;
+}
+
+static int SetuidSuccessFunc(uid_t uid)
+{
+    return 0;
+}
+
+static int SetuidFailFunc(uid_t uid)
+{
+    errno = EPERM;
+    return -1;
 }
 
 HWTEST_F(InitUnitTest, TestSignalHandle, TestSize.Level1)
@@ -191,5 +204,16 @@ HWTEST_F(InitUnitTest, FsDmCreateMultiTargetLinearDevice, TestSize.Level1)
     int rc = FsDmCreateMultiTargetLinearDevice(devName, dmDevPath, dmDevPathLen, targets, targetNum);
     EXPECT_EQ(rc, -1);
     close(fd);
+}
+
+HWTEST_F(InitUnitTest, TestSetRootAppid, TestSize.Level1)
+{
+    UpdateSetuidFunc(SetuidSuccessFunc);
+    EXPECT_EQ(SetRootAppid(), 0);
+    UpdateSetuidFunc(nullptr);
+
+    UpdateSetuidFunc(SetuidFailFunc);
+    EXPECT_EQ(SetRootAppid(), -1);
+    UpdateSetuidFunc(nullptr);
 }
 }

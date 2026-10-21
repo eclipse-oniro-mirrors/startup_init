@@ -442,6 +442,22 @@ ssize_t __wrap_pread(int fd, void* const buf, size_t count, off_t offset)
     }
 }
 
+// start wrap setuid
+static SetuidFunc g_setuid = NULL;
+void UpdateSetuidFunc(SetuidFunc func)
+{
+    g_setuid = func;
+}
+
+int __wrap_setuid(uid_t uid)
+{
+    if (g_setuid) {
+        return g_setuid(uid);
+    } else {
+        return __real_setuid(uid);
+    }
+}
+
 // start wrap getuid
 static GetuidFunc g_getuid = NULL;
 void UpdateGetuidFunc(GetuidFunc func)

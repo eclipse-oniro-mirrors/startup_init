@@ -51,6 +51,7 @@ ohos_unittest("init_unittest") {
       "-Wl,--wrap=fcntl",
       "-Wl,--wrap=waitpid",
       "-Wl,--wrap=pread",
+      "-Wl,--wrap=setuid",
       "-Wl,--wrap=getuid",
       "-Wl,--wrap=open",
       "-Wl,--wrap=close",
