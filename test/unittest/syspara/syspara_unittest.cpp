@@ -215,7 +215,7 @@ HWTEST_F(SysparaUnitTest, parameterTest0029, TestSize.Level0)
 
 HWTEST_F(SysparaUnitTest, parameterTest0030, TestSize.Level0)
 {
-    static const char *nonExist = NULL;
+    static const char *nonExist = nullptr;
     const char *result = GetProperty("persist.nonexistent.test.param", &nonExist);
     EXPECT_EQ(result, nullptr);
     printf("GetProperty for non-existent param returns NULL, triggers EMPTY_STR fallback in GetInstallTime\n");
