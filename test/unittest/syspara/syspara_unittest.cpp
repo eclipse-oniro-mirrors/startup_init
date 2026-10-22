@@ -204,7 +204,7 @@ HWTEST_F(SysparaUnitTest, parameterTest0024, TestSize.Level0)
     }
 }
 
-HWTEST_F(SysparaUnitTest, parameterTest0025, TestSize.Level0)
+HWTEST_F(SysparaUnitTest, parameterTest0029, TestSize.Level0)
 {
     const char *installTime = GetInstallTime();
     EXPECT_STRNE(installTime, nullptr);
