@@ -57,7 +57,11 @@ ohos_moduletest("InitModuleTest") {
   defines = []
 
   if (enable_ohos_startup_init_feature_deviceinfo) {
-    sources += [ "deviceinfo_moduleTest.cpp" ]
+    sources += [
+      "deviceinfo_moduleTest.cpp",
+      "//base/startup/init/interfaces/kits/syscap/src/deviceinfo.c",
+      "//base/startup/init/interfaces/kits/syscap/src/deviceinfo_impl.cpp",
+    ]
 
     if (init_get_disk_sn) {
       defines += [ "PARAM_FEATURE_GET_DEVICE_SN" ]
@@ -78,7 +82,6 @@ ohos_moduletest("InitModuleTest") {
     "//base/startup/init/interfaces/innerkits:deviceinfo_proxy",
     "//base/startup/init/interfaces/innerkits:libbeget_proxy",
     "//base/startup/init/interfaces/innerkits:libbegetutil",
-    "//base/startup/init/interfaces/kits/syscap:deviceinfo_ndk",
   ]
 
   external_deps = [
