@@ -2427,29 +2427,6 @@ ohos_fuzztest("GetBuildTimeFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
-ohos_fuzztest("GetInstallTimeFuzzTest") {
-  module_out_path = module_output_path
-  fuzz_config_file = "//base/startup/init/test/fuzztest/getinstalltime_fuzzer"
-
-  include_dirs = [
-    "//base/startup/init/interfaces/innerkits/fd_holder",
-    "//base/startup/init/test/fuzztest/utils/include",
-  ]
-
-  deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
-  external_deps = [ "bounds_checking_function:libsec_static" ]
-  external_deps += [ "hilog:libhilog" ]
-
-  cflags = [
-    "-g",
-    "-O0",
-    "-Wno-unused-variable",
-    "-fno-omit-frame-pointer",
-  ]
-  sources = [ "getinstalltime_fuzzer/getinstalltime_fuzzer.cpp" ]
-  defines = [ "STARTUP_INIT_TEST" ]
-}
-
 ohos_fuzztest("AclGetSerialFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file = "//base/startup/init/test/fuzztest/aclgetserial_fuzzer"
@@ -4469,7 +4446,6 @@ group("fuzztest") {
     ":GetBootloaderVersionFuzzTest",
     ":GetBuildRootHashFuzzTest",
     ":GetBuildTimeFuzzTest",
-    ":GetInstallTimeFuzzTest",
     ":GetBuildTypeFuzzTest",
     ":GetBuildUserFuzzTest",
     ":GetControlFileFuzzTest",
