@@ -59,6 +59,7 @@ static void GetAllParameterTestFunc(void)
     EXPECT_STRNE(GetBuildUser(), nullptr);
     EXPECT_STRNE(GetBuildHost(), nullptr);
     EXPECT_STRNE(GetBuildTime(), nullptr);
+    EXPECT_STRNE(GetInstallTime(), nullptr);
     GetFirstApiVersion();
     EXPECT_STRNE(system::GetDeviceType().c_str(), nullptr);
 }

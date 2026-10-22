@@ -204,6 +204,17 @@ HWTEST_F(SysparaUnitTest, parameterTest0024, TestSize.Level0)
     }
 }
 
+HWTEST_F(SysparaUnitTest, parameterTest0025, TestSize.Level0)
+{
+    const char *installTime = GetInstallTime();
+    EXPECT_STRNE(installTime, nullptr);
+    if (strcmp(installTime, "") == 0) {
+        printf("installTime is empty string (parameter not set)\n");
+    } else {
+        printf("installTime = %s\n", installTime);
+    }
+}
+
 HWTEST_F(SysparaUnitTest, parameterTest002, TestSize.Level0)
 {
     char key1[] = "test.ro.sys.version";
