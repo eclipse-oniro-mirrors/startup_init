@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "beget_ext.h"
 #include "parameter.h"
 #include <stddef.h>
 
@@ -170,10 +171,12 @@ const char *OH_GetDistributionOSReleaseType(void)
 int32_t OH_GetDiskSN(char *diskSn)
 {
     if (diskSn == NULL) {
+        BEGET_LOGE("GetDiskSN invalid param, diskSn is null");
         return 0;
     }
     int32_t ret = AclGetDiskSN(diskSn, DISK_SN_LEN);
     if (ret != 0) {
+        BEGET_LOGE("GetDiskSN failed, ret = %d", ret);
         return BOARD_INFO_PERMISSION_DENIED_CODE;
     }
     return 0;
