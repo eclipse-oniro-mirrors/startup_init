@@ -574,4 +574,39 @@ HWTEST_F(BegetctlServiceControlTest, ServiceControl_InvalidCommand_HandlesGracef
     EXPECT_EQ(ret, 0) << "无效命令应该被优雅处理";
 }
 
+
+HWTEST_F(BegetctlServiceControlTest, StartPersistentService_WithServiceName_WritesStartParameter, TestSize.Level1)
+{
+    char command[] = "start_persistent_service";
+    char name[] = "init_persistent_ut";
+    char *args[] = {command, name, nullptr};
+    TestSetServiceControlParamFunc(RecordServiceCtrlParam);
+    EXPECT_EQ(BShellEnvDirectExecute(GetShellHandle(), 2, args), 0);
+    EXPECT_STREQ(g_serviceCtrlParamName, "ohos.ctl.start_persistent");
+    EXPECT_STREQ(g_serviceCtrlParamValue, "init_persistent_ut");
+}
+
+HWTEST_F(BegetctlServiceControlTest, StartPersistentService_WithExtraArguments_ForwardsArguments, TestSize.Level1)
+{
+    char command[] = "start_persistent_service";
+    char name[] = "init_persistent_ut";
+    char event[] = "event";
+    char payload[] = "payload";
+    char *args[] = {command, name, event, payload, nullptr};
+    TestSetServiceControlParamFunc(RecordServiceCtrlParam);
+    EXPECT_EQ(BShellEnvDirectExecute(GetShellHandle(), 4, args), 0);
+    EXPECT_STREQ(g_serviceCtrlParamName, "ohos.ctl.start_persistent");
+    EXPECT_STREQ(g_serviceCtrlParamValue, "init_persistent_ut|event|payload");
+}
+
+HWTEST_F(BegetctlServiceControlTest, StartPersistentService_WithoutServiceName_DoesNotWriteParameter, TestSize.Level1)
+{
+    char command[] = "start_persistent_service";
+    char *args[] = {command, nullptr};
+    TestSetServiceControlParamFunc(RecordServiceCtrlParam);
+    EXPECT_EQ(BShellEnvDirectExecute(GetShellHandle(), 1, args), 0);
+    EXPECT_STREQ(g_serviceCtrlParamName, "");
+    EXPECT_STREQ(g_serviceCtrlParamValue, "");
+}
+
 } // namespace init_ut

@@ -63,6 +63,9 @@ static int main_cmd(BShellHandle shell, int argc, char **argv)
     } else if (strcmp(argv[0], "start_ondemand_service") == 0) {
         ServiceControlWithExtra(argv[1], START_ONDEMAND,
             (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
+    } else if (strcmp(argv[0], "start_persistent_service") == 0) {
+        ServiceControlWithExtra(argv[1], START_PERSISTENT,
+            (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
     } else if (strcmp(argv[0], "stop_service") == 0) {
         ServiceControlWithExtra(argv[1], 1, (const char **)argv + SERVICE_START_NUMBER, argc - SERVICE_START_NUMBER);
     } else if (strcmp(argv[0], "start") == 0) {
@@ -106,6 +109,8 @@ MODULE_CONSTRUCTOR(void)
         {"stop_service", main_cmd, "stop service", "stop_service servicename", ""},
         {"start_service", main_cmd, "start service", "start_service servicename", ""},
         {"start_ondemand_service", main_cmd, "start ondemand service", "start_ondemand_service servicename", ""},
+        {"start_persistent_service", main_cmd, "start persistent service",
+            "start_persistent_service servicename", ""},
 #if defined(SUPPORT_SA_MULTI_USER) && !defined(OHOS_LITE)
         {"startwithuserid", main_cmd, "start service with user id",
             "startwithuserid servicename userid [ext...]", ""},

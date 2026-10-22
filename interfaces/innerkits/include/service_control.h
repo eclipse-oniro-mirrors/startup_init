@@ -47,6 +47,7 @@ enum ServiceAction {
     RESTART = 2,
     TERM = 3,
     START_ONDEMAND = 4,
+    START_PERSISTENT = 5,
     SERVICE_ACTION_MAX,
 };
 
