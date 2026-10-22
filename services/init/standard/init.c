@@ -230,7 +230,7 @@ static int FdHolderSockInit(void)
     return sock;
 }
 
-INIT_STATIC int SetRootAppid(void)
+INIT_STATIC int SetRootUid(void)
 {
     if (setuid(0) != 0) {
         INIT_LOGE("Set uid for init to fill appid failed, err = %d", errno);
@@ -524,7 +524,7 @@ void SystemConfig(const char *uptime)
     IsEnableSandbox();
 
     PrelinkReady();
-    SetRootAppid();
+    SetRootUid();
 
     // execute init
     PostInitTriggers();
