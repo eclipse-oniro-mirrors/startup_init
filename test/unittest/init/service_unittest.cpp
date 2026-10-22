@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <cstdlib>
+#include <vector>
 #include "init.h"
 #include "init_cmds.h"
 #include "init_service.h"
@@ -1281,6 +1282,361 @@ HWTEST_F(OnDemandServiceTest, NonOndemandServiceRejected, TestSize.Level1)
     EXPECT_STREQ(service_->onDemandArgs.argv[0], ONDEMAND_TEST_PATH);
     EXPECT_STREQ(service_->onDemandArgs.argv[1], "default");
     EXPECT_STREQ(service_->onDemandArgs.argv[2], "event");
+}
+
+
+namespace {
+constexpr const char *PERSISTENT_TEST_NAME = "test_persistent_service";
+constexpr const char *PERSISTENT_TEST_PATH = "/data/init_ut/persistent_test_service";
+int g_persistentForkCount = 0;
+bool g_persistentForkFailure = false;
+int g_persistentParamCount = 0;
+int g_persistentParamResult = 0;
+std::string g_persistentParamName;
+std::string g_persistentParamValue;
+int g_persistentStrdupCount = 0;
+int g_persistentStrdupFailAt = 0;
+bool g_persistentCallocFailure = false;
+
+pid_t PersistentFork()
+{
+    ++g_persistentForkCount;
+    return g_persistentForkFailure ? -1 : MOCK_FORK_BASE_PID + g_persistentForkCount;
+}
+
+int CapturePersistentParameter(const char *name, const char *value)
+{
+    ++g_persistentParamCount;
+    g_persistentParamName = name;
+    g_persistentParamValue = value;
+    return g_persistentParamResult;
+}
+
+char *PersistentStrdup(const char *value)
+{
+    ++g_persistentStrdupCount;
+    if (g_persistentStrdupFailAt > 0 && g_persistentStrdupCount == g_persistentStrdupFailAt) {
+        errno = ENOMEM;
+        return nullptr;
+    }
+    return __real_strdup(value);
+}
+
+void *PersistentCalloc(size_t count, size_t size)
+{
+    if (g_persistentCallocFailure) {
+        errno = ENOMEM;
+        return nullptr;
+    }
+    return __real_calloc(count, size);
+}
+} // namespace
+
+class PersistentServiceTest : public testing::Test {
+public:
+    static void SetUpTestCase()
+    {
+        ASSERT_TRUE(mkdir("/data/init_ut", TEST_DIR_MODE) == 0 || errno == EEXIST);
+        FILE *file = fopen(PERSISTENT_TEST_PATH, "w");
+        ASSERT_NE(file, nullptr);
+        EXPECT_EQ(fclose(file), 0);
+    }
+
+    static void TearDownTestCase()
+    {
+        unlink(PERSISTENT_TEST_PATH);
+    }
+
+    void SetUp() override
+    {
+        g_persistentForkCount = 0;
+        g_persistentForkFailure = false;
+        g_persistentParamCount = 0;
+        g_persistentParamResult = 0;
+        g_persistentParamName.clear();
+        g_persistentParamValue.clear();
+        g_persistentStrdupCount = 0;
+        g_persistentStrdupFailAt = 0;
+        g_persistentCallocFailure = false;
+        service_ = AddService(PERSISTENT_TEST_NAME);
+        ASSERT_NE(service_, nullptr);
+        ASSERT_EQ(ParseConfig("false"), 0);
+        service_->pid = -1;
+        UpdateForkFunc(PersistentFork);
+    }
+
+    void TearDown() override
+    {
+        UpdateForkFunc(nullptr);
+        UpdateStrdupFunc(nullptr);
+        UpdateCallocFunc(nullptr);
+        TestSetServiceControlParamFunc(nullptr);
+        ReleaseService(service_);
+        service_ = nullptr;
+    }
+
+protected:
+    int ParseConfig(const char *classification)
+    {
+        std::string json = std::string("{\"name\":\"") + PERSISTENT_TEST_NAME +
+            "\",\"path\":[\"" + PERSISTENT_TEST_PATH + "\",\"default\"],"
+            "\"uid\":\"system\",\"gid\":[\"system\"]";
+        if (classification != nullptr) {
+            json += std::string(",\"ondemand\":") + classification;
+        }
+        json += "}";
+        cJSON *item = cJSON_Parse(json.c_str());
+        if (item == nullptr) {
+            return -1;
+        }
+        int ret = ParseOneService(item, service_);
+        cJSON_Delete(item);
+        if (ret == 0) {
+            SavePathArgs();
+        }
+        return ret;
+    }
+
+    void ExpectSkipped(pid_t pid, uint32_t attributes)
+    {
+        EXPECT_EQ(g_persistentForkCount, 0);
+        EXPECT_EQ(service_->pid, pid);
+        EXPECT_EQ(service_->attribute, attributes);
+    }
+
+    void SavePathArgs()
+    {
+        originalPathArgv_ = service_->pathArgs.argv;
+        originalPathArgCount_ = service_->pathArgs.count;
+        originalPathArgs_.clear();
+        ASSERT_NE(originalPathArgv_, nullptr);
+        ASSERT_GT(originalPathArgCount_, 0);
+        for (int i = 0; i < originalPathArgCount_ - 1; ++i) {
+            ASSERT_NE(originalPathArgv_[i], nullptr);
+            originalPathArgs_.emplace_back(originalPathArgv_[i]);
+        }
+        ASSERT_EQ(originalPathArgv_[originalPathArgCount_ - 1], nullptr);
+    }
+
+    void ExpectPathArgsUntouched()
+    {
+        ASSERT_NE(service_->pathArgs.argv, nullptr);
+        ASSERT_EQ(service_->pathArgs.argv, originalPathArgv_);
+        ASSERT_EQ(service_->pathArgs.count, originalPathArgCount_);
+        for (size_t i = 0; i < originalPathArgs_.size(); ++i) {
+            EXPECT_STREQ(service_->pathArgs.argv[i], originalPathArgs_[i].c_str());
+        }
+        EXPECT_EQ(service_->pathArgs.argv[originalPathArgCount_ - 1], nullptr);
+    }
+
+    Service *service_ = nullptr;
+    char **originalPathArgv_ = nullptr;
+    int originalPathArgCount_ = 0;
+    std::vector<std::string> originalPathArgs_;
+};
+
+HWTEST_F(PersistentServiceTest, NonPersistentStoppedSkipped, TestSize.Level1)
+{
+    ASSERT_EQ(ParseConfig("true"), 0);
+    uint32_t attributes = service_->attribute;
+    StartPersistentServiceByName(PERSISTENT_TEST_NAME);
+    ExpectSkipped(-1, attributes);
+}
+
+HWTEST_F(PersistentServiceTest, NonPersistentRunningSkipped, TestSize.Level1)
+{
+    ASSERT_EQ(ParseConfig("true"), 0);
+    service_->pid = MOCK_FORK_BASE_PID;
+    uint32_t attributes = service_->attribute;
+    DoCmdByName("start_persistent ", PERSISTENT_TEST_NAME);
+    ExpectSkipped(MOCK_FORK_BASE_PID, attributes);
+}
+
+HWTEST_F(PersistentServiceTest, PersistentStoppedStarted, TestSize.Level1)
+{
+    EXPECT_FALSE(IsOnDemandService(service_));
+    DoCmdByName("start_persistent ", PERSISTENT_TEST_NAME);
+    EXPECT_EQ(g_persistentForkCount, 1);
+    EXPECT_EQ(service_->pid, MOCK_FORK_BASE_PID + 1);
+    ExpectPathArgsUntouched();
+}
+
+HWTEST_F(PersistentServiceTest, MissingClassificationUsesDefault, TestSize.Level1)
+{
+    ReleaseService(service_);
+    service_ = AddService(PERSISTENT_TEST_NAME);
+    ASSERT_NE(service_, nullptr);
+    ASSERT_EQ(ParseConfig(nullptr), 0);
+    service_->pid = -1;
+    EXPECT_FALSE(IsOnDemandService(service_));
+    StartPersistentServiceByName(PERSISTENT_TEST_NAME);
+    EXPECT_EQ(g_persistentForkCount, 1);
+    ExpectPathArgsUntouched();
+    EXPECT_EQ(service_->pid, MOCK_FORK_BASE_PID + 1);
+}
+
+HWTEST_F(PersistentServiceTest, RepeatedRequestKeepsPid, TestSize.Level1)
+{
+    StartPersistentServiceByName(PERSISTENT_TEST_NAME);
+    pid_t pid = service_->pid;
+    StartPersistentServiceByName(PERSISTENT_TEST_NAME);
+    EXPECT_EQ(g_persistentForkCount, 1);
+    EXPECT_EQ(service_->pid, pid);
+}
+
+HWTEST_F(PersistentServiceTest, ForkFailureThenRetry, TestSize.Level1)
+{
+    g_persistentForkFailure = true;
+    StartPersistentServiceByName(PERSISTENT_TEST_NAME);
+    EXPECT_EQ(service_->pid, -1);
+    EXPECT_EQ(g_persistentForkCount, 1);
+    g_persistentForkFailure = false;
+    StartPersistentServiceByName(PERSISTENT_TEST_NAME);
+    EXPECT_EQ(g_persistentForkCount, 2);
+    EXPECT_EQ(service_->pid, MOCK_FORK_BASE_PID + 2);
+}
+
+HWTEST_F(PersistentServiceTest, InvalidServiceDoesNotStart, TestSize.Level1)
+{
+    StartPersistentServiceByName(nullptr);
+    StartPersistentServiceByName("missing_persistent_service");
+    StartPersistentServiceByName("missing_persistent_service|event");
+    EXPECT_EQ(g_persistentForkCount, 0);
+}
+
+HWTEST_F(PersistentServiceTest, NonPersistentExtraArgumentsSkipped, TestSize.Level1)
+{
+    ASSERT_EQ(ParseConfig("true"), 0);
+    uint32_t attributes = service_->attribute;
+    StartPersistentServiceByName("test_persistent_service|event|payload");
+    ExpectSkipped(-1, attributes);
+    ExpectPathArgsUntouched();
+    service_->pid = MOCK_FORK_BASE_PID;
+    StartPersistentServiceByName("test_persistent_service|event|payload");
+    ExpectSkipped(MOCK_FORK_BASE_PID, attributes);
+    ExpectPathArgsUntouched();
+}
+
+HWTEST_F(PersistentServiceTest, OrdinaryStartAfterSkip, TestSize.Level1)
+{
+    ASSERT_EQ(ParseConfig("true"), 0);
+    StartPersistentServiceByName(PERSISTENT_TEST_NAME);
+    EXPECT_EQ(g_persistentForkCount, 0);
+    DoCmdByName("start ", PERSISTENT_TEST_NAME);
+    EXPECT_EQ(g_persistentForkCount, 1);
+    EXPECT_EQ(service_->pid, MOCK_FORK_BASE_PID + 1);
+}
+
+HWTEST_F(PersistentServiceTest, ParameterToCommandChainWithExtraArguments, TestSize.Level1)
+{
+    TestSetServiceControlParamFunc(CapturePersistentParameter);
+    const char *args[] = {"event", "payload"};
+    ASSERT_EQ(ServiceControlWithExtra(PERSISTENT_TEST_NAME, START_PERSISTENT, args, 2), 0);
+    EXPECT_EQ(g_persistentParamName, "ohos.ctl.start_persistent");
+    EXPECT_EQ(g_persistentParamValue, "test_persistent_service|event|payload");
+    ServiceCtrlInfo *info = nullptr;
+    ASSERT_EQ(GetServiceCtrlInfo(g_persistentParamName.c_str(), g_persistentParamValue.c_str(), &info), 0);
+    ASSERT_NE(info, nullptr);
+    EXPECT_STREQ(info->cmdName, "start_persistent ");
+    EXPECT_STREQ(info->realKey, "ohos.servicectrl.start_persistent.test_persistent_service|event|payload");
+    int index = -1;
+    EXPECT_NE(GetMatchCmd(info->cmdName, &index), nullptr);
+    EXPECT_GE(index, 0);
+    DoCmdByIndex(index, info->realKey + info->valueOffset, nullptr);
+    free(info);
+    EXPECT_EQ(g_persistentForkCount, 1);
+    ExpectPathArgsUntouched();
+}
+
+HWTEST_F(PersistentServiceTest, InvalidClientArgumentsDoNotWriteParameter, TestSize.Level1)
+{
+    TestSetServiceControlParamFunc(CapturePersistentParameter);
+    const char *args[] = {nullptr};
+    EXPECT_EQ(ServiceControlWithExtra(nullptr, START_PERSISTENT, nullptr, 0), -1);
+    EXPECT_EQ(ServiceControlWithExtra(PERSISTENT_TEST_NAME, START_PERSISTENT, args, 1), -1);
+    EXPECT_EQ(ServiceControlWithExtra(PERSISTENT_TEST_NAME, SERVICE_ACTION_MAX, nullptr, 0), -1);
+    EXPECT_EQ(g_persistentParamCount, 0);
+}
+
+HWTEST_F(PersistentServiceTest, ControlErrorReturnedUnchanged, TestSize.Level1)
+{
+    TestSetServiceControlParamFunc(CapturePersistentParameter);
+    g_persistentParamResult = -7;
+    EXPECT_EQ(ServiceControl(PERSISTENT_TEST_NAME, START_PERSISTENT), -7);
+    const char *args[] = {"event"};
+    EXPECT_EQ(ServiceControlWithExtra(PERSISTENT_TEST_NAME, START_PERSISTENT, args, 1), -7);
+    EXPECT_EQ(g_persistentParamCount, 2);
+}
+
+HWTEST_F(PersistentServiceTest, EmptyCommandDoesNotStart, TestSize.Level1)
+{
+    DoCmdByName("start_persistent ", "");
+    EXPECT_EQ(g_persistentForkCount, 0);
+}
+
+HWTEST_F(PersistentServiceTest, ExtraServiceNameDuplicationFailure, TestSize.Level1)
+{
+    UpdateStrdupFunc(PersistentStrdup);
+    g_persistentStrdupFailAt = 1;
+    StartPersistentServiceByName("test_persistent_service|event");
+    EXPECT_EQ(g_persistentStrdupCount, 1);
+    EXPECT_EQ(g_persistentForkCount, 0);
+    ExpectPathArgsUntouched();
+}
+
+HWTEST_F(PersistentServiceTest, ExtraVectorAllocationFailure, TestSize.Level1)
+{
+    UpdateCallocFunc(PersistentCalloc);
+    g_persistentCallocFailure = true;
+    StartPersistentServiceByName("test_persistent_service|event");
+    EXPECT_EQ(g_persistentForkCount, 0);
+    ExpectPathArgsUntouched();
+}
+
+HWTEST_F(PersistentServiceTest, ExtraPathDuplicationFailureDoesNotStart, TestSize.Level1)
+{
+    UpdateStrdupFunc(PersistentStrdup);
+    g_persistentStrdupFailAt = 2;
+    StartPersistentServiceByName("test_persistent_service|event");
+    EXPECT_EQ(g_persistentStrdupCount, 2);
+    EXPECT_EQ(g_persistentForkCount, 0);
+    ExpectPathArgsUntouched();
+}
+
+HWTEST_F(PersistentServiceTest, PartialExtraDuplicationFailureDoesNotStart, TestSize.Level1)
+{
+    UpdateStrdupFunc(PersistentStrdup);
+    g_persistentStrdupFailAt = 5;
+    StartPersistentServiceByName("test_persistent_service|event|payload");
+    EXPECT_EQ(g_persistentStrdupCount, 5);
+    EXPECT_EQ(g_persistentForkCount, 0);
+    ExpectPathArgsUntouched();
+}
+
+HWTEST_F(PersistentServiceTest, ExtraArgumentsStartFailureAndRetry, TestSize.Level1)
+{
+    UpdateStrdupFunc(PersistentStrdup);
+    g_persistentForkFailure = true;
+    StartPersistentServiceByName("test_persistent_service|event");
+    EXPECT_EQ(service_->pid, -1);
+    EXPECT_EQ(g_persistentForkCount, 1);
+    ExpectPathArgsUntouched();
+    UpdateStrdupFunc(nullptr);
+    g_persistentForkFailure = false;
+    StartPersistentServiceByName(PERSISTENT_TEST_NAME);
+    EXPECT_EQ(g_persistentForkCount, 2);
+    ExpectPathArgsUntouched();
+    EXPECT_EQ(service_->pid, MOCK_FORK_BASE_PID + 2);
+}
+
+HWTEST_F(PersistentServiceTest, ClientExtraBufferAllocationFailure, TestSize.Level1)
+{
+    TestSetServiceControlParamFunc(CapturePersistentParameter);
+    UpdateCallocFunc(PersistentCalloc);
+    g_persistentCallocFailure = true;
+    const char *args[] = {"event"};
+    EXPECT_EQ(ServiceControlWithExtra(PERSISTENT_TEST_NAME, START_PERSISTENT, args, 1), -1);
+    EXPECT_EQ(g_persistentParamCount, 0);
 }
 
 } // namespace init_ut

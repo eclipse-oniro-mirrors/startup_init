@@ -1356,6 +1356,33 @@ void StartServiceByName(const char *servName)
     return;
 }
 
+void StartPersistentServiceByName(const char *servName)
+{
+    INIT_ERROR_CHECK(servName != NULL, return,
+        "StartPersistentServiceByName: servName is NULL");
+    ServiceArgs extraArgs = { 0 };
+    Service *service = GetServiceByName(servName);
+    if (service == NULL) {
+        service = GetServiceByExtServName(servName, &extraArgs);
+    }
+    INIT_ERROR_CHECK(service != NULL, FreeStringVector(extraArgs.argv, extraArgs.count);
+        return, "Cannot find service %s.service count %d", servName, g_serviceSpace.serviceCount);
+
+    if (IsOnDemandService(service)) {
+        FreeStringVector(extraArgs.argv, extraArgs.count);
+        return;
+    }
+
+    ServiceArgs *pathArgs = &service->pathArgs;
+    if (extraArgs.count != 0) {
+        pathArgs = &extraArgs;
+    }
+    if (ServiceStart(service, pathArgs) != SERVICE_SUCCESS) {
+        INIT_LOGE("Service %s start failed!", servName);
+    }
+    FreeStringVector(extraArgs.argv, extraArgs.count);
+}
+
 void ClearOnDemandServiceArgs(Service *service)
 {
     INIT_CHECK(service != NULL, return);

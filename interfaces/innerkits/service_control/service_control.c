@@ -182,6 +182,11 @@ static int StartOnDemandProcess(const char *serviceName, const char *extArgv[], 
     return StartProcessByParameter("ohos.ctl.start_ondemand", serviceName, extArgv, extArgc);
 }
 
+static int StartPersistentProcess(const char *serviceName, const char *extArgv[], int extArgc)
+{
+    return StartProcessByParameter("ohos.ctl.start_persistent", serviceName, extArgv, extArgc);
+}
+
 #ifdef SUPPORT_SA_MULTI_USER
 static int SetByUserProcessParam(const char *paramName, const ByUserCtrlValueArgs *args)
 {
@@ -322,6 +327,9 @@ int ServiceControlWithExtra(const char *serviceName, int action, const char *ext
             break;
         case START_ONDEMAND:
             ret = StartOnDemandProcess(serviceName, extArgv, extArgc);
+            break;
+        case START_PERSISTENT:
+            ret = StartPersistentProcess(serviceName, extArgv, extArgc);
             break;
         default:
             BEGET_LOGE("Set service %s action %d error", serviceName, action);
