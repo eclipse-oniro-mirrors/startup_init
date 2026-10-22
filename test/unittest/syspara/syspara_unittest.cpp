@@ -206,13 +206,19 @@ HWTEST_F(SysparaUnitTest, parameterTest0024, TestSize.Level0)
 
 HWTEST_F(SysparaUnitTest, parameterTest0029, TestSize.Level0)
 {
+    SetParameter("persist.dupdate_engine.lastHotaInstallTime", "1234567890");
     const char *installTime = GetInstallTime();
     EXPECT_STRNE(installTime, nullptr);
-    if (strcmp(installTime, "") == 0) {
-        printf("installTime is empty string (parameter not set)\n");
-    } else {
-        printf("installTime = %s\n", installTime);
-    }
+    EXPECT_STREQ(installTime, "1234567890");
+    printf("installTime = %s\n", installTime);
+}
+
+HWTEST_F(SysparaUnitTest, parameterTest0030, TestSize.Level0)
+{
+    static const char *nonExist = NULL;
+    const char *result = GetProperty("persist.nonexistent.test.param", &nonExist);
+    EXPECT_EQ(result, nullptr);
+    printf("GetProperty for non-existent param returns NULL, triggers EMPTY_STR fallback in GetInstallTime\n");
 }
 
 HWTEST_F(SysparaUnitTest, parameterTest002, TestSize.Level0)

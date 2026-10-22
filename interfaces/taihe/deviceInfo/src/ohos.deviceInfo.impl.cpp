@@ -410,11 +410,7 @@ static DevInfoError AclGetDevOdid(char *odid, int size)
 
 ::taihe::string getinstallTime()
 {
-    const char *value = GetInstallTime();
-    if (value == nullptr) {
-        value = "";
-    }
-    return value;
+    return GetInstallTime();
 }
 
 ::ohos::deviceInfo::PerformanceClassLevel getperformanceClass()

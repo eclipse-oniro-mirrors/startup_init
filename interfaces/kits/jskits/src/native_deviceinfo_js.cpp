@@ -721,9 +721,6 @@ static napi_value GetInstallTime(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
     const char *installTime = GetInstallTime();
-    if (installTime == nullptr) {
-        installTime = "";
-    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, installTime, strlen(installTime), &napiValue));
     return napiValue;
