@@ -45,7 +45,7 @@ using namespace std;
 
 extern "C" {
 INIT_STATIC void ProcessSignal(const struct signalfd_siginfo *siginfo);
-INIT_STATIC int SetRootUid(void);
+INIT_STATIC void SetRootUid(void);
 }
 
 namespace init_ut {
@@ -67,9 +67,10 @@ static int TestProcessSignal(struct signalfd_siginfo *siginfo)
     ProcessSignal(siginfo);
     return 0;
 }
-
+static uid_t g_testUid = 999
 static int SetuidSuccessFunc(uid_t uid)
 {
+    g_testUid = uid;
     return 0;
 }
 
@@ -208,12 +209,14 @@ HWTEST_F(InitUnitTest, FsDmCreateMultiTargetLinearDevice, TestSize.Level1)
 
 HWTEST_F(InitUnitTest, TestSetRootUid, TestSize.Level1)
 {
-    UpdateSetuidFunc(SetuidSuccessFunc);
-    EXPECT_EQ(SetRootUid(), 0);
+    g_testUid = 999;
+    UpdateSetuidFunc(SetuidFailFunc);
+    SetRootUid();
     UpdateSetuidFunc(nullptr);
 
-    UpdateSetuidFunc(SetuidFailFunc);
-    EXPECT_EQ(SetRootUid(), -1);
+    UpdateSetuidFunc(SetuidSuccessFunc);
+    SetRootUid();
+    EXPECT_EQ(g_testUid, 0);
     UpdateSetuidFunc(nullptr);
 }
 }
