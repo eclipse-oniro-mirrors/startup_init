@@ -548,12 +548,9 @@ const char *GetInstallTime(void)
 {
     static const char *installTime = NULL;
 #ifndef OHOS_LITE
-    GetPropertyAtomic("persist.dupdate_engine.lastHotaInstallTime", &installTime);
+    const char *result = GetPropertyAtomic("persist.dupdate_engine.lastHotaInstallTime", &installTime);
 #else
-    GetProperty("persist.dupdate_engine.lastHotaInstallTime", &installTime);
+    const char *result = GetProperty("persist.dupdate_engine.lastHotaInstallTime", &installTime);
 #endif
-    if (installTime == NULL) {
-        installTime = EMPTY_STR;
-    }
-    return installTime;
+    return (result != NULL) ? result : EMPTY_STR;
 }

@@ -204,21 +204,21 @@ HWTEST_F(SysparaUnitTest, parameterTest0024, TestSize.Level0)
     }
 }
 
-HWTEST_F(SysparaUnitTest, parameterTest0029, TestSize.Level0)
+HWTEST_F(SysparaUnitTest, parameterTest0025, TestSize.Level0)
 {
-    SetParameter("persist.dupdate_engine.lastHotaInstallTime", "1234567890");
-    const char *installTime = GetInstallTime();
-    EXPECT_STRNE(installTime, nullptr);
-    EXPECT_STREQ(installTime, "1234567890");
-    printf("installTime = %s\n", installTime);
-}
-
-HWTEST_F(SysparaUnitTest, parameterTest0030, TestSize.Level0)
-{
-    static const char *nonExist = nullptr;
-    const char *result = GetProperty("persist.nonexistent.test.param", &nonExist);
-    EXPECT_EQ(result, nullptr);
-    printf("GetProperty for non-existent param returns NULL, triggers EMPTY_STR fallback in GetInstallTime\n");
+    char oldValue[PARAM_VALUE_LEN_MAX] = {0};
+    int oldRet = GetParameter("persist.dupdate_engine.lastHotaInstallTime", "", oldValue, sizeof(oldValue));
+    if (oldRet <= 0) {
+        EXPECT_STREQ(GetInstallTime(), "");
+        SetParameter("persist.dupdate_engine.lastHotaInstallTime", "1234567890");
+        EXPECT_STREQ(GetInstallTime(), "1234567890");
+    } else {
+        const char *result = GetInstallTime();
+        EXPECT_STRNE(result, nullptr);
+        printf("installTime = %s\n", result);
+    }
+    SetParameter("persist.dupdate_engine.lastHotaInstallTime", oldValue);
+    SaveParameters();
 }
 
 HWTEST_F(SysparaUnitTest, parameterTest002, TestSize.Level0)
