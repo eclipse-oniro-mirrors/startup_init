@@ -62,6 +62,7 @@ void TermServiceByName(const char *serviceName);
 void StartServiceByName(const char *serviceName);
 void StartOnDemandServiceByName(const char *serviceName);
 void StartPersistentServiceByName(const char *serviceName);
+void StartServiceByNameHighPriority(const char *serviceName);
 void ClearOnDemandServiceArgs(Service *service);
 void StopServiceByName(const char *serviceName);
 void StopAllServices(int flags, const char **exclude, int size,

@@ -85,6 +85,24 @@
 #define ACCESS_TOKENID_GET_USERID _IOR(ACCESS_TOKENID_IOCTL_BASE, 13, uint32_t)
 #endif
 
+// Qos high priority service events
+#define SCHED_STATE_DEV_PATH "/dev/sched_state_report"
+#define SCHED_STATE_MAGIC 'S'
+#define SCHED_STATE_CMD_SET_STATE 1
+#define SCHED_STATE_SET_STATE _IOW(SCHED_STATE_MAGIC, SCHED_STATE_CMD_SET_STATE, struct sched_state_event)
+
+struct sched_state_event {
+    unsigned int event;
+    unsigned int state;
+};
+
+/* SCHED_EVENT_INIT_SA (2) is a dedicated event for init-SA QoS boost. */
+#define SCHED_EVENT_INIT_SA 2
+#define SCHED_EVENT_MASK_INIT_SA (1U << 2)
+#define SCHED_INIT_SA_ENTER 1
+#define SCHED_STATE_ENCODE(state, pid) \
+    ((unsigned int)((state) << 24) | (unsigned int)((pid) & 0x00FFFFFF))
+
 static int SetAllAmbientCapability(void)
 {
     for (int i = 0; i <= CAP_LAST_CAP; ++i) {
@@ -884,6 +902,24 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
         return SERVICE_FAILURE;
     }
     HandleServicePostFork(service, pid, &startingTime, &preforkTime);
+    if (IsHighPriorityService(service) && pid > 0) {
+        INIT_LOGI("ServiceStart high priority fork success for %s, pid=%d", service->name, pid);
+        int fd = open(SCHED_STATE_DEV_PATH, O_WRONLY | O_CLOEXEC);
+        if (fd >= 0) {
+            struct sched_state_event ev;
+            ev.event = SCHED_EVENT_INIT_SA;
+            ev.state = SCHED_STATE_ENCODE(SCHED_INIT_SA_ENTER, pid);
+            INIT_LOGI("High priority sched_state_event: event=%u, state=%u, pid=%d",
+                ev.event, ev.state, pid);
+            if (ioctl(fd, SCHED_STATE_SET_STATE, &ev) != 0) {
+                INIT_LOGW("ioctl SCHED_STATE_SET_STATE failed for pid %d, err=%d", pid, errno);
+            }
+            close(fd);
+        } else {
+            INIT_LOGW("Failed to open %s for high priority service %s, err=%d",
+                SCHED_STATE_DEV_PATH, service->name, errno);
+        }
+    }
     return SERVICE_SUCCESS;
 }
 
@@ -897,6 +933,8 @@ int ServiceStop(Service *service)
     }
     service->attribute &= ~SERVICE_ATTR_NEED_RESTART;
     service->attribute |= SERVICE_ATTR_NEED_STOP;
+    // Explicit stop ends the high-priority boost granted at start time.
+    UnMarkServiceAsHighPriority(service);
     if (service->pid <= 0) {
         return SERVICE_SUCCESS;
     }
@@ -932,6 +970,8 @@ int ServiceTerm(Service *service)
     }
     service->attribute &= ~SERVICE_ATTR_NEED_RESTART;
     service->attribute |= SERVICE_ATTR_NEED_STOP;
+    // Explicit term ends the high-priority boost granted at start time.
+    UnMarkServiceAsHighPriority(service);
     if (service->pid <= 0) {
         return SERVICE_SUCCESS;
     }
