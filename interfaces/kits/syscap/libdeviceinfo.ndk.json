@@ -39,6 +39,12 @@
     {"name": "OH_GetDistributionOSVersion"},
     {"name": "OH_GetDistributionOSApiVersion"},
     {"name": "OH_GetDistributionOSReleaseType"},
-    {"name": "OH_GetDiskSN"},
-    {"name": "OH_GetOdid"}
+    {
+        "first_introduced": "26",
+        "name": "OH_GetDiskSN"
+    },
+    {
+        "first_introduced": "26",
+        "name": "OH_GetOdid"
+    }
 ]

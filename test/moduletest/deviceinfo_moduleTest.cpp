@@ -16,6 +16,7 @@
 #include <thread>
 #include <gtest/gtest.h>
 #include <cstdint>
+#include <cstring>
 
 #include "beget_ext.h"
 #include "if_system_ability_manager.h"
@@ -152,6 +153,8 @@ HWTEST_F(DeviceInfoModuleTest, DeviceInfoOHGetOdid_001, TestSize.Level0)
     GTEST_LOG_(INFO) << "DeviceInfoOHGetOdid_001 start";
     const char *odid = OH_GetOdid();
     EXPECT_NE(odid, nullptr);
+    size_t len = strlen(odid);
+    EXPECT_TRUE(len == 0 || len == 36);
     GTEST_LOG_(INFO) << "DeviceInfoOHGetOdid_001 end";
 }
 
