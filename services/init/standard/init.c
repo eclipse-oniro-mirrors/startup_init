@@ -233,7 +233,7 @@ static int FdHolderSockInit(void)
 INIT_STATIC void SetRootUid(void)
 {
     if (setuid(0) != 0) {
-        INIT_LOGE("Set uid for init to fill appid failed, err = %d", errno);
+        INIT_LOGE("Set uid for init to root failed, err = %d", errno);
     }
 }
 
