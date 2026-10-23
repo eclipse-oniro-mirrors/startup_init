@@ -1345,8 +1345,10 @@ static void StartServiceByNameInternal(const char *servName, bool highPriority)
         return, "Cannot find service %s.service count %d", servName, g_serviceSpace.serviceCount);
 
     // Only the high-priority path touches the boost flag. The flag lives for the
-    // whole service lifetime (including automatic restart via ServiceReap) and is
-    // clearde in ServiceStop()/ServiceTerm().
+    // whole service lifetime (including automatic restart via ServiceReap and 
+    // failed first-start attempts) and is clearde in ServiceStop()/ServiceTerm().
+    // A failed start keeps the boost so the service is still boosted whenever it
+    // is later startder (normal start / on-demand / timer / reap restart).
     if (highPriority) {
         MarkServiceAsHighPriority(service);
         INIT_LOGI("StartServiceByNameHighPriority: %s marked as high priority", servName);

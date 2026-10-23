@@ -338,6 +338,7 @@ int ServiceControlWithExtra(const char *serviceName, int action, const char *ext
             break;
         case START_HIGH_PRIORITY:
             ret = StartProcessHighPrior(serviceName, extArgv, extArgc);
+            break;
         default:
             BEGET_LOGE("Set service %s action %d error", serviceName, action);
             ret = -1;
