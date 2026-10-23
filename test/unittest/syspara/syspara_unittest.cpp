@@ -204,7 +204,7 @@ HWTEST_F(SysparaUnitTest, parameterTest0024, TestSize.Level0)
     }
 }
 
-HWTEST_F(SysparaUnitTest, parameterTest0025, TestSize.Level0)
+HWTEST_F(SysparaUnitTest, parameterTest0029, TestSize.Level0)
 {
     char oldValue[PARAM_VALUE_LEN_MAX] = {0};
     int oldRet = GetParameter("persist.dupdate_engine.lastHotaInstallTime", "", oldValue, sizeof(oldValue));
