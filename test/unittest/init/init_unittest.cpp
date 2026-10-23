@@ -67,7 +67,7 @@ static int TestProcessSignal(struct signalfd_siginfo *siginfo)
     ProcessSignal(siginfo);
     return 0;
 }
-static uid_t g_testUid = 999
+static uid_t g_testUid = 999;
 static int SetuidSuccessFunc(uid_t uid)
 {
     g_testUid = uid;
