@@ -16,6 +16,7 @@
 #include <thread>
 #include <gtest/gtest.h>
 #include <cstdint>
+#include <cstring>
 
 #include "beget_ext.h"
 #include "if_system_ability_manager.h"
@@ -24,6 +25,7 @@
 #include "parameter.h"
 #include "system_ability_definition.h"
 #include "sysparam_errno.h"
+#include "deviceinfo.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -116,4 +118,52 @@ HWTEST_F(DeviceInfoModuleTest, DeviceInfoGetDiskSN_001, TestSize.Level0)
     GTEST_LOG_(INFO) << "DeviceInfoGetDiskSN_001 end";
 }
 #endif
+
+HWTEST_F(DeviceInfoModuleTest, DeviceInfoOHGetDiskSN_001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DeviceInfoOHGetDiskSN_001 start";
+    char diskSN[65] = {0};
+    int32_t ret = OH_GetDiskSN(diskSN);
+    EXPECT_TRUE(ret == 0 || ret == BOARD_INFO_PERMISSION_DENIED_CODE);
+    GTEST_LOG_(INFO) << "DeviceInfoOHGetDiskSN_001 end";
+}
+
+HWTEST_F(DeviceInfoModuleTest, DeviceInfoOHGetDiskSN_002, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DeviceInfoOHGetDiskSN_002 start";
+    int32_t ret = OH_GetDiskSN(nullptr);
+    EXPECT_EQ(ret, 0);
+    GTEST_LOG_(INFO) << "DeviceInfoOHGetDiskSN_002 end";
+}
+
+HWTEST_F(DeviceInfoModuleTest, DeviceInfoOHGetDiskSN_003, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DeviceInfoOHGetDiskSN_003 start";
+    char diskSN[65] = {0};
+    int32_t ret1 = OH_GetDiskSN(diskSN);
+    int32_t ret2 = OH_GetDiskSN(diskSN);
+    EXPECT_TRUE(ret1 == 0 || ret1 == BOARD_INFO_PERMISSION_DENIED_CODE);
+    EXPECT_TRUE(ret2 == 0 || ret2 == BOARD_INFO_PERMISSION_DENIED_CODE);
+    EXPECT_EQ(ret1, ret2);
+    GTEST_LOG_(INFO) << "DeviceInfoOHGetDiskSN_003 end";
+}
+
+HWTEST_F(DeviceInfoModuleTest, DeviceInfoOHGetOdid_001, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DeviceInfoOHGetOdid_001 start";
+    const char *odid = OH_GetOdid();
+    EXPECT_NE(odid, nullptr);
+    size_t len = strlen(odid);
+    EXPECT_TRUE(len == 0 || len == 36);
+    GTEST_LOG_(INFO) << "DeviceInfoOHGetOdid_001 end";
+}
+
+HWTEST_F(DeviceInfoModuleTest, DeviceInfoOHGetOdid_002, TestSize.Level0)
+{
+    GTEST_LOG_(INFO) << "DeviceInfoOHGetOdid_002 start";
+    const char *odid1 = OH_GetOdid();
+    const char *odid2 = OH_GetOdid();
+    EXPECT_EQ(odid1, odid2);
+    GTEST_LOG_(INFO) << "DeviceInfoOHGetOdid_002 end";
+}
 }
