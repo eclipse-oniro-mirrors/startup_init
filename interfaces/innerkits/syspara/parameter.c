@@ -471,6 +471,9 @@ int GetDistributionOSApiVersion(void)
     if (distributionOsApiVersion == NULL) {
         distributionOsApiVersion = GetSdkApiVersion_();
     }
+    if (distributionOsApiVersion == NULL) {
+        return 0;
+    }
     return atoi(distributionOsApiVersion);
 }
 const char *GetDistributionOSApiName(void)

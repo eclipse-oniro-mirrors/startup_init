@@ -21,7 +21,6 @@ static constexpr int MAX_NAME_LENGTH = 128;
 static constexpr int MAX_VALUE_LENGTH = PARAM_CONST_VALUE_LEN_MAX;
 
 typedef struct StorageAsyncContext {
-    napi_env env = nullptr;
     napi_async_work work = nullptr;
 
     char key[MAX_NAME_LENGTH] = { 0 };
@@ -151,7 +150,6 @@ static napi_value Set(napi_env env, napi_callback_info info)
     napi_get_cb_info(env, info, &argc, argv, &thisVar, &data);
     PARAM_NAPI_ASSERT(env, argc >= ARGC_NUMBER, SYSPARAM_INVALID_INPUT, "requires 2 parameter");
     StorageAsyncContextPtr asyncContext = new StorageAsyncContext();
-    asyncContext->env = env;
     for (size_t i = 0; i < argc; i++) {
         napi_valuetype valueType = napi_null;
         napi_typeof(env, argv[i], &valueType);
@@ -340,7 +338,6 @@ static napi_value Get(napi_env env, napi_callback_info info)
     napi_get_cb_info(env, info, &argc, argv, &thisVar, &data);
     PARAM_NAPI_ASSERT(env, argc >= 1, SYSPARAM_INVALID_INPUT, "requires 1 parameter");
     StorageAsyncContextPtr asyncContext = new StorageAsyncContext();
-    asyncContext->env = env;
     for (size_t i = 0; i < argc; i++) {
         napi_valuetype valueType = napi_null;
         napi_typeof(env, argv[i], &valueType);

@@ -143,7 +143,7 @@ static DevInfoError AclGetDevOdid(char *odid, int size)
 
 ::taihe::string ODID()
 {
-    static char value[ODID_LEN] = {0};
+    thread_local char value[ODID_LEN] = {0};
     DevInfoError ret = AclGetDevOdid(value, ODID_LEN);
     if (ret != DEV_INFO_OK) {
         DEVINFO_LOGE("GetDevOdid ret:%d", ret);
@@ -376,7 +376,7 @@ static DevInfoError AclGetDevOdid(char *odid, int size)
 
 ::taihe::string getdiskSN()
 {
-    static char value[DISK_SN_LEN] = {0};
+    thread_local char value[DISK_SN_LEN] = {0};
     AclGetDiskSN(value, DISK_SN_LEN);
     return value;
 }

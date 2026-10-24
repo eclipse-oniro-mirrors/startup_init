@@ -787,6 +787,9 @@ static napi_value NAPI_GetDistributionOSName(napi_env env, napi_callback_info in
 {
     napi_value napiValue = nullptr;
     const char *val = GetDistributionOSName();
+    if (val == nullptr) {
+        val = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, val, strlen(val), &napiValue));
     return napiValue;
@@ -796,6 +799,9 @@ static napi_value NAPI_GetDistributionOSVersion(napi_env env, napi_callback_info
 {
     napi_value napiValue = nullptr;
     const char *val = GetDistributionOSVersion();
+    if (val == nullptr) {
+        val = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, val, strlen(val), &napiValue));
     return napiValue;
@@ -814,6 +820,9 @@ static napi_value NAPI_GetDistributionOSApiName(napi_env env, napi_callback_info
 {
     napi_value napiValue = nullptr;
     const char *val = GetDistributionOSApiName();
+    if (val == nullptr) {
+        val = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, val, strlen(val), &napiValue));
     return napiValue;
@@ -823,6 +832,9 @@ static napi_value NAPI_GetDistributionOSReleaseType(napi_env env, napi_callback_
 {
     napi_value napiValue = nullptr;
     const char *val = GetDistributionOSReleaseType();
+    if (val == nullptr) {
+        val = "";
+    }
 
     NAPI_CALL(env, napi_create_string_utf8(env, val, strlen(val), &napiValue));
     return napiValue;
@@ -869,7 +881,7 @@ static DevInfoError AclGetDevOdid(char *odid, int size)
 static napi_value GetDevOdid(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
-    static char odid[ODID_LEN] = {0};
+    thread_local char odid[ODID_LEN] = {0};
     DevInfoError ret = AclGetDevOdid(odid, ODID_LEN);
     if (ret != DEV_INFO_OK) {
         DEVINFO_LOGE("GetDevOdid ret:%d", ret);
@@ -882,7 +894,7 @@ static napi_value GetDevOdid(napi_env env, napi_callback_info info)
 static napi_value GetDiskSN(napi_env env, napi_callback_info info)
 {
     napi_value napiValue = nullptr;
-    static char diskSN[DISK_SN_LEN] = {0};
+    thread_local char diskSN[DISK_SN_LEN] = {0};
     AclGetDiskSN(diskSN, DISK_SN_LEN);
 
     NAPI_CALL(env, napi_create_string_utf8(env, diskSN, strlen(diskSN), &napiValue));
