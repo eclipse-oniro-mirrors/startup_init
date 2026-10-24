@@ -543,3 +543,14 @@ const char *GetKernelVersionInner(void)
     }
     return kernelVersion;
 }
+
+const char *GetInstallTime(void)
+{
+    static const char *installTime = NULL;
+#ifndef OHOS_LITE
+    const char *result = GetPropertyAtomic("persist.dupdate_engine.lastHotaInstallTime", &installTime);
+#else
+    const char *result = GetProperty("persist.dupdate_engine.lastHotaInstallTime", &installTime);
+#endif
+    return (result != NULL) ? result : EMPTY_STR;
+}

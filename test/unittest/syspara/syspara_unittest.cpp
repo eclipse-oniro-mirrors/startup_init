@@ -204,6 +204,23 @@ HWTEST_F(SysparaUnitTest, parameterTest0024, TestSize.Level0)
     }
 }
 
+HWTEST_F(SysparaUnitTest, parameterTest0029, TestSize.Level0)
+{
+    char oldValue[PARAM_VALUE_LEN_MAX] = {0};
+    int oldRet = GetParameter("persist.dupdate_engine.lastHotaInstallTime", "", oldValue, sizeof(oldValue));
+    if (oldRet <= 0) {
+        EXPECT_STREQ(GetInstallTime(), "");
+        SetParameter("persist.dupdate_engine.lastHotaInstallTime", "1234567890");
+        EXPECT_STREQ(GetInstallTime(), "1234567890");
+    } else {
+        const char *result = GetInstallTime();
+        EXPECT_STRNE(result, nullptr);
+        printf("installTime = %s\n", result);
+    }
+    SetParameter("persist.dupdate_engine.lastHotaInstallTime", oldValue);
+    SaveParameters();
+}
+
 HWTEST_F(SysparaUnitTest, parameterTest002, TestSize.Level0)
 {
     char key1[] = "test.ro.sys.version";
