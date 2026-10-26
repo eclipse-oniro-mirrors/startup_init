@@ -263,7 +263,7 @@ const char *OH_GetDistributionOSVersion(void);
  * Obtains the ISV distribution OS api version represented by a integer.
  * If ISV not specified, it will return the same value as OH_GetSdkApiVersion
  * @syscap SystemCapability.Startup.SystemInfo
- * @return NULL - Not found distribution OS api version, or failed to invoke the internal interface.
+ * @return 0 - Not found distribution OS api version, or failed to invoke the internal interface.
  * @since 10
  */
 int OH_GetDistributionOSApiVersion(void);
