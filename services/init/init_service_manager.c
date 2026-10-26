@@ -1334,7 +1334,7 @@ static Service *GetServiceByExtServName(const char *fullServName, ServiceArgs *e
     return service;
 }
 
-static void StartServiceByName(const char *servName)
+void StartServiceByName(const char *servName)
 {
     ServiceArgs extraArgs = { 0 };
     Service *service = GetServiceByName(servName);
