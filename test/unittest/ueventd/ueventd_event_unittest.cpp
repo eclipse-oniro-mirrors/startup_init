@@ -811,4 +811,52 @@ HWTEST_F(UeventdEventUnitTest, IsRequiredPartitionName_NoMatch, TestSize.Level1)
     EXPECT_FALSE(IsRequiredPartitionName("xyz"));
 }
 
+// The fix requires the '=' so these inputs leave ug.uid/ug.gid untouched.
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_MalformedUidGidKeys001, TestSize.Level1)
+{
+    struct Uevent uevent = {
+        .subsystem = "block",
+        .syspath = "/block/mmc/test",
+        .deviceName = "test",
+        .partitionName = "userdata",
+        .firmware = "",
+        .action = ACTION_ADD,
+        .partitionNum = 3,
+        .major = 1,
+        .minor = 2,
+        .ug = {
+            .uid = 1000,
+            .gid = 1000,
+        },
+        .busNum = 1,
+        .devNum = 2,
+    };
+
+    // Append malformed keys after the valid DEVUIO=/DEVGID= keys (which set
+    // uid/gid to 1000). They must not be treated as uid/gid keys.
+    std::vector<std::string> extraData{
+        std::string("DEVUID\0", 7), std::string("DEVGID\0", 7),
+        std::string("DEVUIDX=1\0", 10), std::string("DEVGIDX=1\0", 10),
+    };
+    auto ueventBuffer = GenerateUeventBuffer(uevent, extraData);
+    struct Uevent outEvent = {};
+    EXPECT_NO_FATAL_FAILURE(ParseUeventMessage(ueventBuffer.data(), ueventBuffer.length(), &outEvent));
+    // The vaild DEVUID=/DEVGID= keys still set 1000, and the malformed keys must
+    // not overwrite them (DEVUID=1 would previously set uid/gid to 0).
+    EXPECT_EQ(outEvent.ug.uid, 1000);
+    EXPECT_EQ(outEvent.ug.gid, 1000);
+}
+
+// A buffer that contains only malformed uid/gid keys must leave ug.uid/ug.gid at
+// their defaults instead of polluting them or crashing.
+HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_MalformedUidGidKeys002, TestSize.Level1)
+{
+    // "DEVUID\0" / "DEVGID\0" (bare, no '=') and "DEVUIDX=1\0" / "DEVGIDX=1\0"
+    // (similar prefix) only. parse must not crash and must keep the defaults.
+    std::string malformedbuffer("DEVUID\0DEVGID\0DEVUIDX=1\0DEVGID=1\0", 34);
+    struct Uevent outEvent = {};
+    EXPECT_EQ(outEvent.ug.uid, 0);
+    EXPECT_EQ(outEvent.ug.gid, 0);
+}
+
 } // UeventdUt

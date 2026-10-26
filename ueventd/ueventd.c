@@ -328,9 +328,9 @@ static void AddUevent(struct Uevent *uevent, const char *event, size_t len)
         uevent->major = StringToInt(event + strlen("MAJOR="), -1);
     } else if (STARTSWITH(event, "MINOR=")) {
         uevent->minor = StringToInt(event + strlen("MINOR="), -1);
-    } else if (STARTSWITH(event, "DEVUID")) {
+    } else if (STARTSWITH(event, "DEVUID=")) {
         uevent->ug.uid = (uid_t)StringToInt(event + strlen("DEVUID="), 0);
-    } else if (STARTSWITH(event, "DEVGID")) {
+    } else if (STARTSWITH(event, "DEVGID=")) {
         uevent->ug.gid = (gid_t)StringToInt(event + strlen("DEVGID="), 0);
     } else if (STARTSWITH(event, "FIRMWARE=")) {
         uevent->firmware = event + strlen("FIRMWARE=");
