@@ -831,7 +831,6 @@ HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_MalformedUidGidKeys001,
         .busNum = 1,
         .devNum = 2,
     };
-}
 
     // Append malformed keys after the valid DEVUIO=/DEVGID= keys (which set
     // uid/gid to 1000). They must not be treated as uid/gid keys.
@@ -846,6 +845,7 @@ HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_MalformedUidGidKeys001,
     // not overwrite them (DEVUID=1 would previously set uid/gid to 0).
     EXPECT_EQ(outEvent.ug.uid, 1000);
     EXPECT_EQ(outEvent.ug.gid, 1000);
+}
 
 // A buffer that contains only malformed uid/gid keys must leave ug.uid/ug.gid at
 // their defaults instead of polluting them or crashing.
