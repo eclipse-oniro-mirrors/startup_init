@@ -534,6 +534,150 @@ const char* TARGET_FILTER_NAME = APP_NAME;
         return false;
     }
 
+    static bool CheckSetuidInRange()
+    {
+        int ret = syscall(__NR_setuid, 100);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetuidOutOfRange()
+    {
+        int ret = syscall(__NR_setuid, 1);
+        if (ret == -1 && errno == EPERM) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetuid65534()
+    {
+        int ret = syscall(__NR_setuid, 65534);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetgid20()
+    {
+        int ret = syscall(__NR_setgid, 20);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetgidOutOfRange()
+    {
+        int ret = syscall(__NR_setgid, 100);
+        if (ret == -1 && errno == EPERM) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckEperrnoBpf()
+    {
+        int ret = syscall(__NR_bpf, 0, nullptr, 0);
+        if (ret == -1 && errno == EPERM) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckEperrnoMount()
+    {
+        int ret = syscall(__NR_mount, nullptr, nullptr, nullptr, 0, nullptr);
+        if (ret == -1 && errno == EPERM) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckEperrnoChroot()
+    {
+        int ret = syscall(__NR_chroot, "/tmp");
+        if (ret == -1 && errno == EPERM) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckEperrnoAdjtimex()
+    {
+        int ret = syscall(__NR_adjtimex, nullptr);
+        if (ret == -1 && errno == EPERM) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckEperrnoSwapon()
+    {
+        int ret = syscall(__NR_swapon, nullptr, 0);
+        if (ret == -1 && errno == EPERM) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckEnosysClone3()
+    {
+        int ret = syscall(__NR_clone3, nullptr, 0);
+        if (ret == -1 && errno == ENOSYS) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckEnosysKcmp()
+    {
+        int ret = syscall(__NR_kcmp, 0, 0, 0, 0, 0);
+        if (ret == -1 && errno == ENOSYS) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckEnosysFsopen()
+    {
+        int ret = syscall(__NR_fsopen, 0, 0);
+        if (ret == -1 && errno == ENOSYS) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckEnosysMoveMount()
+    {
+        int ret = syscall(__NR_move_mount, 0, nullptr, 0, nullptr, 0);
+        if (ret == -1 && errno == ENOSYS) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckRseq()
+    {
+        (void)syscall(__NR_rseq, nullptr, 0, 0, 0);
+        return true;
+    }
+
+    static bool CheckCloseRange()
+    {
+        (void)syscall(__NR_close_range, 0, 0, 0);
+        return true;
+    }
+
+    static bool CheckOpenat2()
+    {
+        (void)syscall(__NR_openat2, AT_FDCWD, ".", nullptr, 0);
+        return true;
+    }
+
     static bool CheckSetuid64ForUidFilter1()
     {
         int ret = syscall(__NR_setuid, 0);
@@ -1045,7 +1189,95 @@ const char* TARGET_FILTER_NAME = APP_NAME;
         ret = CheckSyscall(APP, APP_CUSTOM, CheckShmget, true);
         EXPECT_EQ(ret, 0);
 
-        ret = CheckSyscall(APP, APP_CUSTOM, CheckSetuid, true);
+        // setuid now range-controlled: uid 100 in range -> ALLOW
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckSetuidInRange, true);
+        EXPECT_EQ(ret, 0);
+
+        // setuid uid 1 out of range -> EPERM (not SIGSYS, process exits normally)
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckSetuidOutOfRange, true);
+        EXPECT_EQ(ret, 0);
+    }
+
+    void TestSeccompCustomEperrnoSyscall()
+    {
+        // Part 4: EPERM soft-deny (not SIGSYS)
+        // isAllow=true because process doesn't crash (exits normally), CheckStatus treats it as "allowed"
+        int ret = CheckSyscall(APP, APP_CUSTOM, CheckEperrnoBpf, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckEperrnoMount, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckEperrnoChroot, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckEperrnoAdjtimex, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckEperrnoSwapon, true);
+        EXPECT_EQ(ret, 0);
+    }
+
+    void TestSeccompCustomEnosysSyscall()
+    {
+        // Part 3: ENOSYS soft-deny (not SIGSYS)
+        // isAllow=true because process doesn't crash (exits normally), CheckStatus treats it as "allowed"
+        int ret = CheckSyscall(APP, APP_CUSTOM, CheckEnosysClone3, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckEnosysKcmp, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckEnosysFsopen, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckEnosysMoveMount, true);
+        EXPECT_EQ(ret, 0);
+    }
+
+    void TestSeccompCustomSetuidGidArgs()
+    {
+        // Part 5: UID range 100-999 + 65534
+        int ret = CheckSyscall(APP, APP_CUSTOM, CheckSetuidInRange, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckSetuidOutOfRange, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckSetuid65534, true);
+        EXPECT_EQ(ret, 0);
+
+        // Part 5: GID only 20
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckSetgid20, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckSetgidOutOfRange, true);
+        EXPECT_EQ(ret, 0);
+    }
+
+    void TestSeccompCustomAllowSyscall()
+    {
+        // Part 1+2: ALLOW
+        int ret = CheckSyscall(APP, APP_CUSTOM, CheckRseq, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckCloseRange, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckOpenat2, true);
+        EXPECT_EQ(ret, 0);
+    }
+
+    void TestSeccompCustomFilterLoaded()
+    {
+        // AC-3.1: filter loaded, basic behavior correct
+        int ret = CheckSyscall(APP, APP_CUSTOM, CheckGetpid, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckEperrnoBpf, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckEnosysClone3, true);
         EXPECT_EQ(ret, 0);
     }
 #endif
@@ -1974,6 +2206,68 @@ HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompNormalSycall001, TestSize.Level0)
 {
     SeccompUnitTest test;
     test.TestAppNormalSyscall();
+}
+#endif
+
+#ifdef CUSTOM_SANDBOX
+/**
+ * @tc.name: TestSeccompCustomEperrnoSyscall
+ * @tc.desc: Verify category-4 syscalls return EPERM instead of SIGSYS in app_custom.
+ * @tc.type: FUNC
+ * @tc.require: issueI5IUWJ
+ */
+HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompCustomEperrnoSycall001, TestSize.Level0)
+{
+    SeccompUnitTest test;
+    test.TestSeccompCustomEperrnoSyscall();
+}
+
+/**
+ * @tc.name: TestSeccompCustomEnosysSyscall
+ * @tc.desc: Verify category-3 syscalls return ENOSYS instead of SIGSYS in app_custom.
+ * @tc.type: FUNC
+ * @tc.require: issueI5IUWJ
+ */
+HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompCustomEnosysSycall001, TestSize.Level0)
+{
+    SeccompUnitTest test;
+    test.TestSeccompCustomEnosysSyscall();
+}
+
+/**
+ * @tc.name: TestSeccompCustomSetuidGidArgs
+ * @tc.desc: Verify set*uid/set*gid parameter-controlled syscalls in app_custom.
+ * @tc.type: FUNC
+ * @tc.require: issueI5IUWJ
+ */
+HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompCustomSetuidGidArgs001, TestSize.Level0)
+{
+    SeccompUnitTest test;
+    test.TestSeccompCustomSetuidGidArgs();
+}
+
+/**
+ * @tc.name: TestSeccompCustomAllowSyscall
+ * @tc.desc: Verify category-1/2 syscalls are allowed in app_custom.
+ * @tc.type: FUNC
+ * @tc.require: issueI5IUWJ
+ */
+HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompCustomAllowSycall001, TestSize.Level0)
+{
+    SeccompUnitTest test;
+    test.TestSeccompCustomAllowSyscall();
+}
+
+/**
+ * @tc.name: TestSeccompCustomFilterLoaded
+ * @tc.desc: Verify filter libraries are loaded and behave correctly.
+ * @tc.type: FUNC
+ * @tc.require: issueI5IUWJ
+ */
+HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompCustomFilterLoaded001, TestSize.Level0)
+{
+    SeccompUnitTest test;
+    test.TestSeccompCustomFilterLoaded();
 }
 #endif
 }

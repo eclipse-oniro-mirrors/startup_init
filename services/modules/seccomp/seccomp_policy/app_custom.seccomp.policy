@@ -329,21 +329,91 @@ futex_time64;arm
 sched_rr_get_interval_time64;arm
 cacheflush;arm
 set_tls;arm
-setuid;arm64
 setuid32;arm
-setgid;arm64
 setgid32;arm
-setgroups;arm64
 setgroups32;arm
-setresgid;arm64
 setresgid32;arm
+vhangup;arm64
+get_robust_list;arm64
+reboot;arm64
 settimeofday;all
 sethostname;all
+setdomainname;arm64
+clock_settime;arm64
+close_range;arm64
+openat2;arm64
+lookup_dcookie;arm64
+nfsservctl;arm64
+acct;arm64
+get_mempolicy;arm64
+set_mempolicy;arm64
+migrate_pages;arm64
+move_pages;arm64
+pkey_mprotect;arm64
+pkey_alloc;arm64
+pkey_free;arm64
+io_pgetevents;arm64
+rseq;arm64
 syslog;all
 io_uring_setup;all
 shmctl;all
 msgctl;all
 semctl;all
+setgroups;arm64
 
 @allowListWithArgs
 clone: if (arg0 & (CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWNET | CLONE_NEWCGROUP | CLONE_NEWUTS | CLONE_NEWIPC | CLONE_NEWUSER)) == 0 ; return ALLOW; else return TRAP;all
+move_mount: if arg0 >= 0; return ERRNO(38); else return ERRNO(38);arm64
+open_tree: if arg0 >= 0; return ERRNO(38); else return ERRNO(38);arm64
+fsopen: if arg0 >= 0; return ERRNO(38); else return ERRNO(38);arm64
+fsconfig: if arg0 >= 0; return ERRNO(38); else return ERRNO(38);arm64
+fsmount: if arg0 >= 0; return ERRNO(38); else return ERRNO(38);arm64
+fspick: if arg0 >= 0; return ERRNO(38); else return ERRNO(38);arm64
+kexec_load: if arg0 >= 0; return ERRNO(38); else return ERRNO(38);arm64
+kexec_file_load: if arg0 >= 0; return ERRNO(38); else return ERRNO(38);arm64
+kcmp: if arg0 >= 0; return ERRNO(38); else return ERRNO(38);arm64
+clone3: if arg0 >= 0; return ERRNO(38); else return ERRNO(38);arm64
+umount2: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+mount: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+pivot_root: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+chroot: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+unshare: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+setns: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+init_module: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+delete_module: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+finit_module: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+adjtimex: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+clock_adjtime: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+mq_open: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+mq_unlink: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+mq_timedsend: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+mq_timedreceive: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+mq_notify: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+mq_getsetattr: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+msgget: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+msgrcv: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+msgsnd: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+semget: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+semtimedop: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+semop: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+shmat: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+shmdt: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+add_key: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+request_key: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+keyctl: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+swapon: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+swapoff: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+fanotify_init: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+fanotify_mark: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+name_to_handle_at: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+open_by_handle_at: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+bpf: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+io_uring_enter: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+io_uring_register: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
+setuid: if arg0 >= 100 && arg0 <= 999; return ALLOW; elif arg0 == 65534; return ALLOW; elif arg0 == 0; return ALLOW; else return ERRNO(1);arm64
+setreuid: if arg0 >= 100 && arg0 <= 999; return ALLOW; elif arg0 == 65534; return ALLOW; elif arg0 == 0; return ALLOW; else return ERRNO(1);arm64
+setfsuid: if arg0 >= 100 && arg0 <= 999; return ALLOW; elif arg0 == 65534; return ALLOW; elif arg0 == 0; return ALLOW; else return ERRNO(1);arm64
+setgid: if arg0 == 20; return ALLOW; elif arg0 == 0; return ALLOW; else return ERRNO(1);arm64
+setregid: if arg0 == 20; return ALLOW; elif arg0 == 0; return ALLOW; else return ERRNO(1);arm64
+setresgid: if arg0 == 20; return ALLOW; elif arg0 == 0; return ALLOW; elif arg0 == -1; return ALLOW; else return ERRNO(1);arm64
+setfsgid: if arg0 == 20; return ALLOW; elif arg0 == 0; return ALLOW; else return ERRNO(1);arm64
