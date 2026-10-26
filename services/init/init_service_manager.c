@@ -1334,7 +1334,7 @@ static Service *GetServiceByExtServName(const char *fullServName, ServiceArgs *e
     return service;
 }
 
-static void StartServiceByNameInternal(const char *servName, bool highPriority)
+static void StartServiceByName(const char *servName)
 {
     ServiceArgs extraArgs = { 0 };
     Service *service = GetServiceByName(servName);
@@ -1344,36 +1344,33 @@ static void StartServiceByNameInternal(const char *servName, bool highPriority)
     INIT_ERROR_CHECK(service != NULL, FreeStringVector(extraArgs.argv, extraArgs.count);
         return, "Cannot find service %s.service count %d", servName, g_serviceSpace.serviceCount);
 
-    // Only the high-priority path touches the boost flag. The flag lives for the
-    // whole service lifetime (including automatic restart via ServiceReap and 
-    // failed first-start attempts) and is clearde in ServiceStop()/ServiceTerm().
-    // A failed start keeps the boost so the service is still boosted whenever it
-    // is later startder (normal start / on-demand / timer / reap restart).
-    if (highPriority) {
-        MarkServiceAsHighPriority(service);
-        INIT_LOGI("StartServiceByNameHighPriority: %s marked as high priority", servName);
-    }
-
     ServiceArgs *pathArgs = &service->pathArgs;
     if (extraArgs.count != 0) {
         pathArgs = &extraArgs;
     }
     if (ServiceStart(service, pathArgs) != SERVICE_SUCCESS) {
-        INIT_LOGE("Service %s start %sfailed!", servName, highPriority ? "high priority " : "");
+        INIT_LOGE("Service %s start failed!", servName);
     }
     // After starting, clear the extra parameters.
     FreeStringVector(extraArgs.argv, extraArgs.count);
     return;
 }
 
-void StartServiceByName(const char *servName)
-{
-    StartServiceByNameInternal(servName, false);
-}
-
 void StartServiceByNameHighPriority(const char *servName)
 {
-    StartServiceByNameInternal(servName, true);
+    // A failed start keeps the boost so the service
+    // is still boosted whenever it is later started.
+    Service *service = GetServiceByName(servName);
+    if (service == NULL) {
+        ServiceArgs tmpArgs = { 0 };
+        service = GetServiceByExtServName(servName, &tmpArgs);
+        FreeStringVector(tmpArgs.argv, tmpArgs.count);
+    }
+    INIT_ERROR_CHECK(service != NULL, return,
+        "Cannot find service %s.service count %d", servName, g_serviceSpace.serviceCount);
+    MarkServiceAsHighPriority(service);
+    INIT_LOGI("StartServiceByNameHighPriority: %s marked as high priority", servName);
+    StartServiceByName(servName, true);
 }
 
 void StartPersistentServiceByName(const char *servName)
