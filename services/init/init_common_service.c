@@ -64,6 +64,7 @@
 
 #ifdef CODE_SIGNATURE_ENABLE
 #include "code_sign_attr_utils.h"
+#define XPM_DEV_PATH "/dev/xpm"
 #endif
 
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
@@ -285,8 +286,23 @@ static int SetPerms(const Service *service)
 #ifdef CODE_SIGNATURE_ENABLE
     if (strcmp(service->name, "nwebspawn") == 0) {
         INIT_LOGV("Set NWebspawn OwnerId");
-        // set nwebspawn OwnerId
-        (void)SetXpmOwnerId(PROCESS_OWNERID_NWEB, NULL);
+        // ensure /dev/xpm has correct permissions for nwebspawn child processes
+        gid_t xpmGid = DecodeGid("nwebspawn");
+        if (xpmGid != (gid_t)-1) {
+            if (chown(XPM_DEV_PATH, 0, xpmGid) != 0) {
+                INIT_LOGW("Failed to chown /dev/xpm, err = %d", errno);
+            }
+            if (chmod(XPM_DEV_PATH, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) != 0) {
+                INIT_LOGW("Failed to chmod /dev/xpm, err = %d", errno);
+            }
+        } else {
+            INIT_LOGW("Failed to resolve gid for nwebspawn");
+        }
+        // set nwebspawn OwnerId and enable JitFort
+        int xpmRet = InitXpm(1, PROCESS_OWNERID_NWEB, NULL, NULL, NULL);
+        if (xpmRet != 0) {
+            INIT_LOGW("InitXpm failed for nwebspawn, ret = %d", xpmRet);
+        }
     }
 #endif
 
