@@ -1334,7 +1334,7 @@ static Service *GetServiceByExtServName(const char *fullServName, ServiceArgs *e
     return service;
 }
 
-void StartServiceByName(const char *servName)
+static void StartServiceByNameInternal(const char *servName)
 {
     ServiceArgs extraArgs = { 0 };
     Service *service = GetServiceByName(servName);
@@ -1354,6 +1354,11 @@ void StartServiceByName(const char *servName)
     // After starting, clear the extra parameters.
     FreeStringVector(extraArgs.argv, extraArgs.count);
     return;
+}
+
+void StartServiceByName(const char *servName)
+{
+    StartServiceByNameInternal(servName);
 }
 
 void StartServiceByNameHighPriority(const char *servName)
