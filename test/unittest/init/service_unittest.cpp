@@ -1745,7 +1745,7 @@ public:
         g_highPriorityCloseCalled = 0;
         UpdateForkFunc(HighPriorityFork);
         const char *json = "{\"name\":\"test_sa_high_priority\","
-            "\"path\":[\"/data/init_ut/high_priority_test_service\"],
+            "\"path\":[\"/data/init_ut/high_priority_test_service\"],"
             "\"uid\":\"system\",\"gid\":[\"system\"]}";
         cJSON *item = cJSON_Parse(json);
         ASSERT_NE(item, nullptr);
@@ -1841,7 +1841,7 @@ HWTEST_F(HighPriorityServiceTest, ServiceStartHighPriorityInvokesQosIoctl, TestS
     // Best-effort Qos notify: open succeeded and ioctl was issued with the
     // SCHED_EVENT_INIT_SA event and encoded (state << 24 | pid).
     EXPECT_EQ(g_highPriorityOpenCalled, 1);
-    EXPECT_STREQ(g_highPriorityOpenName, "/dev/sched_state_report");
+    EXPECT_EQ(g_highPriorityOpenName, "/dev/sched_state_report");
     EXPECT_EQ(g_highPriorityIoctlCalled, 1);
     EXPECT_EQ(g_highPriorityIoctlReq, SCHED_STATE_IOCTL_REQ);
     EXPECT_EQ(g_highPriorityIoctlEvent, SCHED_EVENT_INIT_SA);
