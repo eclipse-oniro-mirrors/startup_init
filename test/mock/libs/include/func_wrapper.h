@@ -151,6 +151,11 @@ ssize_t __real_pread(int fd, void* const buf, size_t count, off_t offset);
 typedef ssize_t (*PreadFunc)(int fd, void* const buf, size_t count, off_t offset);
 void UpdatePreadFunc(PreadFunc func);
 
+// for wrapper setuid;
+int __real_setuid(uid_t uid);
+typedef int (*SetuidFunc)(uid_t uid);
+void UpdateSetuidFunc(SetuidFunc func);
+
 // for wrapper getuid;
 uid_t __real_getuid(void);
 typedef uid_t (*GetuidFunc)(void);

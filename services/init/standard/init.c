@@ -230,6 +230,13 @@ static int FdHolderSockInit(void)
     return sock;
 }
 
+INIT_STATIC void SetRootUid(void)
+{
+    if (setuid(0) != 0) {
+        INIT_LOGE("Set uid for init to root failed, err = %d", errno);
+    }
+}
+
 void SystemInit(void)
 {
     CloseStdio();
@@ -515,6 +522,7 @@ void SystemConfig(const char *uptime)
     IsEnableSandbox();
 
     PrelinkReady();
+    SetRootUid();
 
     // execute init
     PostInitTriggers();
