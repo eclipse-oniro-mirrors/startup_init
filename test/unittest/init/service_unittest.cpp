@@ -1670,6 +1670,14 @@ pid_t HighPriorityFork()
 int CaptureHighPriorityParameter(const char *name, const char *value)
 {
     ++g_highPrioritySendCount;
+    g_highPriorityParamName = name;
+    g_highPriorityParamValue = value;
+    return 0;
+}
+
+int HighPriorityParameterOpen(const char *pathname, int flag)
+{
+    ++g_highPrioritySendCount;
     g_highPriorityOpenPath = pathname;
     (void)flag;
     // Only the Qos device node is simulated as opened; other paths fail so the

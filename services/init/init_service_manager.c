@@ -1375,7 +1375,7 @@ void StartServiceByNameHighPriority(const char *servName)
         "Cannot find service %s.service count %d", servName, g_serviceSpace.serviceCount);
     MarkServiceAsHighPriority(service);
     INIT_LOGI("StartServiceByNameHighPriority: %s marked as high priority", servName);
-    StartServiceByName(servName, true);
+    StartServiceByName(servName);
 }
 
 void StartPersistentServiceByName(const char *servName)
