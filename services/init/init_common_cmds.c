@@ -296,13 +296,6 @@ static void DoStopByUserId(const struct CmdArgs *ctx)
 }
 #endif
 
-static void DoStopByUserId(const struct CmdArgs *ctx)
-{
-    INIT_LOGV("DoStopByUserId %s", ctx->argv[0]);
-    StopServiceByUserId(ctx->argv[0]);
-}
-#endif
-
 static void DoReset(const struct CmdArgs *ctx)
 {
     INIT_LOGV("DoReset %s", ctx->argv[0]);
