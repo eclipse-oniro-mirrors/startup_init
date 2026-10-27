@@ -381,6 +381,12 @@ static int SetOwner(const char *file, const char *ownerStr, const char *groupStr
     return (chown(file, owner, group) != 0) ? -1 : 0;
 }
 
+static int SetOwnerNoFollowById(const char *file, uid_t owner, gid_t group)
+{
+    INIT_ERROR_CHECK(file != NULL, return -1, "SetOwnerNoFollowById invalid file.");
+    return (lchown(file, owner, group) != 0) ? -1 : 0;
+}
+
 static void DoChown(const struct CmdArgs *ctx)
 {
     // format: chown owner group /xxx/xxx/xxx
@@ -390,6 +396,208 @@ static void DoChown(const struct CmdArgs *ctx)
         INIT_LOGE("failed change owner for %s, err %d.", ctx->argv[pathPos], errno);
     }
     return;
+}
+
+enum {
+    DIR_PERMISSION_MASK = S_ISUID | S_ISGID | S_ISVTX | S_IRWXU | S_IRWXG | S_IRWXO,
+};
+
+static const char *GetMkdirErrnoCategory(int err)
+{
+    switch (err) {
+        case EACCES:
+        case EPERM:
+        case EROFS:
+            return "permission";
+        case ENOENT:
+        case ENOTDIR:
+        case ENAMETOOLONG:
+        case ELOOP:
+        case EFAULT:
+            return "path";
+        case EEXIST:
+            return "exists";
+        case ENOSPC:
+        case EDQUOT:
+        case ENOMEM:
+        case EIO:
+        case EMFILE:
+        case ENFILE:
+            return "filesystem";
+        default:
+            return "other";
+    }
+}
+
+static const char *GetFileTypeString(mode_t mode)
+{
+    switch (mode & S_IFMT) {
+        case S_IFDIR:
+            return "directory";
+        case S_IFREG:
+            return "regular file";
+        case S_IFLNK:
+            return "symbolic link";
+        case S_IFIFO:
+            return "fifo";
+        case S_IFSOCK:
+            return "socket";
+        case S_IFBLK:
+            return "block device";
+        case S_IFCHR:
+            return "character device";
+        default:
+            return "unknown";
+    }
+}
+
+static bool EnsureDirCreated(const char *path, mode_t mode, bool *alreadyExists)
+{
+    int mkdirRet = mkdir(path, mode);
+    int mkdirErrno = (mkdirRet != 0) ? errno : 0;
+    *alreadyExists = (mkdirRet != 0 && mkdirErrno == EEXIST);
+    if (mkdirRet == 0 || *alreadyExists) {
+        return true;
+    }
+    if (strcmp(path, "/data/service") != 0) {
+        INIT_LOGE("Create directory '%s' failed, err=%d, category=%s.",
+            path, mkdirErrno, GetMkdirErrnoCategory(mkdirErrno));
+        return false;
+    }
+    INIT_LOGW("Retry create directory '%s', first err=%d, category=%s.",
+        path, mkdirErrno, GetMkdirErrnoCategory(mkdirErrno));
+    int retryRet = mkdir(path, mode);
+    int retryErrno = (retryRet != 0) ? errno : 0;
+    if (retryRet != 0) {
+        INIT_LOGE("retry Create directory '%s' failed, err=%d, category=%s.",
+            path, retryErrno, GetMkdirErrnoCategory(retryErrno));
+        return false;
+    }
+    *alreadyExists = false;
+    return true;
+}
+
+static bool CheckExistingPathIsDir(const char *path)
+{
+    struct stat pathStat;
+    if (lstat(path, &pathStat) != 0) {
+        int statErrno = errno;
+        INIT_LOGE("Create directory '%s' failed, err=%d, category=%s, lstat failed.",
+            path, statErrno, GetMkdirErrnoCategory(statErrno));
+        return false;
+    }
+    if (S_ISDIR(pathStat.st_mode)) {
+        return true;
+    }
+    INIT_LOGE("Create directory '%s' failed, err=%d, category=%s, existing type=%s.",
+        path, ENOTDIR, GetMkdirErrnoCategory(ENOTDIR), GetFileTypeString(pathStat.st_mode));
+    return false;
+}
+
+static void RestoreSelinuxContext(const char *path, bool alreadyExists)
+{
+    /*
+     * Skip restoring default SELinux security contexts if the the folder already
+     * existed and its under /dev or /data/. These files will be proceed by loadSelinuxPolicy.
+     */
+    if (!alreadyExists || ((strncmp(path, "/dev", strlen("/dev")) != 0) &&
+        (strncmp(path, "/data/", strlen("/data/")) != 0)) ||
+        (strncmp(path, "/data/service/el1", strlen("/data/service/el1")) == 0)) {
+        PluginExecCmdByName("restoreContentRecurse", path);
+    }
+}
+
+static void ApplyOwnerAndMode(const char *path, const struct CmdArgs *ctx,
+    bool *ownerApplied, uid_t *owner, gid_t *group, mode_t *targetMode)
+{
+    const int ownerPos = 2;
+    const int groupPos = 3;
+
+    *targetMode = strtoul(ctx->argv[1], NULL, OCTAL_TYPE);
+    *ownerApplied = false;
+    *owner = (uid_t)-1;
+    *group = (gid_t)-1;
+    if (ctx->argc > ownerPos) {
+        *owner = DecodeUid(ctx->argv[ownerPos]);
+        *group = DecodeGid(ctx->argv[groupPos]);
+        if (*owner == (uid_t)-1 || *group == (gid_t)-1) {
+            INIT_LOGE("DoMkDir invalid owner or group for '%s'.", path);
+        } else {
+            *ownerApplied = true;
+        }
+    }
+    if (fchmodat(AT_FDCWD, path, *targetMode & DIR_PERMISSION_MASK, AT_SYMLINK_NOFOLLOW) != 0) {
+        int chmodErrno = errno;
+        INIT_LOGE("DoMkDir failed for '%s', err=%d, category=%s.",
+            path, chmodErrno, GetMkdirErrnoCategory(chmodErrno));
+    }
+    if (*ownerApplied && SetOwnerNoFollowById(path, *owner, *group) != 0) {
+        int chownErrno = errno;
+        INIT_LOGE("failed change owner %s, err=%d, category=%s.",
+            path, chownErrno, GetMkdirErrnoCategory(chownErrno));
+    }
+}
+
+static void VerifyDirAttributes(const char *path, bool ownerApplied,
+    uid_t owner, gid_t group, mode_t targetMode)
+{
+    struct stat attrStat;
+    if (fstatat(AT_FDCWD, path, &attrStat, AT_SYMLINK_NOFOLLOW) != 0) {
+        int fstatErrno = errno;
+        INIT_LOGE("DoMkDir readback fstatat '%s' failed, err=%d, category=%s.",
+            path, fstatErrno, GetMkdirErrnoCategory(fstatErrno));
+        return;
+    }
+    mode_t actualMode = attrStat.st_mode & DIR_PERMISSION_MASK;
+    bool modeMatched = (actualMode == (targetMode & DIR_PERMISSION_MASK));
+    bool ownerMatched = !ownerApplied || (attrStat.st_uid == owner && attrStat.st_gid == group);
+    if (!modeMatched || !ownerMatched) {
+        INIT_LOGE("DoMkDir readback mismatch '%s': expect mode=0%04o uid=%u gid=%u, "
+            "actual mode=0%04o uid=%u gid=%u.",
+            path, targetMode & DIR_PERMISSION_MASK, ownerApplied ? owner : 0, ownerApplied ? group : 0,
+            actualMode, attrStat.st_uid, attrStat.st_gid);
+    }
+}
+
+#ifdef STARTUP_INIT_TEST
+int TestSetOwner(const char *file, const char *ownerStr, const char *groupStr)
+{
+    return SetOwner(file, ownerStr, groupStr);
+}
+
+int TestSetOwnerNoFollowById(const char *file, uid_t owner, gid_t group)
+{
+    return SetOwnerNoFollowById(file, owner, group);
+}
+
+const char *TestGetFileTypeString(mode_t mode)
+{
+    return GetFileTypeString(mode);
+}
+
+const char *TestGetMkdirErrnoCategory(int err)
+{
+    return GetMkdirErrnoCategory(err);
+}
+
+static int (*g_testSetFileCryptPolicy)(const char *path) = NULL;
+
+void SetTestFileCryptPolicyFunc(int (*func)(const char *path))
+{
+    g_testSetFileCryptPolicy = func;
+}
+#endif
+
+static void SetDirCryptPolicy(const char *path)
+{
+#ifdef STARTUP_INIT_TEST
+    int ret = (g_testSetFileCryptPolicy != NULL) ? g_testSetFileCryptPolicy(path) : SetFileCryptPolicy(path);
+#else
+    int ret = SetFileCryptPolicy(path);
+#endif
+    if (ret != 0) {
+        INIT_LOGE("failed set file fscrypt, directory: %s", path);
+    }
 }
 
 static void DoMkDir(const struct CmdArgs *ctx)
@@ -404,43 +612,29 @@ static void DoMkDir(const struct CmdArgs *ctx)
         INIT_LOGE("DoMkDir invalid arguments.");
         return;
     }
-    mode_t mode = DEFAULT_DIR_MODE;
-    if (mkdir(ctx->argv[0], mode) != 0 && errno != EEXIST) {
-        if (strcmp(ctx->argv[0], "/data/service") != 0) {
-            INIT_LOGE("Create directory '%s' failed, err=%d.", ctx->argv[0], errno);
-            return;
-        }
-        int retrycode = mkdir(ctx->argv[0], mode);
-        INIT_ERROR_CHECK(retrycode != 0, return, "retry Create directory '%s' failed, err=%d", ctx->argv[0], errno);
-    }
 
-    /*
-     * Skip restoring default SELinux security contexts if the the folder already
-     * existed and its under /dev or /data/. These files will be proceed by loadSelinuxPolicy.
-     */
-    if ((errno != EEXIST) || ((strncmp(ctx->argv[0], "/dev", strlen("/dev")) != 0) &&
-        (strncmp(ctx->argv[0], "/data/", strlen("/data/")) != 0)) ||
-        (strncmp(ctx->argv[0], "/data/service/el1", strlen("/data/service/el1")) == 0)) {
-        PluginExecCmdByName("restoreContentRecurse", ctx->argv[0]);
+    const char *path = ctx->argv[0];
+    bool alreadyExists = false;
+    if (!EnsureDirCreated(path, DEFAULT_DIR_MODE, &alreadyExists)) {
+        return;
     }
-
-    if (ctx->argc <= 1) {
+    if (!CheckExistingPathIsDir(path)) {
         return;
     }
 
-    mode = strtoul(ctx->argv[1], NULL, OCTAL_TYPE);
-    INIT_CHECK_ONLY_ELOG(chmod(ctx->argv[0], mode) == 0, "DoMkDir failed for '%s', err %d.", ctx->argv[0], errno);
+    if (ctx->argc > 1) {
+        bool ownerApplied = false;
+        uid_t owner = (uid_t)-1;
+        gid_t group = (gid_t)-1;
+        mode_t targetMode = 0;
+        ApplyOwnerAndMode(path, ctx, &ownerApplied, &owner, &group, &targetMode);
+        VerifyDirAttributes(path, ownerApplied, owner, group, targetMode);
+    }
 
-    if (ctx->argc <= ownerPos) {
-        return;
+    RestoreSelinuxContext(path, alreadyExists);
+    if (ctx->argc > ownerPos) {
+        SetDirCryptPolicy(path);
     }
-    int ret = SetOwner(ctx->argv[0], ctx->argv[ownerPos], ctx->argv[groupPos]);
-    if (ret != 0) {
-        INIT_LOGE("failed change owner %s, err %d.", ctx->argv[0], errno);
-    }
-    ret = SetFileCryptPolicy(ctx->argv[0]);
-    INIT_CHECK_ONLY_ELOG(ret == 0, "failed set file fscrypt, directory: %s", ctx->argv[0]);
-    return;
 }
 
 static void DoChmod(const struct CmdArgs *ctx)

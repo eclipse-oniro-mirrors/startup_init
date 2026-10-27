@@ -36,6 +36,11 @@ config("utest_config") {
     "-fexceptions",
   ]
 }
+config("init_unittest_no_lchown_stub") {
+  visibility = [ ":*" ]
+  cflags = [ "-Ulchown" ]
+}
+
 
 ohos_unittest("init_unittest") {
   sanitize = {
@@ -60,7 +65,25 @@ ohos_unittest("init_unittest") {
       "-Wl,--wrap=strdup",
       "-Wl,--wrap=SystemSetParameter",
       "-Wl,--wrap=SystemWaitParameter",
+      "-Wl,--wrap=mkdir",
+      "-Wl,--wrap=stat",
+      "-Wl,--wrap=lstat",
+      "-Wl,--wrap=fchmodat",
+      "-Wl,--wrap=lchown",
+      "-Wl,--wrap=chown",
+      "-Wl,--wrap=getpwnam",
+      "-Wl,--wrap=getgrnam",
+      "-Wl,--wrap=getgrent",
+      "-Wl,--wrap=fstatat",
+      "-Wl,--wrap=PluginExecCmdByName",
+      "-Wl,--wrap=SetFileCryptPolicy",
   ]
+  if (target_cpu == "arm") {
+    ldflags += [
+      "-Wl,--wrap=__lstat_time64",
+      "-Wl,--wrap=__fstatat_time64",
+    ]
+  }
   module_out_path = "init/init"
   sources = [
     "//base/startup/init/device_info/device_info.cpp",
@@ -241,6 +264,7 @@ ohos_unittest("init_unittest") {
   }
 
   sources += [
+    "init/mkdir_test_wrapper.c",
     # 模块化测试文件
     "begetctl/begetctl_param_basic_test.cpp",        # param ls/get/set/wait/shell
     "begetctl/begetctl_param_advanced_test.cpp",     # param dump/save/cd/pwd/cat
@@ -305,7 +329,10 @@ ohos_unittest("init_unittest") {
     "innerkits/strutil_unittest.cpp",
   ]
 
-  configs = [ "//base/startup/init/test/unittest:utest_config" ]
+  configs = [
+    "//base/startup/init/test/unittest:utest_config",
+    ":init_unittest_no_lchown_stub",
+  ]
 
   include_dirs += [
     "//base/startup/init/device_info",
