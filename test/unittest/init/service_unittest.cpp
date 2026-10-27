@@ -1639,4 +1639,230 @@ HWTEST_F(PersistentServiceTest, ClientExtraBufferAllocationFailure, TestSize.Lev
     EXPECT_EQ(g_persistentParamCount, 0);
 }
 
+namespace {
+constexpr const char *HIGH_PRIORITY_TEST_NAME = "test_sa_high_priority";
+constexpr const char *HIGH_PRIORITY_TEST_PATH = "/data/init_ut/high_priority_test_service";
+constexpr int MOCK_HIGH_PRIORITY_PID = 32001;
+int g_highPriorityForkCount = 0;
+bool g_highPriorityForkFailure = false;
+int g_highPrioritySendCount = 0;
+std::string g_highPriorityParamName;
+std::string g_highPriorityParamValue;
+
+// Qos ioctl capture state.
+constexpr int SCHED_STATE_IOCTL_REQ = 0x40085301; // _IOW('S', 1, struct sched_state_event)
+constexpr unsigned int SCHED_EVENT_INIT_SA = 2;
+constexpr unsigned int SCHED_INIT_SA_ENTER = 1;
+int g_highPriorityOpenCalled = 0;
+const char *g_highPriorityOpenPath = nullptr;
+int g_highPriorityIoctlCalled = 0;
+unsigned long g_highPriorityIoctlReq = 0;
+unsigned int g_highPriorityIoctlEvent = 0;
+unsigned int g_highPriorityIoctlState = 0;
+int g_highPriorityCloseCalled = 0;
+
+pid_t HighPriorityFork()
+{
+    ++g_highPriorityForkCount;
+    return g_highPriorityForkFailure ? -1 : MOCK_HIGH_PRIORITY_PID;
+}
+
+int CaptureHighPriorityParameter(const char *name, const char *value)
+{
+    ++g_highPrioritySendCount;
+    g_highPriorityOpenPath = pathname;
+    (void)flag;
+    // Only the Qos device node is simulated as opened; other paths fail so the
+    // mock does not disturb unrelated open() call sites.
+    return strcmp(pathname, "/dev/sched_state_report") == 0 ? 7 : -1;
+}
+
+int HighPriorityIoctl(int fd, int req, va_list args)
+{
+    (void)fd;
+    ++g_highPriorityIoctlCalled;
+    g_highPriorityIoctlReq = (unsigned long)req;
+    if (req == SCHED_STATE_IOCTL_REQ) {
+        void *arg = va_arg(args, void *);
+        if (arg != nullptr) {
+            struct SchedStateEvent {
+                unsigned int event;
+                unsigned int state;
+            } *ev = static_cast<struct SchedStateEvent *>(arg);
+            g_highPriorityIoctlEvent = ev->event;
+            g_highPriorityIoctlState = ev->state;
+        }
+    }
+    return 0;
+}
+
+int HighPriorityClose(int fd)
+{
+    (void)fd;
+    ++g_highPriorityCloseCalled;
+    return 0;
+} 
+} // namespace
+
+class HighPriorityServiceTest : public testing::Test {
+public:
+    static void SetUpTestCase()
+    {
+        ASSERT_TRUE(mkdir("/data/init_ut", TEST_DIR_MODE) == 0 || errno == EEXIST);
+        FILE *file = fopen(HIGH_PRIORITY_TEST_PATH, "w");
+        ASSERT_NE(file, nullptr);
+        EXPECT_EQ(fclose(file), 0);
+    }
+
+    static void TearDownTestCase()
+    {
+        unlink(HIGH_PRIORITY_TEST_PATH);
+    }
+
+    void SetUp() override
+    {
+        g_highPriorityForkCount = 0;
+        g_highPriorityForkFailure = false;
+        g_highPrioritySendCount = 0;
+        g_highPriorityParamName.clear();
+        g_highPriorityParamValue.clear();
+        g_highPriorityOpenCalled = 0;
+        g_highPriorityOpenPath = nullptr;
+        g_highPriorityIoctlCalled = 0;
+        g_highPriorityIoctlReq = 0;
+        g_highPriorityIoctlEvent = 0;
+        g_highPriorityIoctlState = 0;
+        g_highPriorityCloseCalled = 0;
+        UpdateForkFunc(HighPriorityFork);
+        const char *json = "{\"name\":\"test_sa_high_priority\","
+            "\"path\":[\"/data/init_ut/high_priority_test_service\"],
+            "\"uid\":\"system\",\"gid\":[\"system\"]}";
+        cJSON *item = cJSON_Parse(json);
+        ASSERT_NE(item, nullptr);
+        service_ = AddService(HIGH_PRIORITY_TEST_NAME);
+        if (service_ == nullptr) {
+            cJSON_Delete(item);
+            FAIL() << "AddService failed";
+        }
+        int ret = ParseOneService(item, service_);
+        cJSON_Delete(item);
+        ASSERT_EQ(ret, 0);
+        service_->pid = -1;
+    }
+
+    void TearDown() override
+    {
+        TestSetServiceControlParamFunc(nullptr);
+        UpdateForkFunc(nullptr);
+        UpdateOpenFunc(nullptr);
+        UpdateIoctlFunc(nullptr);
+        UpdateCloseFunc(nullptr);
+        // Fork is mocked: do not stop or reap a real process.
+        ReleaseService(service_);
+        service_ = nullptr;
+    }
+
+protected:
+    Service *service_ = nullptr;
+};
+
+// innerkit: ServiceControlWithExtra(name, START_HIGH_PRIORITY, ...) must return 0
+// and set the ohos.ctl.start_priority parameter with the service name and args.
+HWTEST_F(HighPriorityServiceTest, InnerkitControlWritesPriorityParameter, TestSize.Level1)
+{
+    TestSetServiceControlParamFunc(CaptureHighPriorityParameter);
+    const char *args[] = {"event", "payload"};
+    EXPECT_EQ(ServiceControlWithExtra(HIGH_PRIORITY_TEST_NAME, START_HIGH_PRIORITY, args, 2), 0);
+    EXPECT_EQ(g_highPriorityParamName, "ohos.ctl.start_priority");
+    EXPECT_EQ(g_highPriorityParamValue, "test_sa_high_priority|event|payload");
+    EXPECT_EQ(g_highPrioritySendCount, 1);
+    TestSetServiceControlParamFunc(nullptr);
+}
+
+// param -> command chain: ohos.ctl.start_priority maps to the start_priority cmd,
+// whose handler marks the service as high priority and starts it.
+HWTEST_F(HighPriorityServiceTest, InnerkitControlWritesPriorityCommandChain, TestSize.Level1)
+{
+    ServiceCtrlInfo *ctrlInfo = nullptr;
+    int ret = GetServiceCtrlInfo("ohos.ctl.start_priority", HIGH_PRIORITY_TEST_NAME, &ctrlInfo);
+    ASSERT_EQ(ret, 0);
+    ASSERT_NE(ctrlInfo, nullptr);
+    EXPECT_STREQ(ctrlInfo->cmdName, "start_priority ");
+
+    int cmdIndex = -1;
+    const char *matchName = GetMatchCmd(ctrlInfo->cmdName, &cmdIndex);
+    EXPECT_NE(matchName, nullptr);
+    EXPECT_STREQ(matchName, "start_priority ");
+    EXPECT_GE(cmdIndex, 0);
+
+    const char *serviceArg = ctrlInfo->realKey + ctrlInfo->valueOffset;
+    EXPECT_STREQ(serviceArg, HIGH_PRIORITY_TEST_NAME);
+
+    DoCmdByIndex(cmdIndex, serviceArg, nullptr);
+    EXPECT_EQ(g_highPriorityForkCount, 1);
+    EXPECT_EQ(service_->pid, MOCK_HIGH_PRIORITY_PID);
+    EXPECT_NE(service_->attribute & SERVICE_ATTR_HIGH_PRIORITY, 0);
+
+    free(ctrlInfo);
+}
+
+// Command path: start_priority marks SERVICE_ATTR_HIGH_PRIORITY before starting.
+HWTEST_F(HighPriorityServiceTest, StartPriorityCommandMarksAttribute, TestSize.Level1)
+{
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_HIGH_PRIORITY, 0);
+    DoCmdByName("start_priority ", HIGH_PRIORITY_TEST_NAME);
+    EXPECT_EQ(g_highPriorityForkCount, 1);
+    EXPECT_EQ(service_->pid, MOCK_HIGH_PRIORITY_PID);
+    EXPECT_NE(service_->attribute & SERVICE_ATTR_HIGH_PRIORITY, 0);
+}
+
+// ServiceStart on a high-priority service reaches the Qos ioctl branch with the
+// encoded event/pid, and returns SERVICE_SUCCESS even though it is best-effort.
+HWTEST_F(HighPriorityServiceTest, ServiceStartHighPriorityInvokesQosIoctl, TestSize.Level1)
+{
+    service_->attribute |= SERVICE_ATTR_HIGH_PRIORITY;
+    UpdateOpenFunc(HighPriorityOpen);
+    UpdateIoctlFunc(HighPriorityIoctl);
+    UpdateCloseFunc(HighPriorityClose);
+
+    int ret = ServiceStart(service_, &service_->pathArgs);
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(service_->pid, MOCK_HIGH_PRIORITY_PID);
+    // Best-effort Qos notify: open succeeded and ioctl was issued with the
+    // SCHED_EVENT_INIT_SA event and encoded (state << 24 | pid).
+    EXPECT_EQ(g_highPriorityOpenCalled, 1);
+    EXPECT_STREQ(g_highPriorityOpenPath, "/dev/sched_state_report");
+    EXPECT_EQ(g_highPriorityIoctlCalled, 1);
+    EXPECT_EQ(g_highPriorityIoctlReq, SCHED_STATE_IOCTL_REQ);
+    EXPECT_EQ(g_highPriorityIoctlEvent, SCHED_EVENT_INIT_SA);
+    EXPECT_EQ(g_highPriorityIoctlState, (SCHED_INIT_SA_ENTER << 24) | MOCK_HIGH_PRIORITY_PID);
+    EXPECT_EQ(g_highPriorityCloseCalled, 1);
+}
+
+// Ordinary (non-high-priority) start must NOT take the Qos ioctl path.
+HWTEST_F(HighPriorityServiceTest, OrdinaryStartSkipQosIoctl, TestSize.Level1)
+{
+    UpdateOpenFunc(HighPriorityOpen);
+    UpdateIoctlFunc(HighPriorityIoctl);
+    UpdateCloseFunc(HighPriorityClose);
+
+    int ret = ServiceStart(service_, &service_->pathArgs);
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(g_highPriorityOpenCalled, 0);
+    EXPECT_EQ(g_highPriorityIoctlCalled, 0);
+}
+
+// Explicit stop/term ends the high-priority boost: the attribute bit is cleared.
+HWTEST_F(HighPriorityServiceTest, StopAndTermClearHighPriorithFlag, TestSize.Level1)
+{
+    service_->attribute |= SERVICE_ATTR_HIGH_PRIORITY;
+    service_->pid = -1; // Exercise the clear without sending any process signal.
+    EXPECT_EQ(ServiceStop(service_), 0);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_HIGH_PRIORITY, 0);
+
+    service_->attribute |= SERVICE_ATTR_HIGH_PRIORITY;
+    EXPECT_EQ(ServiceTerm(service_), 0);
+    EXPECT_EQ(service_->attribute & SERVICE_ATTR_HIGH_PRIORITY, 0);
+}
+
 } // namespace init_ut

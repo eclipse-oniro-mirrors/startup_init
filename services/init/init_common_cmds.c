@@ -269,7 +269,7 @@ static void DoStartByUserId(const struct CmdArgs *ctx)
         StartServiceByUserId(ctx->argv[0]);
         return;
     }
-
+ 
     INIT_ERROR_CHECK(ctx->argc == 2 && ctx->argv[1] != NULL,
         return, "Invalid start_by_userid arguments");
     errno = 0;
@@ -277,7 +277,7 @@ static void DoStartByUserId(const struct CmdArgs *ctx)
     long userId = strtol(ctx->argv[1], &end, 10);
     INIT_ERROR_CHECK(errno == 0 && end != ctx->argv[1] && *end == '\0' && userId >= 0 && userId <= INT32_MAX,
         return, "Invalid start_by_userid user id %s", ctx->argv[1]);
-
+ 
     char encodedValue[PARAM_VALUE_LEN_MAX] = {0};
     int ret = snprintf_s(encodedValue, sizeof(encodedValue), sizeof(encodedValue) - 1,
         "%s|%ld", ctx->argv[0], userId);
@@ -288,6 +288,13 @@ static void DoStartByUserId(const struct CmdArgs *ctx)
     INIT_LOGV("DoStartByUserId service %s user %ld", ctx->argv[0], userId);
     StartServiceByUserId(encodedValue);
 }
+ 
+static void DoStopByUserId(const struct CmdArgs *ctx)
+{
+    INIT_LOGV("DoStopByUserId %s", ctx->argv[0]);
+    StopServiceByUserId(ctx->argv[0]);
+}
+#endif
 
 static void DoStopByUserId(const struct CmdArgs *ctx)
 {

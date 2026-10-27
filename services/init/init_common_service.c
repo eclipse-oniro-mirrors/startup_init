@@ -912,11 +912,11 @@ int ServiceStart(Service *service, ServiceArgs *pathArgs)
             INIT_LOGI("High priority sched_state_event: event=%u, state=%u, pid=%d",
                 ev.event, ev.state, pid);
             if (ioctl(fd, SCHED_STATE_SET_STATE, &ev) != 0) {
-                INIT_LOGW("ioctl SCHED_STATE_SET_STATE failed for pid %d, err=%d", pid, errno);
+                INIT_LOGE("ioctl SCHED_STATE_SET_STATE failed for pid %d, err=%d", pid, errno);
             }
             close(fd);
         } else {
-            INIT_LOGW("Failed to open %s for high priority service %s, err=%d",
+            INIT_LOGE("Failed to open %s for high priority service %s, err=%d",
                 SCHED_STATE_DEV_PATH, service->name, errno);
         }
     }
@@ -1137,7 +1137,7 @@ static void HandleServiceExit(Service *service, int oldPid, ServiceArgs *onDeman
         CheckOndemandService(service);
         return;
     }
-
+ 
     if (service->attribute & SERVICE_ATTR_CRITICAL) {
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
             INIT_LOGE("ServiceReap error critical service crashed %s %d", service->name, service->crashCount);
@@ -1156,7 +1156,7 @@ static void HandleServiceExit(Service *service, int oldPid, ServiceArgs *onDeman
     }
     ExecuteServiceRestart(service, onDemandArgs);
 }
-
+ 
 void ServiceReap(Service *service)
 {
     INIT_CHECK(service != NULL, return);
@@ -1168,14 +1168,14 @@ void ServiceReap(Service *service)
     NotifyServiceChange(service, SERVICE_STOPPED);
     int oldPid = service->pid;
     service->pid = -1;
-
+ 
     HandleServiceExit(service, oldPid, &onDemandArgs);
     if (IsOnDemandService(service) && service->pid <= 0) {
         service->attribute &= ~SERVICE_ATTR_NEED_RESTART;
     }
     FreeStringVector(onDemandArgs.argv, onDemandArgs.count);
 }
-
+ 
 int UpdaterServiceFds(Service *service, int *fds, size_t fdCount)
 {
     if (service == NULL || fds == NULL) {
