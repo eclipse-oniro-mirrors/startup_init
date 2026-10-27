@@ -872,6 +872,7 @@ namespace {
 constexpr const char *ONDEMAND_TEST_NAME = "test_sa_ondemand";
 constexpr const char *ONDEMAND_TEST_PATH = "/data/init_ut/ondemand_test_service";
 constexpr int MOCK_FORK_BASE_PID = 31000;
+constexpr int MOCK_HIGH_PRIORITY_FD = 7; // Fake fd returned by the open() mock.
 constexpr mode_t TEST_DIR_MODE = 0755;
 int g_onDemandForkCount = 0;
 bool g_onDemandForkFailure = false;
@@ -1654,7 +1655,7 @@ constexpr int SCHED_STATE_IOCTL_REQ = 0x40085301; // _IOW('S', 1, struct sched_s
 constexpr unsigned int SCHED_EVENT_INIT_SA = 2;
 constexpr unsigned int SCHED_INIT_SA_ENTER = 1;
 int g_highPriorityOpenCalled = 0;
-const char *g_highPriorityOpenPath = nullptr;
+std::string g_highPriorityOpenName;
 int g_highPriorityIoctlCalled = 0;
 unsigned long g_highPriorityIoctlReq = 0;
 unsigned int g_highPriorityIoctlEvent = 0;
@@ -1678,18 +1679,18 @@ int CaptureHighPriorityParameter(const char *name, const char *value)
 int HighPriorityParameterOpen(const char *pathname, int flag)
 {
     ++g_highPrioritySendCount;
-    g_highPriorityOpenPath = pathname;
+    g_highPriorityOpenName = pathname;
     (void)flag;
     // Only the Qos device node is simulated as opened; other paths fail so the
     // mock does not disturb unrelated open() call sites.
-    return strcmp(pathname, "/dev/sched_state_report") == 0 ? 7 : -1;
+    return strcmp(pathname, "/dev/sched_state_report") == 0 ? MOCK_HIGH_PRIORITY_FD : -1;
 }
 
 int HighPriorityIoctl(int fd, int req, va_list args)
 {
     (void)fd;
     ++g_highPriorityIoctlCalled;
-    g_highPriorityIoctlReq = (unsigned long)req;
+    g_highPriorityIoctlReq = static_cast<unsigned long>(req);
     if (req == SCHED_STATE_IOCTL_REQ) {
         void *arg = va_arg(args, void *);
         if (arg != nullptr) {
@@ -1709,7 +1710,8 @@ int HighPriorityClose(int fd)
     (void)fd;
     ++g_highPriorityCloseCalled;
     return 0;
-} 
+}
+
 } // namespace
 
 class HighPriorityServiceTest : public testing::Test {
@@ -1735,7 +1737,7 @@ public:
         g_highPriorityParamName.clear();
         g_highPriorityParamValue.clear();
         g_highPriorityOpenCalled = 0;
-        g_highPriorityOpenPath = nullptr;
+        g_highPriorityOpenName.clear();
         g_highPriorityIoctlCalled = 0;
         g_highPriorityIoctlReq = 0;
         g_highPriorityIoctlEvent = 0;
@@ -1839,7 +1841,7 @@ HWTEST_F(HighPriorityServiceTest, ServiceStartHighPriorityInvokesQosIoctl, TestS
     // Best-effort Qos notify: open succeeded and ioctl was issued with the
     // SCHED_EVENT_INIT_SA event and encoded (state << 24 | pid).
     EXPECT_EQ(g_highPriorityOpenCalled, 1);
-    EXPECT_STREQ(g_highPriorityOpenPath, "/dev/sched_state_report");
+    EXPECT_STREQ(g_highPriorityOpenName, "/dev/sched_state_report");
     EXPECT_EQ(g_highPriorityIoctlCalled, 1);
     EXPECT_EQ(g_highPriorityIoctlReq, SCHED_STATE_IOCTL_REQ);
     EXPECT_EQ(g_highPriorityIoctlEvent, SCHED_EVENT_INIT_SA);
