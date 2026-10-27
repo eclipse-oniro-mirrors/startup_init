@@ -1676,9 +1676,9 @@ int CaptureHighPriorityParameter(const char *name, const char *value)
     return 0;
 }
 
-int HighPriorityParameterOpen(const char *pathname, int flag)
+int HighPriorityOpen(const char *pathname, int flag)
 {
-    ++g_highPrioritySendCount;
+    ++g_highPriorityOpenCalled;
     g_highPriorityOpenName = pathname;
     (void)flag;
     // Only the Qos device node is simulated as opened; other paths fail so the
