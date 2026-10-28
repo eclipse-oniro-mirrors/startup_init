@@ -105,7 +105,8 @@ static int SimulateRunLoopParsing(char *buffer,
 static uint32_t BuildNotifyMessage(std::vector<char> &buffer,
                                    const std::string &key, const std::string &value, uint32_t watcherId)
 {
-    uint32_t msgSize = sizeof(ParamMessage) + sizeof(ParamMsgContent) + value.size();
+    uint32_t contentSize = value.size() + 1;
+    uint32_t msgSize = sizeof(ParamMessage) + sizeof(ParamMsgContent) + PARAM_ALIGN(contentSize);
     msgSize = PARAM_ALIGN(msgSize);
     buffer.resize(msgSize, 0);
     ParamMessage *msg = reinterpret_cast<ParamMessage *>(buffer.data());
@@ -474,12 +475,10 @@ HWTEST_F(WatcherBufferOverflowUnitTest, WatchParameterBatch_001, TestSize.Level0
     EXPECT_NE(watcherId, 0u);
     ASSERT_NE(watcher, nullptr);
 
-    ret = AddWatcherGroup("test.watch.batch*", watcherId);
-    EXPECT_EQ(ret, 0);
-
     const std::string keyPrefix = "test.watch.batch*";
     ret = AddWatcherGroup(keyPrefix, watcherId);
     EXPECT_EQ(ret, 0);
+
     WatcherManager *mgr = GetWatcherManager();
     ASSERT_NE(mgr, nullptr);
     auto group = mgr->GetWatcherManager(keyPrefix);
