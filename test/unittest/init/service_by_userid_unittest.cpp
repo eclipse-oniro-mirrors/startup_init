@@ -1262,7 +1262,7 @@ HWTEST_F(ServiceByUserIdUnitTest, StartInstanceParentPathAndForkFailure, TestSiz
     ASSERT_EQ(TestFindServiceByUserIdSnapshot(TEST_SERVICE, USER_A, &snapshot), 0);
     EXPECT_EQ(snapshot.pid, 34567);
     EXPECT_EQ(snapshot.status, SERVICE_STARTED);
-    EXPECT_STREQ(snapshot.mcs, "s0:c913");
+    EXPECT_STREQ(snapshot.mcs, "s0:x913");
     TestSetServiceByUserIdState(TEST_SERVICE, USER_A, -1, SERVICE_STOPPED);
     UpdateForkFunc(ForkFail);
     EXPECT_EQ(TestStartInstanceProcess("init_by_user_ut|401|again"), SERVICE_FAILURE);

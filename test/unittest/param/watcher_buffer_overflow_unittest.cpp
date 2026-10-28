@@ -43,6 +43,8 @@
 #include <fcntl.h>
 #include <cstring>
 #include <vector>
+#include <chrono>
+#include <thread>
 
 #include "init_param.h"
 #include "iwatcher.h"
@@ -475,6 +477,15 @@ HWTEST_F(WatcherBufferOverflowUnitTest, WatchParameterBatch_001, TestSize.Level0
     ret = AddWatcherGroup("test.watch.batch*", watcherId);
     EXPECT_EQ(ret, 0);
 
+    const std::string keyPrefix = "test.watch.batch*";
+    ret = AddWatcherGroup(keyPrefix, watcherId);
+    EXPECT_EQ(ret, 0);
+    WatcherManager *mgr = GetWatcherManager();
+    ASSERT_NE(mgr, nullptr);
+    auto group = mgr->GetWatcherManager(keyPrefix);
+    ASSERT_NE(group, nullptr);
+    uint32_t groupId = group->GetGroupId();
+
     auto *testWatcher = static_cast<TestWatcherForBuffer *>(watcher.GetRefPtr());
     ASSERT_NE(testWatcher, nullptr);
     testWatcher->Reset();
@@ -482,8 +493,15 @@ HWTEST_F(WatcherBufferOverflowUnitTest, WatchParameterBatch_001, TestSize.Level0
     for (int i = 0; i < 10; i++) {
         std::string key = "test.watch.batch.param" + std::to_string(i);
         std::string value = "val" + std::to_string(i);
-        ret = SendNotifyMessage(key, value, watcherId);
+        ret = SendNotifyMessage(key, value, groupId);
         EXPECT_EQ(ret, 0);
+    }
+
+    for (int retry = 0; retry < 100; retry++) {
+        if (testWatcher->GetNotifyCount() >= 10u) {
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     EXPECT_EQ(testWatcher->GetNotifyCount(), 10u);
