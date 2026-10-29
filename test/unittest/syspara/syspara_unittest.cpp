@@ -16,6 +16,8 @@
 #include "gtest/gtest.h"
 
 #include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 
 #include "init_param.h"
@@ -31,6 +33,19 @@
 #include "sysparam_errno.h"
 
 using namespace testing::ext;
+
+#ifndef OHOS_LITE
+extern "C" char *NullProcessorForApiVersion(const char *key, char *value)
+{
+    if (key != nullptr &&
+        (strcmp(key, "const.ohos.apiversion") == 0 ||
+         strcmp(key, "const.product.os.dist.apiversion") == 0)) {
+        free(value);
+        return nullptr;
+    }
+    return value;
+}
+#endif
 
 namespace OHOS {
 constexpr int TEST_VALUE = 101;
@@ -59,6 +74,31 @@ static std::string MakeUniqueConstKey(const char *base)
     }
     counter++;
     return key;
+}
+#endif
+
+#ifndef OHOS_LITE
+HWTEST_F(SysparaUnitTest, parameterTest0000DistApiVersionNullBranch, TestSize.Level0)
+{
+    PropertyValueProcessor prev = SetPropertyGetProcessor(NullProcessorForApiVersion);
+    int ret = GetDistributionOSApiVersion();
+    EXPECT_EQ(ret, 0);
+    // 恢复原处理器，避免影响后续用例
+    SetPropertyGetProcessor(prev);
+}
+
+HWTEST_F(SysparaUnitTest, parameterTest0000DistApiVersionNullBranch2, TestSize.Level0)
+{
+    int ret = GetDistributionOSApiVersion();
+    EXPECT_GT(ret, 0);
+}
+
+HWTEST_F(SysparaUnitTest, parameterTestDistInfoNotNullPtr001, TestSize.Level0)
+{
+    EXPECT_STRNE(GetDistributionOSName(), nullptr);
+    EXPECT_STRNE(GetDistributionOSVersion(), nullptr);
+    EXPECT_STRNE(GetDistributionOSApiName(), nullptr);
+    EXPECT_STRNE(GetDistributionOSReleaseType(), nullptr);
 }
 #endif
 
