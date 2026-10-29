@@ -481,7 +481,7 @@ HWTEST_F(WatcherBufferOverflowUnitTest, WatchParameterBatch_001, TestSize.Level0
 
     WatcherManager *mgr = GetWatcherManager();
     ASSERT_NE(mgr, nullptr);
-    auto group = mgr->GetWatcherManager(keyPrefix);
+    auto group = mgr->GetWatcherGroup(keyPrefix);
     ASSERT_NE(group, nullptr);
     uint32_t groupId = group->GetGroupId();
 
