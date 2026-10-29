@@ -359,6 +359,68 @@ HWTEST_F(InitGroupManagerUnitTest, TestParseServiceCpucore, TestSize.Level1)
     cJSON_Delete(jobItem);
 }
 
+HWTEST_F(InitGroupManagerUnitTest, GetAccessTokenKernelPermPassed, TestSize.Level1)
+{
+    const char *jsonStr = "{\"services\":{\"name\":\"test_service23\",\"path\":[\"/data/init_ut/test_service\"],"
+        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
+        "\"gid\":[\"system\"],\"caps\":[\"\"],\"kernel_permission\":{\"ohos.filesystem.dfs\":345,"
+        "\"ohos.permission.kernel.ALLOW_WRITABLE_CODE_MEMORY\":true}}}";
+    cJSON* jobItem = cJSON_Parse(jsonStr);
+    ASSERT_NE(nullptr, jobItem);
+    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
+    ASSERT_NE(nullptr, serviceItem);
+    Service *service = AddService("test_service23");
+    ASSERT_NE(nullptr, service);
+    int ret = ParseOneService(serviceItem, service);
+    EXPECT_EQ(ret, 0);
+    EXPECT_NE(service->kernelPerms, nullptr);
+    GetAccessToken();
+    EXPECT_NE(service->tokenId, 0u);
+    ReleaseService(service);
+    cJSON_Delete(jobItem);
+}
+
+HWTEST_F(InitGroupManagerUnitTest, GetAccessTokenNoKernelPerm, TestSize.Level1)
+{
+    const char *jsonStr = "{\"services\":{\"name\":\"test_service24\",\"path\":[\"/data/init_ut/test_service\"],"
+        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
+        "\"gid\":[\"system\"],\"caps\":[\"\"]}}";
+    cJSON* jobItem = cJSON_Parse(jsonStr);
+    ASSERT_NE(nullptr, jobItem);
+    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
+    ASSERT_NE(nullptr, serviceItem);
+    Service *service = AddService("test_service24");
+    ASSERT_NE(nullptr, service);
+    int ret = ParseOneService(serviceItem, service);
+    EXPECT_EQ(ret, 0);
+    EXPECT_TRUE(service->kernelPerms == nullptr);
+    GetAccessToken();
+    EXPECT_NE(service->tokenId, 0u);
+    ReleaseService(service);
+    cJSON_Delete(jobItem);
+}
+
+HWTEST_F(InitGroupManagerUnitTest, GetAccessTokenAbnormalKernelPerm, TestSize.Level1)
+{
+    const char *jsonStr = "{\"services\":{\"name\":\"test_service25\",\"path\":[\"/data/init_ut/test_service\"],"
+        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
+        "\"gid\":[\"system\"],\"caps\":[\"\"]}}";
+    cJSON* jobItem = cJSON_Parse(jsonStr);
+    ASSERT_NE(nullptr, jobItem);
+    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
+    ASSERT_NE(nullptr, serviceItem);
+    Service *service = AddService("test_service25");
+    ASSERT_NE(nullptr, service);
+    int ret = ParseOneService(serviceItem, service);
+    EXPECT_EQ(ret, 0);
+    service->kernelPerms = const_cast<char *>("{not-valid-json");
+    GetAccessToken();
+    EXPECT_NE(service->tokenId, 0u);
+    service->kernelPerms = nullptr;
+    ReleaseService(service);
+    cJSON_Delete(jobItem);
+}
+
 HWTEST_F(InitGroupManagerUnitTest, TestUpdaterServiceFds, TestSize.Level1)
 {
     Service *service = AddService("test_service8");
