@@ -43,4 +43,6 @@ ohos_shared_library("deviceinfo_ndk") {
   innerapi_tags = [ "ndk" ]
   part_name = "init"
   subsystem_name = "startup"
+  version_script = "deviceinfo_ndk.map"
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
 }
