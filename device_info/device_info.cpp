@@ -26,6 +26,9 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
+#define ACL_LOGW(fmt, ...) STARTUP_LOGW(BASE_DOMAIN + 8, "BOARDINFO_ACL", fmt, ##__VA_ARGS__)
+#define ACL_LOGI(fmt, ...) STARTUP_LOGI(BASE_DOMAIN + 8, "BOARDINFO_ACL", fmt, ##__VA_ARGS__)
+
 int AclGetDevUdid(char *udid, int size)
 {
     if (udid == nullptr || size < UDID_LEN) {
@@ -38,6 +41,8 @@ int AclGetDevUdid(char *udid, int size)
     int ret = instance.GetUdid(result);
     if (ret == 0) {
         ret = strcpy_s(udid, size, result.c_str());
+    } else {
+        ACL_LOGW("AclGetDevUdid ret=%d", ret);
     }
 #else
     int ret = GetDevUdid_(udid, size);
@@ -54,13 +59,15 @@ const char *AclGetSerial(void)
     int ret = instance.GetSerialID(result);
     if (ret == 0) {
         ret = strcpy_s(serialNumber, sizeof(serialNumber), result.c_str());
-        BEGET_ERROR_CHECK(ret == 0, return nullptr, "failed copy");
+        BEGET_ERROR_CHECK(ret == 0, return nullptr, "Failed to copy");
+    } else {
+        ACL_LOGW("AclGetSerial ret=%d", ret);
     }
 #else
     const char *tmpSerial = GetSerial_();
     if (tmpSerial != nullptr) {
         int ret = strcpy_s(serialNumber, sizeof(serialNumber), tmpSerial);
-        BEGET_ERROR_CHECK(ret == 0, return nullptr, "failed copy");
+        BEGET_ERROR_CHECK(ret == 0, return nullptr, "Failed to copy");
     }
 #endif
     return serialNumber;
@@ -79,6 +86,8 @@ int AclGetDiskSN(char *diskSN, int size)
     ret = instance.GetDiskSN(result);
     if (ret == 0) {
         ret = strcpy_s(diskSN, size, result.c_str());
+    } else {
+        ACL_LOGW("AclGetDiskSN ret=%d", ret);
     }
 #endif
     return ret;
@@ -90,9 +99,10 @@ int AclGetDiskSN(char *diskSN, int size)
 const char *AclGetCpuId(void)
 {
 #ifdef PARAM_FEATURE_DEVICEINFO
-    static char buf[ACL_BOARDINFO_LEN] = {0};
+    thread_local char buf[ACL_BOARDINFO_LEN] = {0};
     std::string result;
-    (void)OHOS::device_info::DeviceInfoKits::GetInstance().GetCpuId(result);
+    int ret = OHOS::device_info::DeviceInfoKits::GetInstance().GetCpuId(result);
+    ACL_LOGI("AclGetCpuId ret = %d", ret);
     if (strcpy_s(buf, sizeof(buf), result.c_str()) != 0) {
         buf[0] = '\0';
     }
@@ -107,9 +117,10 @@ const char *AclGetCpuId(void)
 const char *AclGetCpuArchitecture(void)
 {
 #ifdef PARAM_FEATURE_DEVICEINFO
-    static char buf[ACL_BOARDINFO_LEN] = {0};
+    thread_local char buf[ACL_BOARDINFO_LEN] = {0};
     std::string result;
-    (void)OHOS::device_info::DeviceInfoKits::GetInstance().GetCpuArchitecture(result);
+    int ret = OHOS::device_info::DeviceInfoKits::GetInstance().GetCpuArchitecture(result);
+    ACL_LOGI("AclGetCpuArchitecture ret = %d", ret);
     if (strcpy_s(buf, sizeof(buf), result.c_str()) != 0) {
         buf[0] = '\0';
     }
@@ -124,9 +135,10 @@ const char *AclGetCpuArchitecture(void)
 const char *AclGetCpuVendor(void)
 {
 #ifdef PARAM_FEATURE_DEVICEINFO
-    static char buf[ACL_BOARDINFO_LEN] = {0};
+    thread_local char buf[ACL_BOARDINFO_LEN] = {0};
     std::string result;
-    (void)OHOS::device_info::DeviceInfoKits::GetInstance().GetCpuVendor(result);
+    int ret = OHOS::device_info::DeviceInfoKits::GetInstance().GetCpuVendor(result);
+    ACL_LOGI("AclGetCpuVendor ret = %d", ret);
     if (strcpy_s(buf, sizeof(buf), result.c_str()) != 0) {
         buf[0] = '\0';
     }
@@ -150,6 +162,8 @@ int AclGetBoardSerial(char *value, int size)
     if (ret == 0) {
         DINFO_CHECK(strcpy_s(value, size, result.c_str()) == 0, return SYSPARAM_INVALID_INPUT,
             "AclGetBoardSerial strcpy_s failed");
+    } else {
+        ACL_LOGW("AclGetBoardSerial ret=%d", ret);
     }
     ACL_LOGV("AclGetBoardSerial ret=%d", ret);
     return ret;
@@ -162,9 +176,10 @@ int AclGetBoardSerial(char *value, int size)
 const char *AclGetBoardVendor(void)
 {
 #ifdef PARAM_FEATURE_DEVICEINFO
-    static char buf[ACL_BOARDINFO_LEN] = {0};
+    thread_local char buf[ACL_BOARDINFO_LEN] = {0};
     std::string result;
-    (void)OHOS::device_info::DeviceInfoKits::GetInstance().GetBoardVendor(result);
+    int ret = OHOS::device_info::DeviceInfoKits::GetInstance().GetBoardVendor(result);
+    ACL_LOGI("AclGetBoardVendor ret = %d", ret);
     if (strcpy_s(buf, sizeof(buf), result.c_str()) != 0) {
         buf[0] = '\0';
     }
@@ -179,9 +194,10 @@ const char *AclGetBoardVendor(void)
 const char *AclGetBoardProductName(void)
 {
 #ifdef PARAM_FEATURE_DEVICEINFO
-    static char buf[ACL_BOARDINFO_LEN] = {0};
+    thread_local char buf[ACL_BOARDINFO_LEN] = {0};
     std::string result;
-    (void)OHOS::device_info::DeviceInfoKits::GetInstance().GetBoardProductName(result);
+    int ret = OHOS::device_info::DeviceInfoKits::GetInstance().GetBoardProductName(result);
+    ACL_LOGI("AclGetBoardProductName ret = %d", ret);
     if (strcpy_s(buf, sizeof(buf), result.c_str()) != 0) {
         buf[0] = '\0';
     }
@@ -196,9 +212,10 @@ const char *AclGetBoardProductName(void)
 const char *AclGetBiosVendor(void)
 {
 #ifdef PARAM_FEATURE_DEVICEINFO
-    static char buf[ACL_BOARDINFO_LEN] = {0};
+    thread_local char buf[ACL_BOARDINFO_LEN] = {0};
     std::string result;
-    (void)OHOS::device_info::DeviceInfoKits::GetInstance().GetBiosVendor(result);
+    int ret = OHOS::device_info::DeviceInfoKits::GetInstance().GetBiosVendor(result);
+    ACL_LOGI("AclGetBiosVendor ret = %d", ret);
     if (strcpy_s(buf, sizeof(buf), result.c_str()) != 0) {
         buf[0] = '\0';
     }
@@ -213,9 +230,10 @@ const char *AclGetBiosVendor(void)
 const char *AclGetBiosVersion(void)
 {
 #ifdef PARAM_FEATURE_DEVICEINFO
-    static char buf[ACL_BOARDINFO_LEN] = {0};
+    thread_local char buf[ACL_BOARDINFO_LEN] = {0};
     std::string result;
-    (void)OHOS::device_info::DeviceInfoKits::GetInstance().GetBiosVersion(result);
+    int ret = OHOS::device_info::DeviceInfoKits::GetInstance().GetBiosVersion(result);
+    ACL_LOGI("AclGetBiosVersion ret = %d", ret);
     if (strcpy_s(buf, sizeof(buf), result.c_str()) != 0) {
         buf[0] = '\0';
     }
@@ -230,9 +248,10 @@ const char *AclGetBiosVersion(void)
 const char *AclGetBiosReleaseDate(void)
 {
 #ifdef PARAM_FEATURE_DEVICEINFO
-    static char buf[ACL_BOARDINFO_LEN] = {0};
+    thread_local char buf[ACL_BOARDINFO_LEN] = {0};
     std::string result;
-    (void)OHOS::device_info::DeviceInfoKits::GetInstance().GetBiosReleaseDate(result);
+    int ret = OHOS::device_info::DeviceInfoKits::GetInstance().GetBiosReleaseDate(result);
+    ACL_LOGI("AclGetBiosReleaseDate ret = %d", ret);
     if (strcpy_s(buf, sizeof(buf), result.c_str()) != 0) {
         buf[0] = '\0';
     }
