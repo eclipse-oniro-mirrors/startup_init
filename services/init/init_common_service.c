@@ -1137,7 +1137,7 @@ static void HandleServiceExit(Service *service, int oldPid, ServiceArgs *onDeman
         CheckOndemandService(service);
         return;
     }
- 
+
     if (service->attribute & SERVICE_ATTR_CRITICAL) {
         if (!CalculateCrashTime(service, service->crashTime, service->crashCount)) {
             INIT_LOGE("ServiceReap error critical service crashed %s %d", service->name, service->crashCount);
@@ -1156,7 +1156,7 @@ static void HandleServiceExit(Service *service, int oldPid, ServiceArgs *onDeman
     }
     ExecuteServiceRestart(service, onDemandArgs);
 }
- 
+
 void ServiceReap(Service *service)
 {
     INIT_CHECK(service != NULL, return);
@@ -1175,7 +1175,7 @@ void ServiceReap(Service *service)
     }
     FreeStringVector(onDemandArgs.argv, onDemandArgs.count);
 }
- 
+
 int UpdaterServiceFds(Service *service, int *fds, size_t fdCount)
 {
     if (service == NULL || fds == NULL) {
