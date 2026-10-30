@@ -1256,7 +1256,7 @@ HWTEST_F(RemountOverlayUnitTest, Init_RemountRofsOverlay_010_perPartitionAlready
 {
     CheckAndCreateDir((std::string(STARTUP_INIT_UT_PATH) + "/data/service/el1/startup/remount/").c_str());
     SetRemountResultFlag();
-    __real_mkdir("/mnt/overlay", 0755);
+    RemountSetStubResult(STUB_STAT, 1);
     __real_mkdir("/mnt/overlay/usr", 0755);
     __real_mkdir("/mnt/overlay/usr/upper", 0755);
     RemountSetStubResult(STUB_IS_DM_MERGE_REMOUNT_ENABLED, 0);
@@ -1265,7 +1265,7 @@ HWTEST_F(RemountOverlayUnitTest, Init_RemountRofsOverlay_010_perPartitionAlready
     int ret = RemountRofsOverlay();
     EXPECT_EQ(ret, REMOUNT_SUCC);
     EXPECT_EQ(GetRemountResult(), REMOUNT_SUCC);
-    rmdir("/mnt/overlay/usr/upper");
+    RemountSetStubResult(STUB_STAT, 0);
     rmdir("/mnt/overlay/usr");
     rmdir("/mnt/overlay");
     DeleteRemountResultFlag();

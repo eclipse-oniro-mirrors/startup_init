@@ -834,6 +834,8 @@ ohos_unittest("init_remount_unittest") {
     "-Wl,--wrap=fork",
     "-Wl,--wrap=waitpid",
     "-Wl,--wrap=mkdir",
+    "-Wl,--wrap=stat",
+    "-Wl,--wrap=lstat",
     "-Wl,--wrap=exit",
     "-Wl,--wrap=GetDevSize",
     "-Wl,--wrap=CheckIsExt4",

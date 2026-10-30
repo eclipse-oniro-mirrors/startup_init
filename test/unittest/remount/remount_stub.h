@@ -73,6 +73,8 @@ typedef enum {
     STUB_IS_DM_MERGE_REMOUNT_ENABLED,
     STUB_GETUID,
     STUB_UEVENT_SOCKET_INIT,
+    STUB_STAT,
+    STUB_LSTAT,
     STUB_MAX
 } RemountStubType;
 
