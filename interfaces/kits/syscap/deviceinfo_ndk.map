@@ -30,6 +30,8 @@
       OH_GetSecurityPatchTag;
       OH_GetSoftwareModel;
       OH_GetVersionId;
+      OH_GetOdid;
+      OH_GetDiskSN;
       OH_IsApiVersionGreaterOrEqual;
       canIUse;
     local:
