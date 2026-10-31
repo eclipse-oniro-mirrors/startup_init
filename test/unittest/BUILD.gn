@@ -703,6 +703,7 @@ ohos_unittest("init_fshvb_unittest") {
   module_out_path = "init/init"
   include_dirs = [
     "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/include",
+    "//base/startup/init/test/mock/fs_manager",
     "//base/startup/init/interfaces/innerkits/fs_manager/libfs_dm/include",
     "//base/startup/init/interfaces/innerkits/fs_manager/switch_root/include",
     "//base/startup/init/interfaces/innerkits/init_module_engine/include",
@@ -715,19 +716,21 @@ ohos_unittest("init_fshvb_unittest") {
 
   deps = [
     "//base/startup/init/interfaces/innerkits:libbegetutil",
-    "//base/startup/init/interfaces/innerkits/fs_manager:libfsmanager_static",
   ]
   sources = [
     "//base/startup/init/interfaces/innerkits/fs_manager/fstab.c",
-    "//base/startup/init/interfaces/innerkits/fs_manager/fstab_mount.c",
     "//base/startup/init/services/log/init_commlog.c",
     "//base/startup/init/services/utils/init_utils.c",
-    "//base/startup/init/test/mock/init/interfaces/innerkits/fs_manager/libfs_dm/fs_dm.c",
+    "//base/startup/init/test/mock/fs_manager/libfs_hvb_dm_mock.c",
     "//base/startup/init/test/mock/init/ueventd/ueventd.c",
     "//base/startup/init/test/mock/init/ueventd/ueventd_socket.c",
   ]
 
-  defines = [ "STARTUP_INIT_UT_PATH =\"/data/init_ut\"" ]
+  # Avoid the constant filename-path branch in the existing test log macro.
+  defines = [
+    "STARTUP_INIT_TEST",
+    "STARTUP_INIT_UT_PATH=\"/data/init_ut\"",
+  ]
 
   configs = []
 
@@ -740,11 +743,43 @@ ohos_unittest("init_fshvb_unittest") {
   ]
 
   if (defined(global_parts_info) && defined(global_parts_info.startup_hvb)) {
-    external_deps += [ "hvb:libhvb_static" ]
+    # Scoped failure injection and sandboxed partition I/O for this binary only.
+    ldflags = [
+      "-Wl,--wrap=GetBootSlots",
+      "-Wl,--wrap=GetCurrentSlot",
+      "-Wl,--wrap=HookMgrExecute",
+      "-Wl,--wrap=GetBootStageHookMgr",
+      "-Wl,--wrap=QuickfixIsImagePatch",
+      "-Wl,--wrap=QuickfixFsHvbGetImageCert",
+      "-Wl,--wrap=malloc",
+      "-Wl,--wrap=calloc",
+      "-Wl,--wrap=memcpy_s",
+      "-Wl,--wrap=sprintf_s",
+      "-Wl,--wrap=snprintf_s",
+      "-Wl,--wrap=open",
+      "-Wl,--wrap=access",
+      "-Wl,--wrap=read",
+      "-Wl,--wrap=close",
+      "-Wl,--wrap=lseek64",
+      "-Wl,--wrap=lseek",
+      "-Wl,--wrap=basename",
+    ]
+    # All libhvb entry points used here have explicit test implementations.
+    # Do not pull a second copy of fs_hvb or real crypto in through archives.
+    include_dirs += [ "//base/startup/hvb/libhvb/include" ]
+    if (target_cpu == "arm64") {
+      defines += [ "__LP64__" ]
+    } else {
+      defines += [ "__LP32__" ]
+    }
     sources += [
-      "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/fs_hvb.c",
-      "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/hvb_ops.c",
+      "//base/startup/init/test/mock/fs_manager/fstab_mount_mock.c",
+      "//base/startup/init/test/mock/fs_manager/fs_hvb_test_adapter.c",
+      "//base/startup/init/test/mock/fs_manager/hvb_ops_test_adapter.c",
+      "//base/startup/init/interfaces/innerkits/fs_manager/libfs_hvb/fs_hvb_image_patch.c",
       "//base/startup/init/test/unittest/fs_manager/libfs_hvb_unittest.cpp",
+      "//base/startup/init/test/unittest/fs_manager/libfs_hvb_branch_unittest.cpp",
+      "//base/startup/init/test/mock/fs_manager/libfs_hvb_mock.c",
       "//base/startup/init/test/mock/hvb/libhvb/cert/hvb_cert.c",
       "//base/startup/init/test/mock/hvb/libhvb/crypto/hvb_hash_sha256.c",
       "//base/startup/init/test/mock/hvb/libhvb/auth/hvb.c",

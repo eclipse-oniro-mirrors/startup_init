@@ -14,11 +14,17 @@
  */
 
 #include "hvb_cert.h"
+#include <stdlib.h>
+#include <string.h>
 
 #define BLOCK_SIZE 4096
 
 enum hvb_errno hvb_cert_parser(struct hvb_cert *cert, struct hvb_buf *cert_buf)
 {
+    char *certValue = getenv("CERT_VALUE");
+    if (certValue != NULL && strcmp(certValue, "Fail") == 0) {
+        return HVB_ERROR_INVALID_ARGUMENT;
+    }
     cert->version_major = 0;
     cert->version_minor = 0;
     cert->image_original_len = BLOCK_SIZE;
@@ -29,5 +35,12 @@ enum hvb_errno hvb_cert_parser(struct hvb_cert *cert, struct hvb_buf *cert_buf)
     cert->hash_algo = 0;
     cert->data_block_size = BLOCK_SIZE;
     cert->hash_block_size = BLOCK_SIZE;
+    if (certValue != NULL && strcmp(certValue, "ZeroDataBlock") == 0) {
+        cert->data_block_size = 0;
+    } else if (certValue != NULL && strcmp(certValue, "ZeroHashBlock") == 0) {
+        cert->hash_block_size = 0;
+    } else if (certValue != NULL && strcmp(certValue, "InvalidHash") == 0) {
+        cert->hash_algo = 99;
+    }
     return 0;
 }

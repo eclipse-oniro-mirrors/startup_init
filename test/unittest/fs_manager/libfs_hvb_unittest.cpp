@@ -15,7 +15,10 @@
 
 #include <cstdlib>
 #include <gtest/gtest.h>
+#include <cstring>
+#include "libfs_hvb_mock.h"
 #include "fs_hvb.h"
+#include "fs_hvb_image_patch.h"
 #include "init_utils.h"
 #include "fs_manager/ext4_super_block.h"
 #include "fs_manager/erofs_super_block.h"
@@ -27,7 +30,23 @@ using namespace testing::ext;
 namespace init_ut {
 class FsHvbUnitTest : public testing::Test {
 public:
-    static void SetUpTestCase(void) {};
+    void SetUp() override
+    {
+        HvbMockReset();
+        FsHvbFinal(MAIN_HVB);
+        FsHvbFinal(EXT_HVB);
+        for (const char *key : {"VERIFY_VALUE", "HASH_VALUE", "FSDM_VALUE", "CERT_VALUE", "BOOTSLOTS_VALUE",
+            "CURRENTSLOT_VALUE", "HVB_SNAPSHOT_FORWARD", "HVB_SNAPSHOT_REVERSE", "HVB_QUICKFIX",
+            "HVB_QUICKFIX_CERT", "FSDM_NULL_PATH"}) {
+            unsetenv(key);
+        }
+        remove(BOOT_CMD_LINE);
+        remove(STARTUP_INIT_UT_PATH "/libfs_hvb/module.img");
+    }
+    void TearDown() override
+    {
+        SetUp();
+    }
     static void TearDownTestCase(void) {};
 };
 
@@ -142,6 +161,10 @@ HWTEST_F(FsHvbUnitTest, Init_FsHvbSetupHashtree_001, TestSize.Level0)
     fsItem.fsManagerFlags = 1;
     fsItem.next = nullptr;
 
+    setenv("VERIFY_VALUE", "Succeed", 1);
+    setenv("HASH_VALUE", "AllSucceed", 1);
+    CreateTestFile(BOOT_CMD_LINE, "ohos.boot.hvb.hash_algo=sha256 ohos.boot.hvb.digest=01 ");
+    ASSERT_EQ(FsHvbInit(MAIN_HVB), 0);
     int ret = FsHvbSetupHashtree(nullptr);
     EXPECT_EQ(ret, -1);
 
@@ -158,6 +181,7 @@ HWTEST_F(FsHvbUnitTest, Init_FsHvbSetupHashtree_001, TestSize.Level0)
     EXPECT_EQ(ret, 0);
 
     unsetenv("FSDM_VALUE");
+    free(fsItem.deviceName);
 }
 
 HWTEST_F(FsHvbUnitTest, Init_FsHvbFinal_001, TestSize.Level0)
@@ -193,31 +217,37 @@ HWTEST_F(FsHvbUnitTest, Init_FsHvbGetValueFromCmdLine_001, TestSize.Level0)
 
 HWTEST_F(FsHvbUnitTest, Init_FsHvbConstructVerityTarget_001, TestSize.Level0)
 {
-    DmVerityTarget target;
+    DmVerityTarget target = {};
     const char *devName = "test";
-    struct hvb_cert cert;
+    struct hvb_cert cert = {};
     uint8_t digest = 53;
     uint8_t salt = 55;
 
+    FsHvbDestoryVerityTarget(&target);
     int ret = FsHvbConstructVerityTarget(nullptr, devName, &cert);
     EXPECT_EQ(ret, -1);
+    FsHvbDestoryVerityTarget(&target);
     ret = FsHvbConstructVerityTarget(&target, nullptr, &cert);
     EXPECT_EQ(ret, -1);
+    FsHvbDestoryVerityTarget(&target);
     ret = FsHvbConstructVerityTarget(&target, devName, nullptr);
     EXPECT_EQ(ret, -1);
 
     cert.image_len = 512;
     cert.data_block_size = 0;
+    FsHvbDestoryVerityTarget(&target);
     ret = FsHvbConstructVerityTarget(&target, devName, &cert);
     EXPECT_EQ(ret, -1);
     cert.data_block_size = 8;
     cert.hash_block_size = 0;
+    FsHvbDestoryVerityTarget(&target);
     ret = FsHvbConstructVerityTarget(&target, devName, &cert);
     EXPECT_EQ(ret, -1);
 
     cert.hash_block_size = 8;
     cert.hashtree_offset = 16;
     cert.hash_algo = 4;
+    FsHvbDestoryVerityTarget(&target);
     ret = FsHvbConstructVerityTarget(&target, devName, &cert);
     EXPECT_EQ(ret, -1);
 
@@ -229,20 +259,24 @@ HWTEST_F(FsHvbUnitTest, Init_FsHvbConstructVerityTarget_001, TestSize.Level0)
     cert.fec_size = 1;
     cert.fec_num_roots = 1;
     cert.fec_offset = 8;
+    FsHvbDestoryVerityTarget(&target);
     ret = FsHvbConstructVerityTarget(&target, devName, &cert);
     EXPECT_EQ(ret, 0);
 
     cert.hash_algo = 2;
+    FsHvbDestoryVerityTarget(&target);
     ret = FsHvbConstructVerityTarget(&target, devName, &cert);
     EXPECT_EQ(ret, 0);
+    FsHvbDestoryVerityTarget(&target);
 }
 
 HWTEST_F(FsHvbUnitTest, Init_FsHvbDestoryVerityTarget_001, TestSize.Level0)
 {
-    DmVerityTarget target;
+    DmVerityTarget target = {};
 
     target.paras = static_cast<char *>(calloc(1, 10));
     EXPECT_NE(target.paras, nullptr);
+    FsHvbDestoryVerityTarget(&target);
     FsHvbDestoryVerityTarget(&target);
 }
 
@@ -269,6 +303,7 @@ HWTEST_F(FsHvbUnitTest, Init_VerifyExtHvbImage_001, TestSize.Level0)
     unsetenv("VERIFY_VALUE");
     unsetenv("HASH_VALUE");
     unsetenv("FSDM_VALUE");
+    free(outPath);
 }
 
 HWTEST_F(FsHvbUnitTest, Init_CheckAndGetExt4Size_001, TestSize.Level0)
@@ -318,7 +353,7 @@ HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_001, TestSize.Level0)
     void *buf = malloc(1);
     uint64_t outNumRead;
     ret = ops->read_partition(ops, "boot_not_exit", 0, 1, buf, &outNumRead);
-    EXPECT_EQ(ret, HVB_IO_ERROR_IO);
+    EXPECT_EQ(ret, HVB_IO_ERROR_OOM);
     free(buf);
 }
 
@@ -395,5 +430,835 @@ HWTEST_F(FsHvbUnitTest, Init_HvbGetSizeOfPartition_001, TestSize.Level0)
     EXPECT_EQ(ret, HVB_IO_ERROR_IO);
     ret = ops->get_partiton_size(ops, "boot", &size);
     EXPECT_EQ(ret, HVB_IO_OK);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_HvbReadLockState_002, TestSize.Level0)
+{
+    struct hvb_ops *ops = FsHvbGetOps();
+    bool locked;
+    int ret = ops->read_lock_state(nullptr, &locked);
+    EXPECT_EQ(ret, HVB_IO_ERROR_IO);
+    ret = ops->read_lock_state(ops, nullptr);
+    EXPECT_EQ(ret, HVB_IO_ERROR_IO);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbConstructVerityTarget_002, TestSize.Level0)
+{
+    DmVerityTarget target = {};
+    const char *devName = "test";
+    struct hvb_cert cert = {};
+    uint8_t digest = 53;
+    uint8_t salt = 55;
+
+    cert.image_len = 512;
+    cert.data_block_size = 8;
+    cert.hash_block_size = 8;
+    cert.hashtree_offset = 16;
+    cert.hash_algo = 3;
+    cert.hash_payload.digest = &digest;
+    cert.digest_size = 1;
+    cert.hash_payload.salt = &salt;
+    cert.salt_size = 1;
+    cert.fec_size = 0;
+
+    FsHvbDestoryVerityTarget(&target);
+    int ret = FsHvbConstructVerityTarget(&target, devName, &cert);
+    EXPECT_EQ(ret, 0);
+    FsHvbDestoryVerityTarget(&target);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbInit_003, TestSize.Level0)
+{
+    const char *cmdLine;
+    setenv("VERIFY_VALUE", "Succeed", 1);
+    setenv("HASH_VALUE", "AllSucceed", 1);
+    cmdLine = "ohos.boot.hvb.hash_algo=sha256 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    cmdLine = "ohos.boot.hvb.digest=01 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    int ret = FsHvbInit(MAIN_HVB);
+    EXPECT_EQ(ret, 0);
+
+    ret = FsHvbInit(MAIN_HVB);
+    EXPECT_EQ(ret, 0);
+
+    remove(BOOT_CMD_LINE);
+    FsHvbFinal(MAIN_HVB);
+    unsetenv("VERIFY_VALUE");
+    unsetenv("HASH_VALUE");
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbInit_004, TestSize.Level0)
+{
+    const char *cmdLine;
+    setenv("VERIFY_VALUE", "Succeed", 1);
+    setenv("HASH_VALUE", "AllSucceed", 1);
+    cmdLine = "ohos.boot.hvb.hash_algo=sha256 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    cmdLine = "ohos.boot.hvb.digest=02 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    int ret = FsHvbInit(MAIN_HVB);
+    EXPECT_EQ(ret, -1);
+
+    remove(BOOT_CMD_LINE);
+    unsetenv("VERIFY_VALUE");
+    unsetenv("HASH_VALUE");
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbFinal_002, TestSize.Level0)
+{
+    int ret = FsHvbFinal((InitHvbType)99);
+    EXPECT_EQ(ret, -1);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_CheckAndGetExtheaderSize_002, TestSize.Level0)
+{
+    uint64_t imageSize = 0;
+    ExtheaderV1 header = {};
+    header.magicNumber = EXTHDR_MAGIC;
+    header.partSize = 4096;
+
+    FILE *fp = tmpfile();
+    EXPECT_NE(fp, nullptr);
+    fwrite(&header, sizeof(header), 1, fp);
+    fflush(fp);
+    int fd = fileno(fp);
+    bool ret = CheckAndGetExtheaderSize(fd, 0, &imageSize, "test");
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(imageSize, 4096);
+
+    header.magicNumber = 0;
+    rewind(fp);
+    fwrite(&header, sizeof(header), 1, fp);
+    fflush(fp);
+    ret = CheckAndGetExtheaderSize(fd, 0, &imageSize, "test");
+    EXPECT_FALSE(ret);
+
+    fclose(fp);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbConstructVerityTarget_003, TestSize.Level0)
+{
+    DmVerityTarget target = {};
+    const char *devName = "test";
+    struct hvb_cert cert = {};
+    uint8_t digest = 53;
+    uint8_t salt = 55;
+
+    cert.image_len = 512;
+    cert.data_block_size = 8;
+    cert.hash_block_size = 8;
+    cert.hashtree_offset = 16;
+    cert.hash_algo = 0;
+    cert.hash_payload.digest = &digest;
+    cert.digest_size = 1;
+    cert.hash_payload.salt = &salt;
+    cert.salt_size = 1;
+    cert.fec_size = 1;
+    cert.fec_num_roots = 1;
+    cert.fec_offset = 8;
+    cert.data_block_size = 0;
+
+    FsHvbDestoryVerityTarget(&target);
+    int ret = FsHvbConstructVerityTarget(&target, devName, &cert);
+    EXPECT_EQ(ret, -1);
+    FsHvbDestoryVerityTarget(&target);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbConstructVerityTarget_005, TestSize.Level0)
+{
+    DmVerityTarget target = {};
+    const char *devName = "/dev/block/test";
+    struct hvb_cert cert = {};
+    uint8_t digest = 53;
+    uint8_t salt = 55;
+
+    cert.image_len = 512;
+    cert.data_block_size = 8;
+    cert.hash_block_size = 8;
+    cert.hashtree_offset = 16;
+    cert.hash_algo = 0;
+    cert.hash_payload.digest = &digest;
+    cert.digest_size = 1;
+    cert.hash_payload.salt = &salt;
+    cert.salt_size = 1;
+    cert.fec_size = 0;
+
+    FsHvbDestoryVerityTarget(&target);
+    int ret = FsHvbConstructVerityTarget(&target, devName, &cert);
+    EXPECT_EQ(ret, 0);
+    FsHvbDestoryVerityTarget(&target);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbDestoryVerityTarget_002, TestSize.Level0)
+{
+    FsHvbDestoryVerityTarget(nullptr);
+
+    DmVerityTarget target = {};
+    FsHvbDestoryVerityTarget(&target);
+    FsHvbDestoryVerityTarget(&target);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbGetValueFromCmdLine_002, TestSize.Level0)
+{
+    char hashAlg[32] = {0};
+
+    const char *cmdLine = "ohos.boot.hvb.hash_algo=sha256 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    int ret = FsHvbGetValueFromCmdLine(&hashAlg[0], sizeof(hashAlg), "ohos.boot.hvb.notexist");
+    EXPECT_NE(ret, 0);
+
+    remove(BOOT_CMD_LINE);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_VerifyExtHvbImage_002, TestSize.Level0)
+{
+    const char *devPath = "/dev/block/loop0";
+    char *outPath = nullptr;
+
+    setenv("VERIFY_VALUE", "Succeed", 1);
+    setenv("HASH_VALUE", "AllSucceed", 1);
+    const char *cmdLine = "ohos.boot.hvb.ext_rvt=01 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+
+    int ret = VerifyExtHvbImage(devPath, "notexist", &outPath);
+    EXPECT_NE(ret, 0);
+
+    remove(BOOT_CMD_LINE);
+    unsetenv("VERIFY_VALUE");
+    unsetenv("HASH_VALUE");
+    free(outPath);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_002, TestSize.Level0)
+{
+    struct hvb_ops *ops = FsHvbGetOps();
+    void *buf = malloc(1);
+    uint64_t outNumRead;
+    int ret = ops->read_partition(ops, "module_update", 0, 1, buf, &outNumRead);
+    EXPECT_EQ(ret, HVB_IO_ERROR_IO);
+    free(buf);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_003, TestSize.Level0)
+{
+    struct hvb_ops *ops = FsHvbGetOps();
+    uint64_t outNumRead;
+    const char *path = "/data/init_ut/libfs_hvb/module.img";
+    CheckAndCreateDir(path);
+    FILE *fp = fopen(path, "wb");
+    ASSERT_NE(fp, nullptr);
+    char data[SZ_2KB] = {0};
+    fwrite(data, 1, sizeof(data), fp);
+    fclose(fp);
+
+    void *buf = malloc(1);
+    int ret = ops->read_partition(ops, "module_update", 0, 1, buf, &outNumRead);
+    EXPECT_EQ(ret, HVB_IO_OK);
+    free(buf);
+    remove(path);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_004, TestSize.Level0)
+{
+    struct hvb_ops *ops = FsHvbGetOps();
+    uint64_t outNumRead;
+    const char *path = "/data/init_ut/libfs_hvb/module.img";
+    CheckAndCreateDir(path);
+    FILE *fp = fopen(path, "wb");
+    ASSERT_NE(fp, nullptr);
+    char data[SZ_2KB] = {0};
+    fwrite(data, 1, sizeof(data), fp);
+    fclose(fp);
+
+    void *buf = malloc(1);
+    int ret = ops->read_partition(ops, "module_update", -1, 1, buf, &outNumRead);
+    EXPECT_EQ(ret, HVB_IO_OK);
+    free(buf);
+    remove(path);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_005, TestSize.Level0)
+{
+    struct hvb_ops *ops = FsHvbGetOps();
+    uint64_t outNumRead;
+    const char *path = "/data/init_ut/libfs_hvb/module.img";
+    CheckAndCreateDir(path);
+    FILE *fp = fopen(path, "wb");
+    ASSERT_NE(fp, nullptr);
+    char fileData[SZ_4KB + sizeof(ExtheaderV1)] = {0};
+    struct erofs_super_block *erofs = (struct erofs_super_block *)&fileData[SZ_1KB];
+    erofs->magic = EROFS_SUPER_MAGIC;
+    erofs->blocks = 1;
+    ExtheaderV1 *ext = (ExtheaderV1 *)&fileData[SZ_4KB];
+    ext->magicNumber = EXTHDR_MAGIC;
+    ext->partSize = 4096;
+    fwrite(fileData, 1, sizeof(fileData), fp);
+    fclose(fp);
+
+    void *buf = malloc(1);
+    int ret = ops->read_partition(ops, "module_update", -1, 1, buf, &outNumRead);
+    EXPECT_EQ(ret, HVB_IO_OK);
+    free(buf);
+    remove(path);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_006, TestSize.Level0)
+{
+    struct hvb_ops *ops = FsHvbGetOps();
+    uint64_t outNumRead;
+    const char *path = "/data/init_ut/libfs_hvb/module.img";
+    CheckAndCreateDir(path);
+    FILE *fp = fopen(path, "wb");
+    ASSERT_NE(fp, nullptr);
+    char fileData[SZ_4KB + sizeof(ExtheaderV1)] = {0};
+    ext4_super_block *ext4 = (ext4_super_block *)&fileData[SZ_1KB];
+    ext4->s_magic = EXT4_SUPER_MAGIC;
+    ext4->s_blocks_count_lo = 1;
+    ExtheaderV1 *ext = (ExtheaderV1 *)&fileData[SZ_4KB];
+    ext->magicNumber = EXTHDR_MAGIC;
+    ext->partSize = 4096;
+    fwrite(fileData, 1, sizeof(fileData), fp);
+    fclose(fp);
+
+    void *buf = malloc(1);
+    int ret = ops->read_partition(ops, "module_update", -1, 1, buf, &outNumRead);
+    EXPECT_EQ(ret, HVB_IO_OK);
+    free(buf);
+    remove(path);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbInit_005, TestSize.Level0)
+{
+    int ret = FsHvbInit((InitHvbType)99);
+    EXPECT_NE(ret, 0);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbInit_006, TestSize.Level0)
+{
+    char longDigest[257];
+    memset_s(longDigest, sizeof(longDigest), '0', 256);
+    longDigest[256] = '\0';
+    char cmdLine[300];
+    snprintf_s(cmdLine, sizeof(cmdLine), sizeof(cmdLine) - 1, "ohos.boot.hvb.digest=%s ", longDigest);
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+
+    setenv("VERIFY_VALUE", "Succeed", 1);
+    setenv("HASH_VALUE", "AllSucceed", 1);
+    const char *hashCmd = "ohos.boot.hvb.hash_algo=sha256 ";
+    CreateTestFile(BOOT_CMD_LINE, hashCmd);
+
+    int ret = FsHvbInit(MAIN_HVB);
+    EXPECT_NE(ret, 0);
+
+    remove(BOOT_CMD_LINE);
+    unsetenv("VERIFY_VALUE");
+    unsetenv("HASH_VALUE");
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbSetupHashtree_002, TestSize.Level0)
+{
+    FstabItem fsItem;
+    char testStr[10] = "testStr";
+    char testDev[] = "/dev/block/platform/xxx/by-name/system";
+    fsItem.deviceName = (char *)malloc(sizeof(testDev) + 1);
+    memcpy_s(fsItem.deviceName, sizeof(testDev) + 1, &testDev[0], sizeof(testDev));
+    fsItem.mountPoint = &testStr[0];
+    fsItem.fsType = &testStr[0];
+    fsItem.mountOptions = &testStr[0];
+    fsItem.fsManagerFlags = 1;
+    fsItem.next = nullptr;
+
+    setenv("VERIFY_VALUE", "Succeed", 1);
+    setenv("HASH_VALUE", "AllSucceed", 1);
+    const char *cmdLine = "ohos.boot.hvb.hash_algo=sha256 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    cmdLine = "ohos.boot.hvb.digest=01 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+
+    FsHvbInit(MAIN_HVB);
+    int ret = FsHvbSetupHashtree(&fsItem);
+    EXPECT_NE(ret, 0);
+
+    FsHvbFinal(MAIN_HVB);
+    remove(BOOT_CMD_LINE);
+    free(fsItem.deviceName);
+    unsetenv("VERIFY_VALUE");
+    unsetenv("HASH_VALUE");
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbConstructVerityTarget_006, TestSize.Level0)
+{
+    DmVerityTarget target = {};
+    const char *devName = "test";
+    struct hvb_cert cert = {};
+    uint8_t bigDigest[200] = {0};
+    uint8_t bigSalt[200] = {0};
+
+    cert.image_len = 512;
+    cert.data_block_size = 8;
+    cert.hash_block_size = 8;
+    cert.hashtree_offset = 16;
+    cert.hash_algo = 0;
+    cert.hash_payload.digest = bigDigest;
+    cert.digest_size = 200;
+    cert.hash_payload.salt = bigSalt;
+    cert.salt_size = 200;
+    cert.fec_size = 0;
+
+    FsHvbDestoryVerityTarget(&target);
+    int ret = FsHvbConstructVerityTarget(&target, devName, &cert);
+    EXPECT_EQ(ret, -1);
+    FsHvbDestoryVerityTarget(&target);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_VerifyExtHvbImage_003, TestSize.Level0)
+{
+    const char *devPath = "/dev/block/loop0";
+    char *outPath = nullptr;
+    setenv("VERIFY_VALUE", "Succeed", 1);
+    setenv("HASH_VALUE", "AllSucceed", 1);
+    setenv("FSDM_VALUE", "CreateFail", 1);
+    const char *cmdLine = "ohos.boot.hvb.ext_rvt=01 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+
+    int ret = VerifyExtHvbImage(devPath, "boot", &outPath);
+    EXPECT_NE(ret, 0);
+
+    remove(BOOT_CMD_LINE);
+    unsetenv("VERIFY_VALUE");
+    unsetenv("HASH_VALUE");
+    unsetenv("FSDM_VALUE");
+    free(outPath);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_VerifyExtHvbImage_004, TestSize.Level0)
+{
+    const char *devPath = "/dev/block/loop0";
+    char *outPath = nullptr;
+    setenv("VERIFY_VALUE", "Succeed", 1);
+    setenv("HASH_VALUE", "AllSucceed", 1);
+    setenv("FSDM_VALUE", "InitFail", 1);
+    const char *cmdLine = "ohos.boot.hvb.ext_rvt=01 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+
+    int ret = VerifyExtHvbImage(devPath, "boot", &outPath);
+    EXPECT_NE(ret, 0);
+
+    remove(BOOT_CMD_LINE);
+    unsetenv("VERIFY_VALUE");
+    unsetenv("HASH_VALUE");
+    unsetenv("FSDM_VALUE");
+    free(outPath);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_VerifyExtHvbImage_005, TestSize.Level0)
+{
+    char longDevPath[FS_HVB_MAX_PATH_LEN + 10];
+    memset_s(longDevPath, sizeof(longDevPath), 'a', sizeof(longDevPath) - 1);
+    longDevPath[sizeof(longDevPath) - 1] = '\0';
+    char *outPath = nullptr;
+
+    setenv("VERIFY_VALUE", "Succeed", 1);
+    setenv("HASH_VALUE", "AllSucceed", 1);
+    const char *cmdLine = "ohos.boot.hvb.ext_rvt=01 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+
+    int ret = VerifyExtHvbImage(longDevPath, "boot", &outPath);
+    EXPECT_NE(ret, 0);
+
+    remove(BOOT_CMD_LINE);
+    unsetenv("VERIFY_VALUE");
+    unsetenv("HASH_VALUE");
+    free(outPath);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_CheckAndGetExtheaderSize_003, TestSize.Level0)
+{
+    uint64_t imageSize = 0;
+    FILE *fp = tmpfile();
+    ASSERT_NE(fp, nullptr);
+    char small = 'x';
+    fwrite(&small, 1, 1, fp);
+    fflush(fp);
+    int fd = fileno(fp);
+    bool ret = CheckAndGetExtheaderSize(fd, 0, &imageSize, "test");
+    EXPECT_FALSE(ret);
+    fclose(fp);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbSetupHashtree_003, TestSize.Level0)
+{
+    FstabItem fsItem;
+    char testStr[10] = "testStr";
+    char testDev[] = "/dev/block/platform/xxx/by-name/boot";
+    fsItem.deviceName = (char *)malloc(sizeof(testDev) + 1);
+    memcpy_s(fsItem.deviceName, sizeof(testDev) + 1, &testDev[0], sizeof(testDev));
+    fsItem.mountPoint = &testStr[0];
+    fsItem.fsType = &testStr[0];
+    fsItem.mountOptions = &testStr[0];
+    fsItem.fsManagerFlags = 1;
+    fsItem.next = nullptr;
+
+    setenv("VERIFY_VALUE", "Succeed", 1);
+    setenv("HASH_VALUE", "AllSucceed", 1);
+    setenv("CERT_VALUE", "Fail", 1);
+    const char *cmdLine = "ohos.boot.hvb.hash_algo=sha256 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    cmdLine = "ohos.boot.hvb.digest=01 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+
+    FsHvbInit(MAIN_HVB);
+    int ret = FsHvbSetupHashtree(&fsItem);
+    EXPECT_NE(ret, 0);
+
+    FsHvbFinal(MAIN_HVB);
+    remove(BOOT_CMD_LINE);
+    free(fsItem.deviceName);
+    unsetenv("VERIFY_VALUE");
+    unsetenv("HASH_VALUE");
+    unsetenv("CERT_VALUE");
+}
+
+HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_008, TestSize.Level0)
+{
+    struct hvb_ops *ops = FsHvbGetOps();
+    void *buf = malloc(1);
+    uint64_t outNumRead;
+    const char *path = "/data/init_ut/libfs_hvb/module.img";
+    CheckAndCreateDir(path);
+    FILE *fp = fopen(path, "wb");
+    ASSERT_NE(fp, nullptr);
+    char small[100] = {0};
+    fwrite(small, 1, sizeof(small), fp);
+    fclose(fp);
+
+    int ret = ops->read_partition(ops, "module_update", -1, 1, buf, &outNumRead);
+    EXPECT_EQ(ret, HVB_IO_ERROR_IO);
+
+    remove(path);
+    free(buf);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_009, TestSize.Level0)
+{
+    struct hvb_ops *ops = FsHvbGetOps();
+    const char *path = "/data/init_ut/libfs_hvb/module.img";
+    CheckAndCreateDir(path);
+    FILE *fp = fopen(path, "wb");
+    ASSERT_NE(fp, nullptr);
+    char small[50] = {0};
+    fwrite(small, 1, sizeof(small), fp);
+    fclose(fp);
+
+    void *buf = malloc(100);
+    uint64_t outNumRead;
+    int ret = ops->read_partition(ops, "module_update", 0, 100, buf, &outNumRead);
+    EXPECT_EQ(ret, HVB_IO_ERROR_IO);
+    free(buf);
+    remove(path);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_012, TestSize.Level0)
+{
+    struct hvb_ops *ops = FsHvbGetOps();
+    int ret = ops->read_partition(ops, nullptr, 0, 1, nullptr, nullptr);
+    EXPECT_EQ(ret, HVB_IO_ERROR_IO);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_013, TestSize.Level0)
+{
+    struct hvb_ops *ops = FsHvbGetOps();
+    const char *path = "/data/init_ut/libfs_hvb/module.img";
+    CheckAndCreateDir(path);
+    FILE *fp = fopen(path, "wb");
+    ASSERT_NE(fp, nullptr);
+    char fileData[SZ_4KB + sizeof(ExtheaderV1)] = {0};
+    struct erofs_super_block *erofs = (struct erofs_super_block *)&fileData[SZ_1KB];
+    erofs->magic = EROFS_SUPER_MAGIC;
+    erofs->blocks = 1;
+    ExtheaderV1 *ext = (ExtheaderV1 *)&fileData[SZ_4KB];
+    ext->magicNumber = 0;
+    ext->partSize = 4096;
+    fwrite(fileData, 1, sizeof(fileData), fp);
+    fclose(fp);
+
+    void *buf = malloc(1);
+    uint64_t outNumRead;
+    int ret = ops->read_partition(ops, "module_update", -1, 1, buf, &outNumRead);
+    EXPECT_EQ(ret, HVB_IO_OK);
+    free(buf);
+    remove(path);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_CheckAndGetExt4Size_002, TestSize.Level0)
+{
+    uint64_t imageSize;
+    bool ret = CheckAndGetExt4Size(nullptr, &imageSize, "boot");
+    EXPECT_FALSE(ret);
+    ret = CheckAndGetExt4Size("x", nullptr, "boot");
+    EXPECT_FALSE(ret);
+    ret = CheckAndGetExt4Size("x", &imageSize, nullptr);
+    EXPECT_FALSE(ret);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_CheckAndGetErofsSize_002, TestSize.Level0)
+{
+    uint64_t imageSize;
+    bool ret = CheckAndGetErofsSize(nullptr, &imageSize, "boot");
+    EXPECT_FALSE(ret);
+    ret = CheckAndGetErofsSize("x", nullptr, "boot");
+    EXPECT_FALSE(ret);
+    ret = CheckAndGetErofsSize("x", &imageSize, nullptr);
+    EXPECT_FALSE(ret);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_CheckAndGetExtheaderSize_004, TestSize.Level0)
+{
+    uint64_t imageSize = 0;
+    bool ret = CheckAndGetExtheaderSize(0, 0, &imageSize, nullptr);
+    EXPECT_FALSE(ret);
+    ret = CheckAndGetExtheaderSize(-1, 0, &imageSize, "test");
+    EXPECT_FALSE(ret);
+    ret = CheckAndGetExtheaderSize(0, 0, nullptr, "test");
+    EXPECT_FALSE(ret);
+    int pipefd[2];
+    if (pipe(pipefd) == 0) {
+        ret = CheckAndGetExtheaderSize(pipefd[0], 0, &imageSize, "test");
+        EXPECT_FALSE(ret);
+        close(pipefd[0]);
+        close(pipefd[1]);
+    }
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbConstructVerityTarget_007, TestSize.Level0)
+{
+    DmVerityTarget target = {};
+    const char *devName = "test";
+    struct hvb_cert cert = {};
+    uint8_t digest = 53;
+    uint8_t salt = 55;
+
+    cert.image_len = 512;
+    cert.data_block_size = 0;
+    cert.hash_block_size = 8;
+    cert.hashtree_offset = 16;
+    cert.hash_algo = 0;
+    cert.hash_payload.digest = &digest;
+    cert.digest_size = 1;
+    cert.hash_payload.salt = &salt;
+    cert.salt_size = 1;
+    cert.fec_size = 1;
+    cert.fec_num_roots = 1;
+    cert.fec_offset = 8;
+
+    FsHvbDestoryVerityTarget(&target);
+    int ret = FsHvbConstructVerityTarget(&target, devName, &cert);
+    EXPECT_EQ(ret, -1);
+    FsHvbDestoryVerityTarget(&target);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_010, TestSize.Level0)
+{
+    struct hvb_ops *ops = FsHvbGetOps();
+    void *buf = malloc(1);
+    uint64_t outNumRead;
+    setenv("BOOTSLOTS_VALUE", "2", 1);
+    setenv("CURRENTSLOT_VALUE", "1", 1);
+    int ret = ops->read_partition(ops, "nonexist", 0, 1, buf, &outNumRead);
+    EXPECT_EQ(ret, HVB_IO_ERROR_OOM);
+    unsetenv("BOOTSLOTS_VALUE");
+    unsetenv("CURRENTSLOT_VALUE");
+    free(buf);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_011, TestSize.Level0)
+{
+    struct hvb_ops *ops = FsHvbGetOps();
+    void *buf = malloc(1);
+    uint64_t outNumRead;
+    setenv("BOOTSLOTS_VALUE", "2", 1);
+    setenv("CURRENTSLOT_VALUE", "0", 1);
+    int ret = ops->read_partition(ops, "nonexist", 0, 1, buf, &outNumRead);
+    EXPECT_EQ(ret, HVB_IO_ERROR_OOM);
+    unsetenv("BOOTSLOTS_VALUE");
+    unsetenv("CURRENTSLOT_VALUE");
+    free(buf);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_014, TestSize.Level0)
+{
+    struct hvb_ops *ops = FsHvbGetOps();
+    void *buf = malloc(1);
+    uint64_t outNumRead;
+    setenv("BOOTSLOTS_VALUE", "2", 1);
+    setenv("CURRENTSLOT_VALUE", "999", 1);
+    int ret = ops->read_partition(ops, "nonexist", 0, 1, buf, &outNumRead);
+    EXPECT_EQ(ret, HVB_IO_ERROR_OOM);
+    unsetenv("BOOTSLOTS_VALUE");
+    unsetenv("CURRENTSLOT_VALUE");
+    free(buf);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbSetupHashtree_004, TestSize.Level0)
+{
+    FstabItem fsItem;
+    char testStr[10] = "testStr";
+    char testDev[] = "/dev/block/platform/xxx/by-name/boot_a";
+    fsItem.deviceName = (char *)malloc(sizeof(testDev) + 1);
+    memcpy_s(fsItem.deviceName, sizeof(testDev) + 1, &testDev[0], sizeof(testDev));
+    fsItem.mountPoint = &testStr[0];
+    fsItem.fsType = &testStr[0];
+    fsItem.mountOptions = &testStr[0];
+    fsItem.fsManagerFlags = 1;
+    fsItem.next = nullptr;
+
+    setenv("VERIFY_VALUE", "Succeed", 1);
+    setenv("HASH_VALUE", "AllSucceed", 1);
+    setenv("FSDM_VALUE", "AllSucceed", 1);
+    setenv("BOOTSLOTS_VALUE", "2", 1);
+    const char *cmdLine = "ohos.boot.hvb.hash_algo=sha256 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    cmdLine = "ohos.boot.hvb.digest=01 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+
+    FsHvbInit(MAIN_HVB);
+    int ret = FsHvbSetupHashtree(&fsItem);
+    EXPECT_EQ(ret, 0);
+
+    FsHvbFinal(MAIN_HVB);
+    remove(BOOT_CMD_LINE);
+    free(fsItem.deviceName);
+    unsetenv("VERIFY_VALUE");
+    unsetenv("HASH_VALUE");
+    unsetenv("FSDM_VALUE");
+    unsetenv("BOOTSLOTS_VALUE");
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbSetupHashtree_005, TestSize.Level0)
+{
+    FstabItem fsItem;
+    char testStr[10] = "testStr";
+    char testDev[] = "/dev/block/platform/xxx/by-name/boot_b";
+    fsItem.deviceName = (char *)malloc(sizeof(testDev) + 1);
+    memcpy_s(fsItem.deviceName, sizeof(testDev) + 1, &testDev[0], sizeof(testDev));
+    fsItem.mountPoint = &testStr[0];
+    fsItem.fsType = &testStr[0];
+    fsItem.mountOptions = &testStr[0];
+    fsItem.fsManagerFlags = 1;
+    fsItem.next = nullptr;
+
+    setenv("VERIFY_VALUE", "Succeed", 1);
+    setenv("HASH_VALUE", "AllSucceed", 1);
+    setenv("FSDM_VALUE", "AllSucceed", 1);
+    setenv("BOOTSLOTS_VALUE", "2", 1);
+    const char *cmdLine = "ohos.boot.hvb.hash_algo=sha256 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    cmdLine = "ohos.boot.hvb.digest=01 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+
+    FsHvbInit(MAIN_HVB);
+    int ret = FsHvbSetupHashtree(&fsItem);
+    EXPECT_EQ(ret, 0);
+
+    FsHvbFinal(MAIN_HVB);
+    remove(BOOT_CMD_LINE);
+    free(fsItem.deviceName);
+    unsetenv("VERIFY_VALUE");
+    unsetenv("HASH_VALUE");
+    unsetenv("FSDM_VALUE");
+    unsetenv("BOOTSLOTS_VALUE");
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbSetupHashtree_006, TestSize.Level0)
+{
+    FstabItem fsItem;
+    char testStr[10] = "testStr";
+    char testDev[] = "/dev/block/platform/xxx/by-name/ab";
+    fsItem.deviceName = (char *)malloc(sizeof(testDev) + 1);
+    memcpy_s(fsItem.deviceName, sizeof(testDev) + 1, &testDev[0], sizeof(testDev));
+    fsItem.mountPoint = &testStr[0];
+    fsItem.fsType = &testStr[0];
+    fsItem.mountOptions = &testStr[0];
+    fsItem.fsManagerFlags = 1;
+    fsItem.next = nullptr;
+
+    setenv("VERIFY_VALUE", "Succeed", 1);
+    setenv("HASH_VALUE", "AllSucceed", 1);
+    setenv("BOOTSLOTS_VALUE", "2", 1);
+    const char *cmdLine = "ohos.boot.hvb.hash_algo=sha256 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+    cmdLine = "ohos.boot.hvb.digest=01 ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine);
+
+    FsHvbInit(MAIN_HVB);
+    int ret = FsHvbSetupHashtree(&fsItem);
+    EXPECT_NE(ret, 0);
+
+    FsHvbFinal(MAIN_HVB);
+    remove(BOOT_CMD_LINE);
+    free(fsItem.deviceName);
+    unsetenv("VERIFY_VALUE");
+    unsetenv("HASH_VALUE");
+    unsetenv("BOOTSLOTS_VALUE");
+}
+
+HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_015, TestSize.Level0)
+{
+    struct hvb_ops *ops = FsHvbGetOps();
+    void *buf = malloc(1);
+    uint64_t outNumRead;
+    int ret = ops->read_partition(ops, "patch_test", 0, 1, buf, &outNumRead);
+    EXPECT_EQ(ret, HVB_IO_ERROR_OOM);
+    free(buf);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_016, TestSize.Level0)
+{
+    struct hvb_ops *ops = FsHvbGetOps();
+    void *buf = malloc(1);
+    int ret = ops->read_partition(ops, "nonexist", 0, 1, buf, nullptr);
+    EXPECT_EQ(ret, HVB_IO_ERROR_IO);
+    free(buf);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_HvbReadFromPartition_017, TestSize.Level0)
+{
+    struct hvb_ops *ops = FsHvbGetOps();
+    void *buf = malloc(1);
+    uint64_t outNumRead;
+    char longName[257];
+    memset_s(longName, sizeof(longName), 'a', 256);
+    longName[256] = '\0';
+    int ret = ops->read_partition(ops, longName, 0, 1, buf, &outNumRead);
+    EXPECT_EQ(ret, HVB_IO_ERROR_OOM);
+    free(buf);
+}
+
+HWTEST_F(FsHvbUnitTest, Init_FsHvbConstructVerityTarget_008, TestSize.Level0)
+{
+    DmVerityTarget target = {};
+    const char *devName = "test";
+    struct hvb_cert cert = {};
+    uint8_t digest = 53;
+    uint8_t salt = 55;
+
+    cert.image_len = 512;
+    cert.data_block_size = 8;
+    cert.hash_block_size = 0;
+    cert.hashtree_offset = 16;
+    cert.hash_algo = 0;
+    cert.hash_payload.digest = &digest;
+    cert.digest_size = 1;
+    cert.hash_payload.salt = &salt;
+    cert.salt_size = 1;
+    cert.fec_size = 1;
+    cert.fec_num_roots = 1;
+    cert.fec_offset = 8;
+
+    FsHvbDestoryVerityTarget(&target);
+    int ret = FsHvbConstructVerityTarget(&target, devName, &cert);
+    EXPECT_EQ(ret, -1);
+    FsHvbDestoryVerityTarget(&target);
 }
 }
