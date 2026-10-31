@@ -1277,8 +1277,8 @@ HWTEST_F(RemountOverlayUnitTest, Init_RemountRofsOverlay_011_perPartitionNotActi
     RemountSetStubMntEntries(nullptr, 0);
     int ret = RemountRofsOverlay();
     EXPECT_EQ(ret, REMOUNT_FAIL);
-    EXPECT_NE(GetRemountResult(), REMOUNT_SUCC);
     RemountSetStubResult(STUB_STAT, 0);
+    EXPECT_NE(GetRemountResult(), REMOUNT_SUCC);
     DeleteRemountResultFlag();
 }
 }
