@@ -68,6 +68,10 @@ extern "C" {
 #define MAX_WRITEPID_FILES 120
 #define MAX_ENV_VALUE 128
 
+#define KERNEL_PERM_PRE "encaps"
+#define OHOS_KERNEL_PERM_COUNT_KEY "ohos.encaps.count"
+#define KERNEL_PERM_MAX_COUNT 64
+
 #define FULL_CAP 0xFFFFFFFF
 // init
 #define DEFAULT_UMASK_INIT 022

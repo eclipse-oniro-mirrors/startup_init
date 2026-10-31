@@ -41,9 +41,6 @@
 #include "token_setproc.h"
 #include "nativetoken_kit.h"
 #include "cJSON.h"
-#define KERNEL_PERM_PRE "encaps"
-#define OHOS_KERNEL_PERM_COUNT_KEY "ohos.encaps.count"
-#define KERNEL_PERM_MAX_COUNT 64
 #endif
 #include "sandbox.h"
 #include "sandbox_namespace.h"
@@ -295,18 +292,14 @@ static int FillPermNameWithValue(PermNameWithValue *item, const cJSON *permItem)
 {
     if (cJSON_IsBool(permItem)) {
         item->permissionName = permItem->string;
-        item->types = 1; // bool: valueNum 1 means true, 0 means false
+        item->type = 1; // bool: valueNum 1 means true, 0 means false
         item->valueNum = cJSON_IsTrue(permItem) ? 1 : 0;
-        INIT_LOGI("kernel perm item name %s types %d valueNum %d", item->permissionName,
-            item->types, item->valueNum);
         return 1;
     }
     if (cJSON_IsNumber(permItem)) {
         item->permissionName = permItem->string;
-        item->types = 2; // int
+        item->type = 2; // int
         item->valueNum = permItem->valueint;
-        INIT_LOGI("kernel perm item name %s types %d valueNum %d", item->permissionName,
-            item->types, item->valueNum);
         return 1;
     }
     return 0;
@@ -316,8 +309,6 @@ static int ParseKernelPermItems(cJSON *permObj, PermNameWithValue *permList, int
 {
     int cnt = 0;
     cJSON *permItem = NULL;
-    INIT_LOGI("ParseKernelPermItems: %s has %d item(s), list limit %d", KERNEL_PERM_PRE,
-        cJSON_GetArraySize(permObj), listSize);
     cJSON_ArrayForEach(permItem, permObj) {
         if (cnt >= listSize) {
             break;
@@ -337,16 +328,15 @@ static int ParseKernelPermItems(cJSON *permObj, PermNameWithValue *permList, int
 static cJSON *GetKernelPermList(const char *kernelPermsStr, KernelPermissionList *kernPerms,
     PermNameWithValue *permList)
 {
-    kernPerms->cnt = 0;
+    kernPerms->permsNum = 0;
     kernPerms->perms = NULL;
     INIT_CHECK(kernelPermsStr != NULL, return NULL);
-    INIT_LOGI("GetKernelPermList: parse json %s", kernelPermsStr);
     cJSON *root = cJSON_Parse(kernelPermsStr);
     INIT_CHECK(root != NULL, return NULL);
     cJSON *permObj = cJSON_GetObjectItemCaseSensitive(root, KERNEL_PERM_PRE);
     if (permObj != NULL) {
-        kernPerms->cnt = ParseKernelPermItems(permObj, permList, KERNEL_PERM_MAX_COUNT);
-        kernPerms->perms = (kernPerms->cnt > 0) ? permList : NULL;
+        kernPerms->permsNum = ParseKernelPermItems(permObj, permList, KERNEL_PERM_MAX_COUNT - 1);
+        kernPerms->perms = (kernPerms->permsNum > 0) ? permList : NULL;
     }
     return root;
 }
@@ -367,11 +357,8 @@ void GetAccessToken(void)
                 apl = service->apl;
             }
             KernelPermissionList kernPerms = {0};
-            PermNameWithValue permList[KERNEL_PERM_MAX_COUNT];
+            PermNameWithValue permList[KERNEL_PERM_MAX_COUNT - 1];
             cJSON *kernelPermRoot = GetKernelPermList(service->kernelPerms, &kernPerms, permList);
-            INIT_LOGI("service %s kernel perm: json %s, cnt %d, root %s", service->name,
-                (service->kernelPerms != NULL) ? "configured" : "null", kernPerms.cnt,
-                (kernelPermRoot != NULL) ? "parsed" : "null");
             NativeTokenInfoParams nativeTokenInfoParams = {
                 .dcapsNum = service->capsArgs.count,
                 .permsNum = service->permArgs.count,
@@ -384,24 +371,9 @@ void GetAccessToken(void)
                 .uid = (int32_t)service->servPerm.uID,
                 .kernPerms = kernPerms,
             };
-            INIT_LOGI("ready to pass to ATM: svc %s, dcaps %d, perms %d, acls %d, uid %d, "
-                "kernPerms.cnt %d, kernPerms.ptr %s",
-                nativeTokenInfoParams.processName,
-                nativeTokenInfoParams.dcapsNum,
-                nativeTokenInfoParams.permsNum,
-                nativeTokenInfoParams.aclsNum,
-                nativeTokenInfoParams.uid,
-                nativeTokenInfoParams.kernPerms.cnt,
-                (nativeTokenInfoParams.kernPerms.perms != NULL) ? "valid" : "null");
-            for (int i = 0; i < kernPerms.cnt; i++) {
-                INIT_LOGI("service %s kernPerms[%d]: name %s, types %d, valueNum %d", service->name, i,
-                    (permList[i].permissionName != NULL) ? permList[i].permissionName : "null",
-                    permList[i].types, permList[i].valueNum);
-            }
             uint64_t tokenId = GetAccessTokenId(&nativeTokenInfoParams);
             if (kernelPermRoot != NULL) {
                 cJSON_Delete(kernelPermRoot);
-                INIT_LOGE("service %s kernel perm tree released after GetAccessTokenId", service->name);
             }
             INIT_CHECK_ONLY_ELOG(tokenId  != 0,
                 "gettotkenid failed, service \' %s \'", service->name);
