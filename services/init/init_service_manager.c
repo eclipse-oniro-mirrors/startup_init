@@ -1360,17 +1360,25 @@ void StartServiceByNameHighPriority(const char *servName)
 {
     // A failed start keeps the boost so the service
     // is still boosted whenever it is later started.
+    Service extraArgs = { 0 };
     Service *service = GetServiceByName(servName);
     if (service == NULL) {
-        ServiceArgs tmpArgs = { 0 };
         service = GetServiceByExtServName(servName, &tmpArgs);
-        FreeStringVector(tmpArgs.argv, tmpArgs.count);
     }
-    INIT_ERROR_CHECK(service != NULL, return,
-        "Cannot find service %s.service count %d", servName, g_serviceSpace.serviceCount);
+    INIT_ERROR_CHECK(service != NULL, FreeStringVector(extraArgs.argv, extraArgs.count);
+        return, "Cannot find service %s.service count %d", servName, g_serviceSpace.serviceCount);
     MarkServiceAsHighPriority(service);
     INIT_LOGI("StartServiceByNameHighPriority: %s marked as high priority", servName);
-    StartServiceByName(servName);
+
+    ServiceArgs *pathArgs = &service->pathArgs;
+    if (extraArgs.count != 0) {
+        pathArgs = &extraArgs;
+    }
+    if (ServiceStart(service, pathArgs) != SERVICE_SUCCESS) {
+        INIT_LOGE("Service %s start failed!", servName);
+    }
+    // After starting, clear the extra parameters.
+    FreeStringVector(extraArgs.argv, extraArgs.count);
 }
 
 void StartPersistentServiceByName(const char *servName)
