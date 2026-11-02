@@ -1360,7 +1360,7 @@ void StartServiceByNameHighPriority(const char *servName)
 {
     // A failed start keeps the boost so the service
     // is still boosted whenever it is later started.
-    Service extraArgs = { 0 };
+    ServiceArgs extraArgs = { 0 };
     Service *service = GetServiceByName(servName);
     if (service == NULL) {
         service = GetServiceByExtServName(servName, &extraArgs);
