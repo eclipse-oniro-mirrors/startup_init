@@ -1363,7 +1363,7 @@ void StartServiceByNameHighPriority(const char *servName)
     Service extraArgs = { 0 };
     Service *service = GetServiceByName(servName);
     if (service == NULL) {
-        service = GetServiceByExtServName(servName, &tmpArgs);
+        service = GetServiceByExtServName(servName, &extraArgs);
     }
     INIT_ERROR_CHECK(service != NULL, FreeStringVector(extraArgs.argv, extraArgs.count);
         return, "Cannot find service %s.service count %d", servName, g_serviceSpace.serviceCount);
