@@ -41,3 +41,4 @@ const.ohos.buildroothash=default
 persist.startup.bootcount=0
 persist.init.time.boot=0
 persist.init.time.shutdown=0
+persist.dupdate_engine.lastHotaInstallTime=1790784000000
