@@ -292,4 +292,85 @@ HWTEST_F(TraceUnitTest, TraceTest_011_NonDebuggableSkipsBootTrace, TestSize.Leve
     ExpectSystemParamEq("persist.hitrace.boot_trace.count", "2");
     ExpectSystemParamEq("debug.hitrace.boot_trace.active", "0");
 }
+
+/* ---- extra coverage: state/arg validation and broken config ---- */
+static void UtWriteParamSimple(const char *name, const char *value)
+{
+    uint32_t dataIndex = 0;
+    EXPECT_EQ(WriteParam(name, value, &dataIndex, 0), 0);
+}
+
+/* invalid cmd dispatch: empty args, early stop/interrupt, unknown cmd; none changes trace state */
+HWTEST_F(TraceUnitTest, TraceTest_012, TestSize.Level1)
+{
+    PluginExecCmdByName("init_trace", "");
+    UtWriteParamSimple("persist.init.trace.enabled", "1");
+    UtWriteParamSimple("debug.hitrace.boot_trace.active", "0");
+    PluginExecCmdByName("init_trace", "stop");
+    PluginExecCmdByName("init_trace", "1");
+    PluginExecCmdByName("init_trace", "ut_unknown_cmd");
+    ExpectSystemParamEq("persist.init.trace.enabled", "1");
+    ExpectSystemParamEq("debug.hitrace.boot_trace.active", "0");
+    UtWriteParamSimple("persist.init.trace.enabled", "0");
+}
+
+/* boot_trace with non-numeric count: count keeps unchanged */
+HWTEST_F(TraceUnitTest, TraceTest_013_BootTraceInvalidCount, TestSize.Level1)
+{
+    UtWriteParamSimple("persist.init.trace.enabled", "0");
+    UtWriteParamSimple("debug.hitrace.boot_trace.active", "0");
+    UtWriteParamSimple("persist.hitrace.boot_trace.count", "ut-not-a-number");
+    PluginExecCmdByName("init_trace", "boot_trace");
+    ExpectSystemParamEq("persist.hitrace.boot_trace.count", "ut-not-a-number");
+    ExpectSystemParamEq("debug.hitrace.boot_trace.active", "0");
+}
+
+/* boot_trace with count out of [1, 100]: count keeps unchanged */
+HWTEST_F(TraceUnitTest, TraceTest_014_BootTraceCountOutOfRange, TestSize.Level1)
+{
+    UtWriteParamSimple("persist.init.trace.enabled", "0");
+    UtWriteParamSimple("debug.hitrace.boot_trace.active", "0");
+    UtWriteParamSimple("persist.hitrace.boot_trace.count", "0");
+    PluginExecCmdByName("init_trace", "boot_trace");
+    ExpectSystemParamEq("persist.hitrace.boot_trace.count", "0");
+
+    UtWriteParamSimple("persist.hitrace.boot_trace.count", "101");
+    PluginExecCmdByName("init_trace", "boot_trace");
+    ExpectSystemParamEq("persist.hitrace.boot_trace.count", "101");
+    ExpectSystemParamEq("debug.hitrace.boot_trace.active", "0");
+}
+
+/* boot_trace when trace already active: count is not consumed */
+HWTEST_F(TraceUnitTest, TraceTest_015_BootTraceAlreadyActive, TestSize.Level1)
+{
+    UtWriteParamSimple("persist.init.trace.enabled", "0");
+    UtWriteParamSimple("persist.hitrace.boot_trace.count", "2");
+    UtWriteParamSimple("debug.hitrace.boot_trace.active", "1");
+    PluginExecCmdByName("init_trace", "boot_trace");
+    ExpectSystemParamEq("persist.hitrace.boot_trace.count", "2");
+    ExpectSystemParamEq("debug.hitrace.boot_trace.active", "1");
+    UtWriteParamSimple("debug.hitrace.boot_trace.active", "0");
+}
+
+/* start with a broken (invalid json) config file: init trace workspace fails, config is left as is */
+HWTEST_F(TraceUnitTest, TraceTest_016_BrokenConfig, TestSize.Level1)
+{
+    UtWriteParamSimple("persist.init.trace.enabled", "1");
+    CreateTestFile(STARTUP_INIT_UT_PATH"/system/etc/init_trace.cfg", "{ not a valid json");
+    PluginExecCmdByName("init_trace", "start");
+    EXPECT_EQ(access(STARTUP_INIT_UT_PATH"/system/etc/init_trace.cfg", F_OK), 0);
+    UtWriteParamSimple("persist.init.trace.enabled", "0");
+    CreateInitTraceConfig(0);
+}
+
+/* start with config file missing: read file fails, start does not recreate the config */
+HWTEST_F(TraceUnitTest, TraceTest_017_MissingConfig, TestSize.Level1)
+{
+    UtWriteParamSimple("persist.init.trace.enabled", "1");
+    EXPECT_EQ(unlink(STARTUP_INIT_UT_PATH"/system/etc/init_trace.cfg"), 0);
+    PluginExecCmdByName("init_trace", "start");
+    EXPECT_NE(access(STARTUP_INIT_UT_PATH"/system/etc/init_trace.cfg", F_OK), 0);
+    UtWriteParamSimple("persist.init.trace.enabled", "0");
+    CreateInitTraceConfig(0);
+}
 } // namespace init_ut

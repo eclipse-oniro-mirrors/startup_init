@@ -60,6 +60,8 @@ ohos_unittest("init_unittest") {
       "-Wl,--wrap=strdup",
       "-Wl,--wrap=SystemSetParameter",
       "-Wl,--wrap=SystemWaitParameter",
+      "-Wl,--wrap=unlinkat",
+      "-Wl,--wrap=opendir",
   ]
   module_out_path = "init/init"
   sources = [
@@ -262,6 +264,7 @@ ohos_unittest("init_unittest") {
     "fs_manager/erofs/erofs_common_unittest.cpp",
     "fs_manager/erofs/erofs_mount_unittest.cpp",
     "fs_manager/erofs/erofs_remount_unittest.cpp",
+    "fs_manager/switch_root_unittest.cpp",
     "init/cmds_unittest.cpp",
     "init/group_unittest.cpp",
     "init/init_reboot_unittest.cpp",
@@ -277,6 +280,7 @@ ohos_unittest("init_unittest") {
     "loopevent/loopserver_unittest.cpp",
     "loopevent/loopsignal_unittest.cpp",
     "loopevent/looptimer_unittest.cpp",
+    "loopevent/loopidle_unittest.cpp",
     "modules/eng_unittest.cpp",
     "modules/modules_unittest.cpp",
     "modules/udid_unittest.cpp",
