@@ -28,10 +28,6 @@ setresgid32;arm
 settimeofday;all
 sethostname;all
 syslog;all
-setreuid;arm64
-setfsuid;arm64
-setregid;arm64
-setfsgid;arm64
 reboot;arm64
 setdomainname;arm64
 clock_settime;arm64

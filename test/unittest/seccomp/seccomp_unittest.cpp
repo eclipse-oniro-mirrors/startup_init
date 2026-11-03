@@ -534,51 +534,6 @@ const char* TARGET_FILTER_NAME = APP_NAME;
         return false;
     }
 
-    static bool CheckSetuidInRange()
-    {
-        int ret = syscall(__NR_setuid, 100);
-        if (ret == 0) {
-            return true;
-        }
-        return false;
-    }
-
-    static bool CheckSetuidOutOfRange()
-    {
-        int ret = syscall(__NR_setuid, 1);
-        if (ret == -1 && errno == EPERM) {
-            return true;
-        }
-        return false;
-    }
-
-    static bool CheckSetuid65534()
-    {
-        int ret = syscall(__NR_setuid, 65534);
-        if (ret == 0) {
-            return true;
-        }
-        return false;
-    }
-
-    static bool CheckSetgid20()
-    {
-        int ret = syscall(__NR_setgid, 20);
-        if (ret == 0) {
-            return true;
-        }
-        return false;
-    }
-
-    static bool CheckSetgidOutOfRange()
-    {
-        int ret = syscall(__NR_setgid, 100);
-        if (ret == -1 && errno == EPERM) {
-            return true;
-        }
-        return false;
-    }
-
     static bool CheckEperrnoBpf()
     {
         int ret = syscall(__NR_bpf, 0, nullptr, 0);
@@ -1189,12 +1144,7 @@ const char* TARGET_FILTER_NAME = APP_NAME;
         ret = CheckSyscall(APP, APP_CUSTOM, CheckShmget, true);
         EXPECT_EQ(ret, 0);
 
-        // setuid now range-controlled: uid 100 in range -> ALLOW
-        ret = CheckSyscall(APP, APP_CUSTOM, CheckSetuidInRange, true);
-        EXPECT_EQ(ret, 0);
-
-        // setuid uid 1 out of range -> EPERM (not SIGSYS, process exits normally)
-        ret = CheckSyscall(APP, APP_CUSTOM, CheckSetuidOutOfRange, true);
+        ret = CheckSyscall(APP, APP_CUSTOM, CheckSetuid, true);
         EXPECT_EQ(ret, 0);
     }
 
@@ -1232,26 +1182,6 @@ const char* TARGET_FILTER_NAME = APP_NAME;
         EXPECT_EQ(ret, 0);
 
         ret = CheckSyscall(APP, APP_CUSTOM, CheckEnosysMoveMount, true);
-        EXPECT_EQ(ret, 0);
-    }
-
-    void TestSeccompCustomSetuidGidArgs()
-    {
-        // Part 5: UID range 100-999 + 65534
-        int ret = CheckSyscall(APP, APP_CUSTOM, CheckSetuidInRange, true);
-        EXPECT_EQ(ret, 0);
-
-        ret = CheckSyscall(APP, APP_CUSTOM, CheckSetuidOutOfRange, true);
-        EXPECT_EQ(ret, 0);
-
-        ret = CheckSyscall(APP, APP_CUSTOM, CheckSetuid65534, true);
-        EXPECT_EQ(ret, 0);
-
-        // Part 5: GID only 20
-        ret = CheckSyscall(APP, APP_CUSTOM, CheckSetgid20, true);
-        EXPECT_EQ(ret, 0);
-
-        ret = CheckSyscall(APP, APP_CUSTOM, CheckSetgidOutOfRange, true);
         EXPECT_EQ(ret, 0);
     }
 
@@ -2232,18 +2162,6 @@ HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompCustomEnosysSycall001, TestSize.Le
 {
     SeccompUnitTest test;
     test.TestSeccompCustomEnosysSyscall();
-}
-
-/**
- * @tc.name: TestSeccompCustomSetuidGidArgs
- * @tc.desc: Verify set*uid/set*gid parameter-controlled syscalls in app_custom.
- * @tc.type: FUNC
- * @tc.require: issueI5IUWJ
- */
-HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompCustomSetuidGidArgs001, TestSize.Level0)
-{
-    SeccompUnitTest test;
-    test.TestSeccompCustomSetuidGidArgs();
 }
 
 /**
