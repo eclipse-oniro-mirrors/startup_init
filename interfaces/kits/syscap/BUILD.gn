@@ -19,6 +19,7 @@ ohos_shared_library("deviceinfo_ndk") {
     "src/deviceinfo.c",
     "src/syscap_ndk.c",
     "src/deviceinfo_impl.cpp",
+    "src/boardinfo.c",
   ]
   include_dirs = [ "./include" ]
   deps = [
