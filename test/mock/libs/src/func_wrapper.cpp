@@ -410,6 +410,21 @@ int __wrap_fcntl(int fd, int flag, unsigned long arg)
     return result;
 }
 
+// start wrap unlinkat
+static UnlinkatFunc g_unlinkat = NULL;
+void UpdateUnlinkatFunc(UnlinkatFunc func)
+{
+    g_unlinkat = func;
+}
+
+int WrapUnlinkat(int dirfd, const char *pathname, int flags)
+{
+    if (g_unlinkat) {
+        return g_unlinkat(dirfd, pathname, flags);
+    }
+    return WrapUnlinkatReal(dirfd, pathname, flags);
+}
+
 // start wrap waitpid
 static WaitpidFunc g_waitpid = NULL;
 void UpdateWaitpidFunc(WaitpidFunc func)

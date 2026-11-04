@@ -63,6 +63,8 @@ taihe_shared_library("deviceInfo_taihe_native") {
     external_deps += [ "bundle_framework:appexecfwk_base" ]
     defines = [ "DEPENDENT_APPEXECFWK_BASE" ]
   }
+  version_script = "libdeviceInfo_taihe_native.map"
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
 }
 
 generate_static_abc("deviceInfo") {

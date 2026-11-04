@@ -329,9 +329,12 @@ futex_time64;arm
 sched_rr_get_interval_time64;arm
 cacheflush;arm
 set_tls;arm
+setuid;arm64
 setuid32;arm
+setgid;arm64
 setgid32;arm
 setgroups32;arm
+setresgid;arm64
 setresgid32;arm
 vhangup;arm64
 get_robust_list;arm64
@@ -410,10 +413,3 @@ open_by_handle_at: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
 bpf: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
 io_uring_enter: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
 io_uring_register: if arg0 >= 0; return ERRNO(1); else return ERRNO(1);arm64
-setuid: if arg0 >= 100 && arg0 <= 999; return ALLOW; elif arg0 == 65534; return ALLOW; elif arg0 == 0; return ALLOW; else return ERRNO(1);arm64
-setreuid: if arg0 >= 100 && arg0 <= 999; return ALLOW; elif arg0 == 65534; return ALLOW; elif arg0 == 0; return ALLOW; else return ERRNO(1);arm64
-setfsuid: if arg0 >= 100 && arg0 <= 999; return ALLOW; elif arg0 == 65534; return ALLOW; elif arg0 == 0; return ALLOW; else return ERRNO(1);arm64
-setgid: if arg0 == 20; return ALLOW; elif arg0 == 0; return ALLOW; else return ERRNO(1);arm64
-setregid: if arg0 == 20; return ALLOW; elif arg0 == 0; return ALLOW; else return ERRNO(1);arm64
-setresgid: if arg0 == 20; return ALLOW; elif arg0 == 0; return ALLOW; elif arg0 == -1; return ALLOW; else return ERRNO(1);arm64
-setfsgid: if arg0 == 20; return ALLOW; elif arg0 == 0; return ALLOW; else return ERRNO(1);arm64

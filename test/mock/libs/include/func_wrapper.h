@@ -141,6 +141,12 @@ int __real_fcntl(int fd, int flag, unsigned long arg);
 typedef int (*FcntlFunc)(int fd, int flag, unsigned long arg);
 void UpdateFcntlFunc(FcntlFunc func, int flagFilter);
 
+// for wrapper unlinkat; asm labels keep the ld --wrap mandated link names;
+int WrapUnlinkat(int dirfd, const char *pathname, int flags) __asm__("__wrap_unlinkat");
+int WrapUnlinkatReal(int dirfd, const char *pathname, int flags) __asm__("__real_unlinkat");
+typedef int (*UnlinkatFunc)(int dirfd, const char *pathname, int flags);
+void UpdateUnlinkatFunc(UnlinkatFunc func);
+
 // for wrapper waitpid;
 pid_t __real_waitpid(pid_t pid, int *status, int options);
 typedef pid_t (*WaitpidFunc)(pid_t pid, int *status, int options);

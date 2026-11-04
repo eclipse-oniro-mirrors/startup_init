@@ -53,6 +53,8 @@ taihe_shared_library("systemParameterEnhance_taihe_native") {
   external_deps = [
     "bounds_checking_function:libsec_shared",
   ]
+  version_script = "libsystemParameterEnhance_taihe_native.map"
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
 }
 
 generate_static_abc("systemParameterEnhance") {

@@ -23,6 +23,7 @@
 #include <cerrno>
 #include <csignal>
 #include <sys/prctl.h>
+#include <fcntl.h>
 #include <securec.h>
 #include <csetjmp>
 
@@ -243,6 +244,37 @@ int __wrap_mkdir(const char *pathname, mode_t mode)  // NOLINT
         return -1;
     }
     return __real_mkdir(pathname, mode);
+}
+
+int __wrap_stat(const char *pathname, struct stat *buf)  // NOLINT
+{
+    if (g_stubResult[STUB_STAT] > 0) {
+        if (buf != nullptr) {
+            memset_s(buf, sizeof(struct stat), 0, sizeof(struct stat));
+        }
+        return 0;
+    }
+    if (g_stubResult[STUB_STAT] < 0) {
+        errno = ENOENT;
+        return -1;
+    }
+    // fstatat() reaches the real filesystem without declaring linker-reserved symbols.
+    return fstatat(AT_FDCWD, pathname, buf, 0);
+}
+
+int __wrap_lstat(const char *pathname, struct stat *buf)  // NOLINT
+{
+    if (g_stubResult[STUB_LSTAT] > 0) {
+        if (buf != nullptr) {
+            memset_s(buf, sizeof(struct stat), 0, sizeof(struct stat));
+        }
+        return 0;
+    }
+    if (g_stubResult[STUB_LSTAT] < 0) {
+        errno = ENOENT;
+        return -1;
+    }
+    return fstatat(AT_FDCWD, pathname, buf, AT_SYMLINK_NOFOLLOW);
 }
 
 int __wrap_GetDevSize(const char *fsBlkDev, uint64_t *devSize)  // NOLINT

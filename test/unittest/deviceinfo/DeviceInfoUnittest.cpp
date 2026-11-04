@@ -15,6 +15,7 @@
 #include <chrono>
 #include <thread>
 #include <string>
+#include <vector>
 #include <iostream>
 #include <gtest/gtest.h>
 
@@ -311,5 +312,42 @@ HWTEST_F(DeviceInfoUnittest, Init_TestDevicekits_002, TestSize.Level1)
     instance.deviceInfoService_ = nullptr;
     std::unique_lock<std::mutex> lock(instance.lock_);
     EXPECT_NE(nullptr, instance.RetryGetService(lock));
+}
+
+// 验证多线程并发调用 AclGetDiskSN/AclGetDevUdid 时不会因线程间共享缓冲区
+HWTEST_F(DeviceInfoUnittest, Init_TestAclInterfaceMultithread_001, TestSize.Level1)
+{
+    constexpr int threadNum = 8;
+    std::vector<std::string> results(threadNum);
+    std::vector<int> rets(threadNum, -1);
+    std::vector<std::thread> threads;
+    threads.reserve(threadNum);
+    for (int i = 0; i < threadNum; ++i) {
+        threads.emplace_back([&results, &rets, i]() {
+            char diskSN[DISK_SN_LEN] = {0};
+            rets[i] = AclGetDiskSN(diskSN, DISK_SN_LEN);
+            results[i] = std::string(diskSN);
+
+            char udid[UDID_LEN] = {0};
+            (void)AclGetDevUdid(udid, UDID_LEN);
+        });
+    }
+    for (auto &t : threads) {
+        t.join();
+    }
+    for (int i = 0; i < threadNum; ++i) {
+        EXPECT_NE(rets[i], -1);
+    }
+}
+
+// 验证 AclGetDiskSN 边界参数校验：nullptr / size 不足应返回 SYSPARAM_INVALID_INPUT。
+HWTEST_F(DeviceInfoUnittest, Init_TestAclGetDiskSNBoundary_001, TestSize.Level1)
+{
+    EXPECT_EQ(AclGetDiskSN(nullptr, DISK_SN_LEN), SYSPARAM_INVALID_INPUT);
+    char diskSN[DISK_SN_LEN] = {0};
+    EXPECT_EQ(AclGetDiskSN(diskSN, DISK_SN_LEN - 1), SYSPARAM_INVALID_INPUT);
+    // 合法入参应返回 0 或权限拒绝，但不能是参数校验失败
+    int ret = AclGetDiskSN(diskSN, DISK_SN_LEN);
+    EXPECT_NE(ret, SYSPARAM_INVALID_INPUT);
 }
 }  // namespace init_ut

@@ -129,9 +129,9 @@ static int StartProcessByParameter(const char *parameter, const char *name, cons
         unsigned int len = 0;
         for (int i = 0; i < extArgc; i++) {
             BEGET_ERROR_CHECK(extArgv[i] != NULL, return -1, "Extra argument is null.");
-            len += strlen(extArgv[i]);
+            len += (unsigned int)strlen(extArgv[i]);
         }
-        len += strlen(name) + extArgc + 1;
+        len += (unsigned int)(strlen(name) + extArgc + 1);
         char *nameValue = (char *)calloc(len, sizeof(char));
         BEGET_ERROR_CHECK(nameValue != NULL, return -1, "Failed calloc err=%d", errno);
 
