@@ -218,6 +218,7 @@ HWTEST_F(SysparaUnitTest, parameterTest001_2, TestSize.Level0)
 
 HWTEST_F(SysparaUnitTest, parameterTest001_3, TestSize.Level0)
 {
+    GetChipType();
     EXPECT_STRNE(GetSecurityPatchTag(), nullptr);
     EXPECT_STRNE(GetAbiList(), nullptr);
     EXPECT_GT(GetFirstApiVersion(), 0);
@@ -241,6 +242,19 @@ HWTEST_F(SysparaUnitTest, parameterTest0024, TestSize.Level0)
         printf("deviceColor is empty string (parameter not set)\n");
     } else {
         printf("deviceColor = %s\n", deviceColor);
+    }
+}
+
+// GetKernelVersionInner 通过 uname 获取内核版本，缓存于静态缓冲区；
+// uname 失败或 strcpy_s 失败时返回 EMPTY_STR，但永不返回 nullptr。
+HWTEST_F(SysparaUnitTest, parameterTest0024_2, TestSize.Level0)
+{
+    const char *kernelVersion = GetKernelVersionInner();
+    EXPECT_STRNE(kernelVersion, nullptr);
+    if (kernelVersion == nullptr || strcmp(kernelVersion, "") == 0) {
+        printf("kernelVersion is empty string (uname failed)\n");
+    } else {
+        printf("kernelVersion = %s\n", kernelVersion);
     }
 }
 
