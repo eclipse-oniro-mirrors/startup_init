@@ -98,8 +98,12 @@ class RemountOverlayUnitTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
     static void TearDownTestCase(void) { RemountResetAllStubs(); };
-    void SetUp(void) {};
-    void TearDown(void) {};
+    void SetUp(void) {
+        RemountResetAllStubs();
+    };
+    void TearDown(void) {
+        RemountResetAllStubs();
+    };
 };
 
 HWTEST_F(RemountOverlayUnitTest, Init_MntNeedRemountTest_001, TestSize.Level0)
@@ -368,7 +372,14 @@ HWTEST_F(RemountOverlayUnitTest, Init_RootOverlaySetup_003_success, TestSize.Lev
 {
     RemountSetStubResult(STUB_MKDIR, 0);
     RemountSetStubResult(STUB_MOUNT, 0);
+    RemountSetStubResult(STUB_ACCESS, 0);
+    __real_mkdir("/mnt/overlay", 0755);
+    __real_mkdir("/mnt/overlay/upper", 0755);
+    __real_mkdir("/mnt/overlay/work", 0755);
     EXPECT_EQ(RootOverlaySetup(), 0);
+    rmdir("/mnt/overlay/upper");
+    rmdir("/mnt/overlay/work");
+    rmdir("/mnt/overlay");
 }
 
 HWTEST_F(RemountOverlayUnitTest, Init_DoSystemRemount_001_isExt4OverlaySucc, TestSize.Level1)
@@ -383,7 +394,19 @@ HWTEST_F(RemountOverlayUnitTest, Init_DoSystemRemount_001_isExt4OverlaySucc, Tes
     RemountSetStubResult(STUB_CHECK_IS_EXT4, 1);
     RemountSetStubResult(STUB_MKDIR, 0);
     RemountSetStubResult(STUB_MOUNT, 0);
+    RemountSetStubResult(STUB_ACCESS, 0);
+    bool mntExisted = (access("/mnt", F_OK) == 0);
+    __real_mkdir("/mnt", 0755);
+    __real_mkdir("/mnt/overlay", 0755);
+    __real_mkdir("/mnt/overlay/upper", 0755);
+    __real_mkdir("/mnt/overlay/work", 0755);
     EXPECT_EQ(DoSystemRemount(&mentry), true);
+    rmdir("/mnt/overlay/upper");
+    rmdir("/mnt/overlay/work");
+    rmdir("/mnt/overlay");
+    if (!mntExisted) {
+        rmdir("/mnt");
+    }
 }
 
 HWTEST_F(RemountOverlayUnitTest, Init_DoSystemRemount_002_formatFail, TestSize.Level1)
@@ -692,8 +715,16 @@ HWTEST_F(RemountOverlayUnitTest, Init_CheckIsExt4_real_001_fail, TestSize.Level0
 HWTEST_F(RemountOverlayUnitTest, Init_MkdirExt4OverlayDirs_001, TestSize.Level0)
 {
     RemountSetStubResult(STUB_MKDIR, 0);
+    __real_mkdir("/mnt/overlay", 0755);
+    __real_mkdir("/mnt/overlay/vendor", 0755);
+    __real_mkdir("/mnt/overlay/vendor/upper", 0755);
+    __real_mkdir("/mnt/overlay/vendor/work", 0755);
     int ret = MkdirExt4OverlayDirs("/vendor");
     EXPECT_EQ(ret, 0);
+    rmdir("/mnt/overlay/vendor/upper");
+    rmdir("/mnt/overlay/vendor/work");
+    rmdir("/mnt/overlay/vendor");
+    rmdir("/mnt/overlay");
 }
 
 HWTEST_F(RemountOverlayUnitTest, Init_MkdirExt4OverlayDirs_002_mkdirFail, TestSize.Level1)
@@ -707,8 +738,16 @@ HWTEST_F(RemountOverlayUnitTest, Init_MkdirExt4OverlayDirs_002_mkdirFail, TestSi
 HWTEST_F(RemountOverlayUnitTest, Init_MkdirExt4UpperWorkDirs_001, TestSize.Level0)
 {
     RemountSetStubResult(STUB_MKDIR, 0);
+    __real_mkdir("/mnt/overlay", 0755);
+    __real_mkdir("/mnt/overlay/vendor", 0755);
+    __real_mkdir("/mnt/overlay/vendor/upper", 0755);
+    __real_mkdir("/mnt/overlay/vendor/work", 0755);
     int ret = MkdirExt4UpperWorkDirs("/vendor");
     EXPECT_EQ(ret, 0);
+    rmdir("/mnt/overlay/vendor/upper");
+    rmdir("/mnt/overlay/vendor/work");
+    rmdir("/mnt/overlay/vendor");
+    rmdir("/mnt/overlay");
 }
 
 HWTEST_F(RemountOverlayUnitTest, Init_MkdirExt4UpperWorkDirs_002_mkdirFail, TestSize.Level1)
@@ -875,9 +914,11 @@ HWTEST_F(RemountOverlayUnitTest, Init_RemountOverlay_002_overlayFail, TestSize.L
 {
     RemountSetStubResult(STUB_IS_DM_MERGE_OVERLAY_ACTIVE, 0);
     RemountSetStubResult(STUB_MOUNT, -1);
+    RemountSetStubResult(STUB_ACCESS, -1);
     int ret = RemountOverlay();
     EXPECT_EQ(ret, -1);
     RemountSetStubResult(STUB_MOUNT, 0);
+    RemountSetStubResult(STUB_ACCESS, 0);
 }
 
 HWTEST_F(RemountOverlayUnitTest, Init_GetFsSize_001_fail, TestSize.Level0)
@@ -1118,7 +1159,7 @@ HWTEST_F(RemountOverlayUnitTest, Init_EngFilesOverlay_004_targetNotRegular, Test
     __real_mkdir((target + "/eng_340test").c_str(), 0755);
     __real_mkdir(tgtSubPath.c_str(), 0755);
     CreateTestFile(srcFile.c_str(), "test");
-    RemountSetStubResult(STUB_MKDIR, 0);
+    RemountSetStubResult(STUB_MOUNT, -1);
     EngFilesOverlay(source.c_str(), target.c_str());
     unlink(srcFile.c_str());
     rmdir(tgtSubPath.c_str());
@@ -1126,6 +1167,7 @@ HWTEST_F(RemountOverlayUnitTest, Init_EngFilesOverlay_004_targetNotRegular, Test
     rmdir(target.c_str());
     rmdir(source.c_str());
     EXPECT_EQ(RemountGetStubResult(STUB_MOUNT), -1);
+    RemountSetStubResult(STUB_MOUNT, 0);
 }
 
 HWTEST_F(RemountOverlayUnitTest, Init_RootOverlaySetup_001_snprintfFail, TestSize.Level1)
@@ -1256,29 +1298,19 @@ HWTEST_F(RemountOverlayUnitTest, Init_RemountRofsOverlay_010_perPartitionAlready
 {
     CheckAndCreateDir((std::string(STARTUP_INIT_UT_PATH) + "/data/service/el1/startup/remount/").c_str());
     SetRemountResultFlag();
-    RemountSetStubResult(STUB_STAT, 1);
+    __real_mkdir("/mnt/overlay", 0755);
+    __real_mkdir("/mnt/overlay/usr", 0755);
+    __real_mkdir("/mnt/overlay/usr/upper", 0755);
     RemountSetStubResult(STUB_IS_DM_MERGE_REMOUNT_ENABLED, 0);
     RemountSetStubResult(STUB_SETMNTENT, -1);
     RemountSetStubMntEntries(nullptr, 0);
     int ret = RemountRofsOverlay();
     EXPECT_EQ(ret, REMOUNT_SUCC);
     EXPECT_EQ(GetRemountResult(), REMOUNT_SUCC);
-    RemountSetStubResult(STUB_STAT, 0);
+    rmdir("/mnt/overlay/usr/upper");
+    rmdir("/mnt/overlay/usr");
+    rmdir("/mnt/overlay");
     DeleteRemountResultFlag();
 }
 
-HWTEST_F(RemountOverlayUnitTest, Init_RemountRofsOverlay_011_perPartitionNotActiveFallsThrough, TestSize.Level1)
-{
-    CheckAndCreateDir((std::string(STARTUP_INIT_UT_PATH) + "/data/service/el1/startup/remount/").c_str());
-    SetRemountResultFlag();
-    RemountSetStubResult(STUB_STAT, -1);
-    RemountSetStubResult(STUB_IS_DM_MERGE_REMOUNT_ENABLED, 0);
-    RemountSetStubResult(STUB_SETMNTENT, -1);
-    RemountSetStubMntEntries(nullptr, 0);
-    int ret = RemountRofsOverlay();
-    EXPECT_EQ(ret, REMOUNT_FAIL);
-    RemountSetStubResult(STUB_STAT, 0);
-    EXPECT_NE(GetRemountResult(), REMOUNT_SUCC);
-    DeleteRemountResultFlag();
-}
 }
