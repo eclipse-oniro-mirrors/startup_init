@@ -98,12 +98,8 @@ class RemountOverlayUnitTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {};
     static void TearDownTestCase(void) { RemountResetAllStubs(); };
-    void SetUp(void) {
-        RemountResetAllStubs();
-    };
-    void TearDown(void) {
-        RemountResetAllStubs();
-    };
+    void SetUp(void) { RemountResetAllStubs(); };
+    void TearDown(void) { RemountResetAllStubs(); };
 };
 
 HWTEST_F(RemountOverlayUnitTest, Init_MntNeedRemountTest_001, TestSize.Level0)
