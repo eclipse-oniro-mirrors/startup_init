@@ -67,6 +67,18 @@ ohos_unittest("init_unittest") {
       "-Wl,--wrap=SystemWaitParameter",
       "-Wl,--wrap=unlinkat",
       "-Wl,--wrap=opendir",
+      "-Wl,--wrap=mkdir",
+      "-Wl,--wrap=stat",
+      "-Wl,--wrap=lstat",
+      "-Wl,--wrap=fchmodat",
+      "-Wl,--wrap=lchown",
+      "-Wl,--wrap=chown",
+      "-Wl,--wrap=getpwnam",
+      "-Wl,--wrap=getgrnam",
+      "-Wl,--wrap=getgrent",
+      "-Wl,--wrap=fstatat",
+      "-Wl,--wrap=PluginExecCmdByName",
+      "-Wl,--wrap=SetFileCryptPolicy",
   ]
   if (target_cpu == "arm") {
     ldflags += [
