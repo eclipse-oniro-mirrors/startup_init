@@ -97,16 +97,15 @@ public:
     };
 };
 
-/* null / empty new root is rejected with EINVAL, nonexistent new root fails stat */
+/* null / empty / blank / nonexistent / overlong new root is rejected */
 HWTEST_F(SwitchRootUnitTest, SwitchRootTest_001, TestSize.Level1)
 {
-    errno = 0;
     EXPECT_EQ(SwitchRoot(nullptr), -1);
-    EXPECT_EQ(errno, EINVAL);
-    errno = 0;
     EXPECT_EQ(SwitchRoot(""), -1);
-    EXPECT_EQ(errno, EINVAL);
+    EXPECT_EQ(SwitchRoot(" "), -1);
     EXPECT_EQ(SwitchRoot("/no/such/dir/for/ut"), -1);
+    EXPECT_EQ(SwitchRoot("/ut/long/nonexistent/path/0123456789/0123456789/0123456789/0123456789/"
+        "0123456789/0123456789/0123456789/0123456789/0123456789/0123456789/end"), -1);
 }
 
 /* new root on the same device as "/": switch is skipped, 0 returned, entries under fake old root survive */

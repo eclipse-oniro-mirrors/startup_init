@@ -34,6 +34,18 @@ static void ExpectSystemParamEq(const char *name, const char *expectValue)
     EXPECT_STREQ(tmp, expectValue) << "param " << name;
 }
 
+/* returns current value of a system param so cases can assert with a one-line EXPECT_STREQ */
+static const char *UtParamValue(const char *name)
+{
+    static char tmp[PARAM_BUFFER_SIZE];
+    if (memset_s(tmp, sizeof(tmp), 0, sizeof(tmp)) != EOK) {
+        return "";
+    }
+    uint32_t len = sizeof(tmp) - 1;
+    (void)SystemReadParam(name, tmp, &len);
+    return tmp;
+}
+
 static bool IsConstDebuggableValue(const char *expectValue)
 {
     char value[PARAM_BUFFER_SIZE] = {0};
@@ -309,8 +321,8 @@ HWTEST_F(TraceUnitTest, TraceTest_012, TestSize.Level1)
     PluginExecCmdByName("init_trace", "stop");
     PluginExecCmdByName("init_trace", "1");
     PluginExecCmdByName("init_trace", "ut_unknown_cmd");
-    ExpectSystemParamEq("persist.init.trace.enabled", "1");
-    ExpectSystemParamEq("debug.hitrace.boot_trace.active", "0");
+    EXPECT_STREQ(UtParamValue("persist.init.trace.enabled"), "1");
+    EXPECT_STREQ(UtParamValue("debug.hitrace.boot_trace.active"), "0");
     UtWriteParamSimple("persist.init.trace.enabled", "0");
 }
 
@@ -321,8 +333,8 @@ HWTEST_F(TraceUnitTest, TraceTest_013_BootTraceInvalidCount, TestSize.Level1)
     UtWriteParamSimple("debug.hitrace.boot_trace.active", "0");
     UtWriteParamSimple("persist.hitrace.boot_trace.count", "ut-not-a-number");
     PluginExecCmdByName("init_trace", "boot_trace");
-    ExpectSystemParamEq("persist.hitrace.boot_trace.count", "ut-not-a-number");
-    ExpectSystemParamEq("debug.hitrace.boot_trace.active", "0");
+    EXPECT_STREQ(UtParamValue("persist.hitrace.boot_trace.count"), "ut-not-a-number");
+    EXPECT_STREQ(UtParamValue("debug.hitrace.boot_trace.active"), "0");
 }
 
 /* boot_trace with count out of [1, 100]: count keeps unchanged */
@@ -332,12 +344,12 @@ HWTEST_F(TraceUnitTest, TraceTest_014_BootTraceCountOutOfRange, TestSize.Level1)
     UtWriteParamSimple("debug.hitrace.boot_trace.active", "0");
     UtWriteParamSimple("persist.hitrace.boot_trace.count", "0");
     PluginExecCmdByName("init_trace", "boot_trace");
-    ExpectSystemParamEq("persist.hitrace.boot_trace.count", "0");
+    EXPECT_STREQ(UtParamValue("persist.hitrace.boot_trace.count"), "0");
 
     UtWriteParamSimple("persist.hitrace.boot_trace.count", "101");
     PluginExecCmdByName("init_trace", "boot_trace");
-    ExpectSystemParamEq("persist.hitrace.boot_trace.count", "101");
-    ExpectSystemParamEq("debug.hitrace.boot_trace.active", "0");
+    EXPECT_STREQ(UtParamValue("persist.hitrace.boot_trace.count"), "101");
+    EXPECT_STREQ(UtParamValue("debug.hitrace.boot_trace.active"), "0");
 }
 
 /* boot_trace when trace already active: count is not consumed */
@@ -347,8 +359,8 @@ HWTEST_F(TraceUnitTest, TraceTest_015_BootTraceAlreadyActive, TestSize.Level1)
     UtWriteParamSimple("persist.hitrace.boot_trace.count", "2");
     UtWriteParamSimple("debug.hitrace.boot_trace.active", "1");
     PluginExecCmdByName("init_trace", "boot_trace");
-    ExpectSystemParamEq("persist.hitrace.boot_trace.count", "2");
-    ExpectSystemParamEq("debug.hitrace.boot_trace.active", "1");
+    EXPECT_STREQ(UtParamValue("persist.hitrace.boot_trace.count"), "2");
+    EXPECT_STREQ(UtParamValue("debug.hitrace.boot_trace.active"), "1");
     UtWriteParamSimple("debug.hitrace.boot_trace.active", "0");
 }
 
