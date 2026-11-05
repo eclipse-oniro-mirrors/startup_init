@@ -239,6 +239,12 @@ static void DoStartPersistent(const struct CmdArgs *ctx)
     StartPersistentServiceByName(ctx->argv[0]);
 }
 
+static void DoStartHighPriority(const struct CmdArgs *ctx)
+{
+    INIT_LOGV("DoStartHighPriority %s", ctx->argv[0]);
+    StartServiceByNameHighPriority(ctx->argv[0]);
+}
+
 static void DoStop(const struct CmdArgs *ctx)
 {
     INIT_LOGV("DoStop %s", ctx->argv[0]);
@@ -668,7 +674,8 @@ static const struct CmdTable g_cmdTable[] = {
     { "hostname ", 1, 1, 1, DoSetHostname },
     { "domainname ", 1, 1, 1, DoSetDomainname },
     { "start_ondemand ", 0, 1, 0, DoStartOnDemand },
-    { "start_persistent ", 0, 1, 0, DoStartPersistent }
+    { "start_persistent ", 0, 1, 0, DoStartPersistent },
+    { "start_priority ", 1, 1, 0, DoStartHighPriority }
 };
 
 static const struct CmdTable *GetCommCmdTable(int *number)

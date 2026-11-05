@@ -57,6 +57,7 @@ extern "C" {
 #define SERVICE_ATTR_PERIOD 0x8000    //service period
 
 #define SERVICE_ATTR_SETUID 0x10000 //service can setuid with no fixup
+#define SERVICE_ATTR_HIGH_PRIORITY 0X80000 //high priority service
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
 #define SERVICE_ATTR_SASPAWN 0X20000 //service support sa spawn
 #endif
@@ -124,6 +125,13 @@ extern "C" {
 #define ServiceResetSupportSaSpawn(service) \
     ((service)->attribute &= ~SERVICE_ATTR_SASPAWN)
 #endif
+
+#define IsHighPriorityService(service) \
+    (((service)->attribute & SERVICE_ATTR_HIGH_PRIORITY) == SERVICE_ATTR_HIGH_PRIORITY)
+#define MarkServiceAsHighPriority(service) \
+    ((service)->attribute |= SERVICE_ATTR_HIGH_PRIORITY)
+#define UnMarkServiceAsHighPriority(service) \
+    ((service)->attribute &= ~SERVICE_ATTR_HIGH_PRIORITY)
 
 #pragma pack(4)
 typedef enum {
