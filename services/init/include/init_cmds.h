@@ -109,6 +109,10 @@ char *BuildStringFromCmdArg(const struct CmdArgs *ctx, int startIndex);
 void ExecCmd(const struct CmdTable *cmd, const char *cmdContent);
 int SetFileCryptPolicy(const char *dir);
 #ifdef STARTUP_INIT_TEST
+int TestSetOwner(const char *file, const char *ownerStr, const char *groupStr);
+int TestSetOwnerNoFollowById(const char *file, uid_t owner, gid_t group);
+const char *TestGetFileTypeString(mode_t mode);
+const char *TestGetMkdirErrnoCategory(int err);
 bool EchoToPath(const char* path, const char* content);
 bool IsHyperHoldDisabled();
 void DumpHyperHoldCloseResult(bool dmaEswapDeinitSucc, bool gpuEswapDeinitSucc);
