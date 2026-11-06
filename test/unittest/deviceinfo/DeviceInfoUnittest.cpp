@@ -350,4 +350,73 @@ HWTEST_F(DeviceInfoUnittest, Init_TestAclGetDiskSNBoundary_001, TestSize.Level1)
     int ret = AclGetDiskSN(diskSN, DISK_SN_LEN);
     EXPECT_NE(ret, SYSPARAM_INVALID_INPUT);
 }
+
+// 验证 boardInfo cache hit 分支：注入 cache 后 GetBiosReleaseDate 应返回注入值而非空
+HWTEST_F(DeviceInfoUnittest, Init_BoardInfoCacheHitTest_001, TestSize.Level1)
+{
+    DeviceInfoServicePtr deviceInfoService = GetDeviceInfoService();
+    ASSERT_NE(deviceInfoService, nullptr);
+
+    const std::string testBiosReleaseDate = "test_bios_date_001";
+    deviceInfoService->TestInjectBoardInfoCache("v1", "v2", "v3", "v4", "v5",
+        "v6", "v7", "v8", testBiosReleaseDate);
+
+    // GetBiosReleaseDate 的 cache 检查在 #ifdef INIT_SUPPORT_BOARDINFO_HDI 之前，
+    // 无 HDI 支持时也能验证 cache hit 分支
+    std::string result;
+    EXPECT_EQ(deviceInfoService->GetBiosReleaseDate(result), 0);
+    EXPECT_EQ(result, testBiosReleaseDate);
+
+    // OnStop 清理 cache 后应走 cache miss 分支，返回空字符串
+    deviceInfoService->OnStop();
+    EXPECT_EQ(deviceInfoService->GetBiosReleaseDate(result), 0);
+    EXPECT_EQ(result, "");
+}
+
+// 验证 boardInfo cache miss 分支：未注入 cache 时 GetBiosReleaseDate 应走 miss 路径返回空
+HWTEST_F(DeviceInfoUnittest, Init_BoardInfoCacheMissTest_001, TestSize.Level1)
+{
+    DeviceInfoServicePtr deviceInfoService = GetDeviceInfoService();
+    ASSERT_NE(deviceInfoService, nullptr);
+
+    deviceInfoService->OnStop(); // 确保起始状态 cache 为空
+
+    std::string result = "non_empty_initial";
+    EXPECT_EQ(deviceInfoService->GetBiosReleaseDate(result), 0);
+    EXPECT_EQ(result, "");
+
+    // 连续调用多次，验证 cache miss 分支稳定性
+    for (int i = 0; i < 3; ++i) {
+        result = "non_empty";
+        EXPECT_EQ(deviceInfoService->GetBiosReleaseDate(result), 0);
+        EXPECT_EQ(result, "");
+    }
+}
+
+// 验证 OnStop 后 cache 被清理：注入 -> 命中 -> OnStop -> miss
+HWTEST_F(DeviceInfoUnittest, Init_BoardInfoCacheClearTest_001, TestSize.Level1)
+{
+    DeviceInfoServicePtr deviceInfoService = GetDeviceInfoService();
+    ASSERT_NE(deviceInfoService, nullptr);
+
+    deviceInfoService->TestInjectBoardInfoCache("a", "b", "c", "d", "e",
+        "f", "g", "h", "inject_date");
+
+    std::string result;
+    EXPECT_EQ(deviceInfoService->GetBiosReleaseDate(result), 0);
+    EXPECT_EQ(result, "inject_date");
+
+    deviceInfoService->OnStop();
+
+    EXPECT_EQ(deviceInfoService->GetBiosReleaseDate(result), 0);
+    EXPECT_EQ(result, "");
+
+    // 再次注入验证 OnStop 后 cache 可重新填充
+    deviceInfoService->TestInjectBoardInfoCache("a", "b", "c", "d", "e",
+        "f", "g", "h", "second_date");
+    EXPECT_EQ(deviceInfoService->GetBiosReleaseDate(result), 0);
+    EXPECT_EQ(result, "second_date");
+
+    deviceInfoService->OnStop();
+}
 }  // namespace init_ut

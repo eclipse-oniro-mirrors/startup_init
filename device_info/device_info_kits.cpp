@@ -124,7 +124,7 @@ sptr<IDeviceInfo> DeviceInfoKits::RetryGetService(std::unique_lock<std::mutex> &
 int32_t DeviceInfoKits::GetUdid(std::string& result)
 {
     std::unique_lock<std::mutex> lock(lock_);
-    static std::optional<std::pair<int32_t, std::string>> resultPair;
+    auto &resultPair = udidCache_;
     if (resultPair.has_value()) {
         int32_t ret = resultPair->first;
         result = resultPair->second;
@@ -149,7 +149,7 @@ int32_t DeviceInfoKits::GetUdid(std::string& result)
 int32_t DeviceInfoKits::GetSerialID(std::string& result)
 {
     std::unique_lock<std::mutex> lock(lock_);
-    static std::optional<std::pair<int32_t, std::string>> resultPair;
+    auto &resultPair = serialCache_;
     if (resultPair.has_value()) {
         int32_t ret = resultPair->first;
         result = resultPair->second;
@@ -174,7 +174,7 @@ int32_t DeviceInfoKits::GetSerialID(std::string& result)
 int32_t DeviceInfoKits::GetDiskSN(std::string& result)
 {
     std::unique_lock<std::mutex> lock(lock_);
-    static std::optional<std::pair<int32_t, std::string>> resultPair;
+    auto &resultPair = diskSnCache_;
     if (resultPair.has_value()) {
         int32_t ret = resultPair->first;
         result = resultPair->second;
@@ -226,69 +226,78 @@ int32_t DeviceInfoKits::CallRemoteBoardInfo(const char* name,
 int32_t DeviceInfoKits::GetBoardSerial(std::string& result)
 {
     std::unique_lock<std::mutex> lock(lock_);
-    static std::optional<std::pair<int32_t, std::string>> resultPair;
-    return CallRemoteBoardInfo("GetBoardSerial", &IDeviceInfo::GetBoardSerial, result, lock, resultPair);
+    return CallRemoteBoardInfo("GetBoardSerial", &IDeviceInfo::GetBoardSerial, result, lock, boardSerialCache_);
 }
 
 int32_t DeviceInfoKits::GetCpuId(std::string& result)
 {
     std::unique_lock<std::mutex> lock(lock_);
-    static std::optional<std::pair<int32_t, std::string>> resultPair;
-    return CallRemoteBoardInfo("GetCpuId", &IDeviceInfo::GetCpuId, result, lock, resultPair);
+    return CallRemoteBoardInfo("GetCpuId", &IDeviceInfo::GetCpuId, result, lock, cpuIdCache_);
 }
 
 int32_t DeviceInfoKits::GetCpuArchitecture(std::string& result)
 {
     std::unique_lock<std::mutex> lock(lock_);
-    static std::optional<std::pair<int32_t, std::string>> resultPair;
-    return CallRemoteBoardInfo("GetCpuArchitecture", &IDeviceInfo::GetCpuArchitecture, result, lock, resultPair);
+    return CallRemoteBoardInfo("GetCpuArchitecture", &IDeviceInfo::GetCpuArchitecture, result, lock, cpuArchCache_);
 }
 
 int32_t DeviceInfoKits::GetCpuVendor(std::string& result)
 {
     std::unique_lock<std::mutex> lock(lock_);
-    static std::optional<std::pair<int32_t, std::string>> resultPair;
-    return CallRemoteBoardInfo("GetCpuVendor", &IDeviceInfo::GetCpuVendor, result, lock, resultPair);
+    return CallRemoteBoardInfo("GetCpuVendor", &IDeviceInfo::GetCpuVendor, result, lock, cpuVendorCache_);
 }
 
 int32_t DeviceInfoKits::GetBoardVendor(std::string& result)
 {
     std::unique_lock<std::mutex> lock(lock_);
-    static std::optional<std::pair<int32_t, std::string>> resultPair;
-    return CallRemoteBoardInfo("GetBoardVendor", &IDeviceInfo::GetBoardVendor, result, lock, resultPair);
+    return CallRemoteBoardInfo("GetBoardVendor", &IDeviceInfo::GetBoardVendor, result, lock, boardVendorCache_);
 }
 
 int32_t DeviceInfoKits::GetBoardProductName(std::string& result)
 {
     std::unique_lock<std::mutex> lock(lock_);
-    static std::optional<std::pair<int32_t, std::string>> resultPair;
-    return CallRemoteBoardInfo("GetBoardProductName", &IDeviceInfo::GetBoardProductName, result, lock, resultPair);
+    return CallRemoteBoardInfo("GetBoardProductName", &IDeviceInfo::GetBoardProductName, result, lock,
+        boardProductNameCache_);
 }
 
 int32_t DeviceInfoKits::GetBiosVendor(std::string& result)
 {
     std::unique_lock<std::mutex> lock(lock_);
-    static std::optional<std::pair<int32_t, std::string>> resultPair;
-    return CallRemoteBoardInfo("GetBiosVendor", &IDeviceInfo::GetBiosVendor, result, lock, resultPair);
+    return CallRemoteBoardInfo("GetBiosVendor", &IDeviceInfo::GetBiosVendor, result, lock, biosVendorCache_);
 }
 
 int32_t DeviceInfoKits::GetBiosVersion(std::string& result)
 {
     std::unique_lock<std::mutex> lock(lock_);
-    static std::optional<std::pair<int32_t, std::string>> resultPair;
-    return CallRemoteBoardInfo("GetBiosVersion", &IDeviceInfo::GetBiosVersion, result, lock, resultPair);
+    return CallRemoteBoardInfo("GetBiosVersion", &IDeviceInfo::GetBiosVersion, result, lock, biosVersionCache_);
 }
 
 int32_t DeviceInfoKits::GetBiosReleaseDate(std::string& result)
 {
     std::unique_lock<std::mutex> lock(lock_);
-    static std::optional<std::pair<int32_t, std::string>> resultPair;
-    return CallRemoteBoardInfo("GetBiosReleaseDate", &IDeviceInfo::GetBiosReleaseDate, result, lock, resultPair);
+    return CallRemoteBoardInfo("GetBiosReleaseDate", &IDeviceInfo::GetBiosReleaseDate, result, lock,
+        biosReleaseDateCache_);
 }
 
 void DeviceInfoKits::DeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
 {
     DelayedRefSingleton<DeviceInfoKits>::GetInstance().ResetService(remote);
+}
+
+void DeviceInfoKits::ClearAllCache()
+{
+    udidCache_.reset();
+    serialCache_.reset();
+    diskSnCache_.reset();
+    boardSerialCache_.reset();
+    cpuIdCache_.reset();
+    cpuArchCache_.reset();
+    cpuVendorCache_.reset();
+    boardVendorCache_.reset();
+    boardProductNameCache_.reset();
+    biosVendorCache_.reset();
+    biosVersionCache_.reset();
+    biosReleaseDateCache_.reset();
 }
 
 void DeviceInfoKits::ResetService(const wptr<IRemoteObject> &remote)
@@ -300,6 +309,7 @@ void DeviceInfoKits::ResetService(const wptr<IRemoteObject> &remote)
         if ((object != nullptr) && (remote == object)) {
             object->RemoveDeathRecipient(deathRecipient_);
             deviceInfoService_ = nullptr;
+            ClearAllCache();
         }
     }
 }
