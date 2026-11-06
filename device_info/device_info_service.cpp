@@ -108,12 +108,15 @@ int32_t DeviceInfoService::GetDiskSN(std::string& result)
 static int32_t CallBoardInfoHdi(const char* name,
     int32_t (OHOS::HDI::Boardinfo::V1_0::IBoardInfo::*method)(std::string&),
     std::string& result,
-    std::atomic<std::string*>& cache)
+    std::shared_ptr<std::string>& cache,
+    std::mutex& mutex)
 {
-    auto cached = cache.load(std::memory_order_acquire);
-    if (cached != nullptr) {
-        result = *cached;
-        return 0;
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (cache != nullptr) {
+            result = *cache;
+            return 0;
+        }
     }
     result.clear();
     int32_t hdiRet = -1;
@@ -125,7 +128,8 @@ static int32_t CallBoardInfoHdi(const char* name,
     if (hdiRet != 0) {
         return hdiRet;
     }
-    cache.store(new std::string(result), std::memory_order_release);
+    std::lock_guard<std::mutex> lock(mutex);
+    cache = std::make_shared<std::string>(result);
     return 0;
 }
 #endif
@@ -134,8 +138,8 @@ int32_t DeviceInfoService::GetBoardSerial(std::string& result)
 {
     DINFO_LOGI("GetBoardSerial");
 #ifdef INIT_SUPPORT_BOARDINFO_HDI
-    static std::atomic<std::string*> cache{nullptr};
-    return CallBoardInfoHdi("GetBoardSerial", &IBoardInfo::GetBoardSn, result, cache);
+    return CallBoardInfoHdi("GetBoardSerial", &IBoardInfo::GetBoardSn, result, boardSerialCache_,
+        boardInfoMutex_);
 #else
     result.clear();
     return 0;
@@ -146,8 +150,8 @@ int32_t DeviceInfoService::GetCpuId(std::string& result)
 {
     DINFO_LOGI("GetCpuId");
 #ifdef INIT_SUPPORT_BOARDINFO_HDI
-    static std::atomic<std::string*> cache{nullptr};
-    return CallBoardInfoHdi("GetCpuId", &IBoardInfo::GetCpuId, result, cache);
+    return CallBoardInfoHdi("GetCpuId", &IBoardInfo::GetCpuId, result, cpuIdCache_,
+        boardInfoMutex_);
 #else
     result.clear();
     return 0;
@@ -158,8 +162,8 @@ int32_t DeviceInfoService::GetCpuArchitecture(std::string& result)
 {
     DINFO_LOGI("GetCpuArchitecture");
 #ifdef INIT_SUPPORT_BOARDINFO_HDI
-    static std::atomic<std::string*> cache{nullptr};
-    return CallBoardInfoHdi("GetCpuArchitecture", &IBoardInfo::GetCpuArch, result, cache);
+    return CallBoardInfoHdi("GetCpuArchitecture", &IBoardInfo::GetCpuArch, result, cpuArchCache_,
+        boardInfoMutex_);
 #else
     result.clear();
     return 0;
@@ -170,8 +174,8 @@ int32_t DeviceInfoService::GetCpuVendor(std::string& result)
 {
     DINFO_LOGI("GetCpuVendor");
 #ifdef INIT_SUPPORT_BOARDINFO_HDI
-    static std::atomic<std::string*> cache{nullptr};
-    return CallBoardInfoHdi("GetCpuVendor", &IBoardInfo::GetCpuVendor, result, cache);
+    return CallBoardInfoHdi("GetCpuVendor", &IBoardInfo::GetCpuVendor, result, cpuVendorCache_,
+        boardInfoMutex_);
 #else
     result.clear();
     return 0;
@@ -182,8 +186,8 @@ int32_t DeviceInfoService::GetBoardVendor(std::string& result)
 {
     DINFO_LOGI("GetBoardVendor");
 #ifdef INIT_SUPPORT_BOARDINFO_HDI
-    static std::atomic<std::string*> cache{nullptr};
-    return CallBoardInfoHdi("GetBoardVendor", &IBoardInfo::GetBoardVendor, result, cache);
+    return CallBoardInfoHdi("GetBoardVendor", &IBoardInfo::GetBoardVendor, result, boardVendorCache_,
+        boardInfoMutex_);
 #else
     result.clear();
     return 0;
@@ -194,8 +198,8 @@ int32_t DeviceInfoService::GetBoardProductName(std::string& result)
 {
     DINFO_LOGI("GetBoardProductName");
 #ifdef INIT_SUPPORT_BOARDINFO_HDI
-    static std::atomic<std::string*> cache{nullptr};
-    return CallBoardInfoHdi("GetBoardProductName", &IBoardInfo::GetBoardName, result, cache);
+    return CallBoardInfoHdi("GetBoardProductName", &IBoardInfo::GetBoardName, result, boardProductNameCache_,
+        boardInfoMutex_);
 #else
     result.clear();
     return 0;
@@ -206,8 +210,8 @@ int32_t DeviceInfoService::GetBiosVendor(std::string& result)
 {
     DINFO_LOGI("GetBiosVendor");
 #ifdef INIT_SUPPORT_BOARDINFO_HDI
-    static std::atomic<std::string*> cache{nullptr};
-    return CallBoardInfoHdi("GetBiosVendor", &IBoardInfo::GetBiosVendor, result, cache);
+    return CallBoardInfoHdi("GetBiosVendor", &IBoardInfo::GetBiosVendor, result, biosVendorCache_,
+        boardInfoMutex_);
 #else
     result.clear();
     return 0;
@@ -218,8 +222,8 @@ int32_t DeviceInfoService::GetBiosVersion(std::string& result)
 {
     DINFO_LOGI("GetBiosVersion");
 #ifdef INIT_SUPPORT_BOARDINFO_HDI
-    static std::atomic<std::string*> cache{nullptr};
-    return CallBoardInfoHdi("GetBiosVersion", &IBoardInfo::GetBiosVersion, result, cache);
+    return CallBoardInfoHdi("GetBiosVersion", &IBoardInfo::GetBiosVersion, result, biosVersionCache_,
+        boardInfoMutex_);
 #else
     result.clear();
     return 0;
@@ -229,11 +233,12 @@ int32_t DeviceInfoService::GetBiosVersion(std::string& result)
 int32_t DeviceInfoService::GetBiosReleaseDate(std::string& result)
 {
     DINFO_LOGI("GetBiosReleaseDate");
-    static std::atomic<std::string*> cache{nullptr};
-    auto cached = cache.load(std::memory_order_acquire);
-    if (cached != nullptr) {
-        result = *cached;
-        return 0;
+    {
+        std::lock_guard<std::mutex> lock(boardInfoMutex_);
+        if (biosReleaseDateCache_ != nullptr) {
+            result = *biosReleaseDateCache_;
+            return 0;
+        }
     }
     result.clear();
 #ifdef INIT_SUPPORT_BOARDINFO_HDI
@@ -248,7 +253,8 @@ int32_t DeviceInfoService::GetBiosReleaseDate(std::string& result)
     if (ret != 0) {
         return ret;
     }
-    cache.store(new std::string(result), std::memory_order_release);
+    std::lock_guard<std::mutex> lock(boardInfoMutex_);
+    biosReleaseDateCache_ = std::make_shared<std::string>(result);
     return 0;
 #endif
     return 0;
@@ -338,7 +344,22 @@ void DeviceInfoService::OnStart(void)
 void DeviceInfoService::OnStop(void)
 {
     threadStarted_ = false;
+    ClearBoardInfoCache();
     DINFO_LOGI("DeviceInfoService OnStop");
+}
+
+void DeviceInfoService::ClearBoardInfoCache()
+{
+    std::lock_guard<std::mutex> lock(boardInfoMutex_);
+    boardSerialCache_.reset();
+    cpuIdCache_.reset();
+    cpuArchCache_.reset();
+    cpuVendorCache_.reset();
+    boardVendorCache_.reset();
+    boardProductNameCache_.reset();
+    biosVendorCache_.reset();
+    biosVersionCache_.reset();
+    biosReleaseDateCache_.reset();
 }
 
 int DeviceInfoService::Dump(int fd, const std::vector<std::u16string>& args)

@@ -294,7 +294,11 @@ int32_t OH_GetDiskSN(char *diskSn);
  * Obtains the Open device identifier.
  *
  * @syscap SystemCapability.Startup.SystemInfo
- * @return Returns the Open device identifier.
+ * @return Returns the Open device identifier. The returned pointer has thread-local storage
+ *         duration: it is valid within the calling thread until the next call to OH_GetOdid
+ *         from the same thread. The pointer must not be freed by the caller.
+ *         This function is thread-safe. Note that other functions in this module
+ *         (e.g. AclGetSerial) return pointers to static buffers and are NOT thread-safe.
  * @since 26.2.0
  */
 const char *OH_GetOdid(void);

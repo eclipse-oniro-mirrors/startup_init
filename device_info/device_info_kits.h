@@ -17,6 +17,7 @@
 #define OHOS_SYSTEM_DEVICE_ID_KITS_S
 #include <mutex>
 #include <optional>
+#include <string>
 #include <utility>
 #include "idevice_info.h"
 #include "singleton.h"
@@ -67,11 +68,26 @@ private:
         std::string& result,
         std::unique_lock<std::mutex> &lock,
         std::optional<std::pair<int32_t, std::string>> &resultPair);
+    void ClearAllCache();
     std::mutex lock_;
     std::condition_variable deviceInfoLoadCon_;
     sptr<IRemoteObject::DeathRecipient> deathRecipient_ {};
     sptr<IDeviceInfo> deviceInfoService_ {};
     sptr<IDeviceInfo> RetryGetService(std::unique_lock<std::mutex> &lock);
+
+    // Per-API result caches (cleared on SA death via ResetService)
+    std::optional<std::pair<int32_t, std::string>> udidCache_;
+    std::optional<std::pair<int32_t, std::string>> serialCache_;
+    std::optional<std::pair<int32_t, std::string>> diskSnCache_;
+    std::optional<std::pair<int32_t, std::string>> boardSerialCache_;
+    std::optional<std::pair<int32_t, std::string>> cpuIdCache_;
+    std::optional<std::pair<int32_t, std::string>> cpuArchCache_;
+    std::optional<std::pair<int32_t, std::string>> cpuVendorCache_;
+    std::optional<std::pair<int32_t, std::string>> boardVendorCache_;
+    std::optional<std::pair<int32_t, std::string>> boardProductNameCache_;
+    std::optional<std::pair<int32_t, std::string>> biosVendorCache_;
+    std::optional<std::pair<int32_t, std::string>> biosVersionCache_;
+    std::optional<std::pair<int32_t, std::string>> biosReleaseDateCache_;
 };
 } // namespace device_info
 } // namespace OHOS
