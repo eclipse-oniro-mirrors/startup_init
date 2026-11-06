@@ -40,6 +40,7 @@
 #ifdef INIT_SUPPORT_ACCESS_TOKEN
 #include "token_setproc.h"
 #include "nativetoken_kit.h"
+#include "cJSON.h"
 #endif
 #include "sandbox.h"
 #include "sandbox_namespace.h"
@@ -286,6 +287,61 @@ int SetAccessToken(const Service *service)
 #endif
 }
 
+#ifdef INIT_SUPPORT_ACCESS_TOKEN
+static int FillPermNameWithValue(PermNameWithValue *item, const cJSON *permItem)
+{
+    if (cJSON_IsBool(permItem)) {
+        item->permissionName = permItem->string;
+        item->type = 1; // bool: valueNum 1 means true, 0 means false
+        item->valueNum = cJSON_IsTrue(permItem) ? 1 : 0;
+        return 1;
+    }
+    if (cJSON_IsNumber(permItem)) {
+        item->permissionName = permItem->string;
+        item->type = 2; // int
+        item->valueNum = permItem->valueint;
+        return 1;
+    }
+    return 0;
+}
+
+static int ParseKernelPermItems(cJSON *permObj, PermNameWithValue *permList, int listSize)
+{
+    int cnt = 0;
+    cJSON *permItem = NULL;
+    cJSON_ArrayForEach(permItem, permObj) {
+        if (cnt >= listSize) {
+            break;
+        }
+        if (strcmp(permItem->string, OHOS_KERNEL_PERM_COUNT_KEY) == 0) {
+            continue;
+        }
+        if (FillPermNameWithValue(&permList[cnt], permItem)) {
+            cnt++;
+        }
+    }
+    return cnt;
+}
+
+// Parse kernelPermsStr into kernPerms item list. Returns cJSON root that the caller
+// must delete AFTER GetAccessTokenId returns: item permissionName points into this tree.
+static cJSON *GetKernelPermList(const char *kernelPermsStr, KernelPermissionList *kernPerms,
+    PermNameWithValue *permList)
+{
+    kernPerms->permsNum = 0;
+    kernPerms->perms = NULL;
+    INIT_CHECK(kernelPermsStr != NULL, return NULL);
+    cJSON *root = cJSON_Parse(kernelPermsStr);
+    INIT_CHECK(root != NULL, return NULL);
+    cJSON *permObj = cJSON_GetObjectItemCaseSensitive(root, KERNEL_PERM_PRE);
+    if (permObj != NULL) {
+        kernPerms->permsNum = ParseKernelPermItems(permObj, permList, KERNEL_PERM_MAX_COUNT - 1);
+        kernPerms->perms = (kernPerms->permsNum > 0) ? permList : NULL;
+    }
+    return root;
+}
+#endif
+
 void GetAccessToken(void)
 {
     InitGroupNode *node = GetNextGroupNode(NODE_TYPE_SERVICES, NULL);
@@ -300,18 +356,25 @@ void GetAccessToken(void)
             if (service->apl != NULL) {
                 apl = service->apl;
             }
+            KernelPermissionList kernPerms = {0};
+            PermNameWithValue permList[KERNEL_PERM_MAX_COUNT - 1];
+            cJSON *kernelPermRoot = GetKernelPermList(service->kernelPerms, &kernPerms, permList);
             NativeTokenInfoParams nativeTokenInfoParams = {
-                service->capsArgs.count,
-                service->permArgs.count,
-                service->permAclsArgs.count,
-                (const char **)service->capsArgs.argv,
-                (const char **)service->permArgs.argv,
-                (const char **)service->permAclsArgs.argv,
-                service->name,
-                apl,
-                (int32_t)service->servPerm.uID,
+                .dcapsNum = service->capsArgs.count,
+                .permsNum = service->permArgs.count,
+                .aclsNum = service->permAclsArgs.count,
+                .dcaps = (const char **)service->capsArgs.argv,
+                .perms = (const char **)service->permArgs.argv,
+                .acls = (const char **)service->permAclsArgs.argv,
+                .processName = service->name,
+                .aplStr = apl,
+                .uid = (int32_t)service->servPerm.uID,
+                .kernPerms = kernPerms,
             };
             uint64_t tokenId = GetAccessTokenId(&nativeTokenInfoParams);
+            if (kernelPermRoot != NULL) {
+                cJSON_Delete(kernelPermRoot);
+            }
             INIT_CHECK_ONLY_ELOG(tokenId  != 0,
                 "gettotkenid failed, service \' %s \'", service->name);
             service->tokenId = tokenId;

@@ -45,9 +45,6 @@
 
 #define VALUE_ATTR_CONSOLE 1
 #define VALUE_ATTR_KMSG 2
-#define OHOS_KERNEL_PERM_COUNT_KEY "ohos.encaps.count"
-#define KERNEL_PERM_PRE "encaps"
-#define KERNEL_PERM_MAX_COUNT 64
 #define BUFFER_SIZE 4096
 
 // All service processes that init will fork+exec.

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include <cstdlib>
+#include <string>
 #include "init_cmds.h"
 #include "init_group_manager.h"
 #include "init_hashmap.h"
@@ -27,6 +28,9 @@
 
 using namespace testing::ext;
 using namespace std;
+
+#define UT_KERNEL_PERM_OVER_LIMIT 65
+#define UT_PERM_NAME_OVER_LEN 257
 
 typedef struct {
     HashNode node;
@@ -95,6 +99,35 @@ static void DoCmdByName(const char *name, const char *cmdContent)
     int cmdIndex = 0;
     (void)GetMatchCmd(name, &cmdIndex);
     DoCmdByIndex(cmdIndex, cmdContent, nullptr);
+}
+
+static Service *AddKernelPermTestService(const char *name, const char *kernelPerms)
+{
+    std::string cfg = std::string("{\"services\":{\"name\":\"") + name +
+        "\",\"path\":[\"/data/init_ut/test_service\"],\"importance\":-20,\"uid\":\"system\","
+        "\"writepid\":[\"/dev/test_service\"],\"console\":1,\"gid\":[\"system\"],\"caps\":[\"\"]}}";
+    cJSON *jobItem = cJSON_Parse(cfg.c_str());
+    if (jobItem == nullptr) {
+        return nullptr;
+    }
+    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
+    Service *service = (serviceItem == nullptr) ? nullptr : AddService(name);
+    if (service != nullptr) {
+        (void)ParseOneService(serviceItem, service);
+        service->kernelPerms = (kernelPerms == nullptr) ? nullptr : strdup(kernelPerms);
+    }
+    cJSON_Delete(jobItem);
+    return service;
+}
+
+static std::string BuildKernelPermsJson(int validCount)
+{
+    std::string json = "{\"encaps\":{\"ohos.encaps.count\":" + std::to_string(validCount);
+    for (int i = 0; i < validCount; i++) {
+        json += ",\"ohos.permission.kernel.UT_KERNEL_PERM_" + std::to_string(i) + "\":true";
+    }
+    json += "}}";
+    return json;
 }
 
 namespace init_ut {
@@ -357,6 +390,143 @@ HWTEST_F(InitGroupManagerUnitTest, TestParseServiceCpucore, TestSize.Level1)
         ReleaseService(service);
     }
     cJSON_Delete(jobItem);
+}
+
+HWTEST_F(InitGroupManagerUnitTest, GetAccessTokenKernelPermPassed, TestSize.Level1)
+{
+    const char *jsonStr = "{\"services\":{\"name\":\"test_service23\",\"path\":[\"/data/init_ut/test_service\"],"
+        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
+        "\"gid\":[\"system\"],\"caps\":[\"\"],\"kernel_permission\":{\"ohos.filesystem.dfs\":345,"
+        "\"ohos.permission.kernel.ALLOW_WRITABLE_CODE_MEMORY\":true}}}";
+    cJSON* jobItem = cJSON_Parse(jsonStr);
+    ASSERT_NE(nullptr, jobItem);
+    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
+    ASSERT_NE(nullptr, serviceItem);
+    Service *service = AddService("test_service23");
+    ASSERT_NE(nullptr, service);
+    int ret = ParseOneService(serviceItem, service);
+    EXPECT_EQ(ret, 0);
+    EXPECT_NE(service->kernelPerms, nullptr);
+    GetAccessToken();
+    EXPECT_NE(service->tokenId, 0u);
+    ReleaseService(service);
+    cJSON_Delete(jobItem);
+}
+
+HWTEST_F(InitGroupManagerUnitTest, GetAccessTokenNoKernelPerm, TestSize.Level1)
+{
+    const char *jsonStr = "{\"services\":{\"name\":\"test_service24\",\"path\":[\"/data/init_ut/test_service\"],"
+        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
+        "\"gid\":[\"system\"],\"caps\":[\"\"]}}";
+    cJSON* jobItem = cJSON_Parse(jsonStr);
+    ASSERT_NE(nullptr, jobItem);
+    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
+    ASSERT_NE(nullptr, serviceItem);
+    Service *service = AddService("test_service24");
+    ASSERT_NE(nullptr, service);
+    int ret = ParseOneService(serviceItem, service);
+    EXPECT_EQ(ret, 0);
+    EXPECT_TRUE(service->kernelPerms == nullptr);
+    GetAccessToken();
+    EXPECT_NE(service->tokenId, 0u);
+    ReleaseService(service);
+    cJSON_Delete(jobItem);
+}
+
+HWTEST_F(InitGroupManagerUnitTest, GetAccessTokenAbnormalKernelPerm, TestSize.Level1)
+{
+    const char *jsonStr = "{\"services\":{\"name\":\"test_service25\",\"path\":[\"/data/init_ut/test_service\"],"
+        "\"importance\":-20,\"uid\":\"system\",\"writepid\":[\"/dev/test_service\"],\"console\":1,"
+        "\"gid\":[\"system\"],\"caps\":[\"\"]}}";
+    cJSON* jobItem = cJSON_Parse(jsonStr);
+    ASSERT_NE(nullptr, jobItem);
+    cJSON *serviceItem = cJSON_GetObjectItem(jobItem, "services");
+    ASSERT_NE(nullptr, serviceItem);
+    Service *service = AddService("test_service25");
+    ASSERT_NE(nullptr, service);
+    int ret = ParseOneService(serviceItem, service);
+    EXPECT_EQ(ret, 0);
+    service->kernelPerms = const_cast<char *>("{not-valid-json");
+    GetAccessToken();
+    EXPECT_NE(service->tokenId, 0u);
+    service->kernelPerms = nullptr;
+    ReleaseService(service);
+    cJSON_Delete(jobItem);
+}
+
+HWTEST_F(InitGroupManagerUnitTest, GetAccessTokenKernelPermBoolFalse, TestSize.Level1)
+{
+    Service *service = AddKernelPermTestService("test_service26",
+        "{\"encaps\":{\"ohos.encaps.count\":1,\"ohos.permission.kernel.UT_BOOL_FALSE\":false}}");
+    ASSERT_NE(nullptr, service);
+    GetAccessToken();
+    EXPECT_NE(service->tokenId, 0u);
+    ReleaseService(service);
+}
+
+HWTEST_F(InitGroupManagerUnitTest, GetAccessTokenKernelPermUnsupportedValue, TestSize.Level1)
+{
+    Service *service = AddKernelPermTestService("test_service27",
+        "{\"encaps\":{\"ohos.encaps.count\":1,"
+        "\"ohos.permission.kernel.UT_STR\":\"abc\","
+        "\"ohos.permission.kernel.UT_NULL\":null,"
+        "\"ohos.permission.kernel.UT_OBJ\":{\"a\":1},"
+        "\"ohos.permission.kernel.UT_ARR\":[1,2],"
+        "\"ohos.permission.kernel.UT_BOOL_TRUE\":true}}");
+    ASSERT_NE(nullptr, service);
+    GetAccessToken();
+    EXPECT_NE(service->tokenId, 0u);
+    ReleaseService(service);
+}
+
+HWTEST_F(InitGroupManagerUnitTest, GetAccessTokenKernelPermNoEncapsObject, TestSize.Level1)
+{
+    Service *service = AddKernelPermTestService("test_service28",
+        "{\"other\":{\"ohos.encaps.count\":1,\"ohos.permission.kernel.UT_BOOL_TRUE\":true}}");
+    ASSERT_NE(nullptr, service);
+    GetAccessToken();
+    EXPECT_NE(service->tokenId, 0u);
+    ReleaseService(service);
+}
+
+HWTEST_F(InitGroupManagerUnitTest, GetAccessTokenKernelPermEmptyEncaps, TestSize.Level1)
+{
+    Service *service = AddKernelPermTestService("test_service29", "{\"encaps\":{}}");
+    ASSERT_NE(nullptr, service);
+    GetAccessToken();
+    EXPECT_NE(service->tokenId, 0u);
+    ReleaseService(service);
+}
+
+HWTEST_F(InitGroupManagerUnitTest, GetAccessTokenKernelPermOnlyCountKey, TestSize.Level1)
+{
+    Service *service = AddKernelPermTestService("test_service30",
+        "{\"encaps\":{\"ohos.encaps.count\":3}}");
+    ASSERT_NE(nullptr, service);
+    GetAccessToken();
+    EXPECT_NE(service->tokenId, 0u);
+    ReleaseService(service);
+}
+
+HWTEST_F(InitGroupManagerUnitTest, GetAccessTokenKernelPermExceedMaxCount, TestSize.Level1)
+{
+    std::string json = BuildKernelPermsJson(UT_KERNEL_PERM_OVER_LIMIT);
+    Service *service = AddKernelPermTestService("test_service31", json.c_str());
+    ASSERT_NE(nullptr, service);
+    GetAccessToken();
+    EXPECT_NE(service->tokenId, 0u);
+    ReleaseService(service);
+}
+
+HWTEST_F(InitGroupManagerUnitTest, GetAccessTokenKernelPermNameTooLong, TestSize.Level1)
+{
+    std::string longName(UT_PERM_NAME_OVER_LEN, 'A');
+    std::string json = "{\"encaps\":{\"" + longName + "\":true}}";
+    Service *service = AddKernelPermTestService("test_service32", json.c_str());
+    ASSERT_NE(nullptr, service);
+    GetAccessToken();
+    EXPECT_EQ(service->tokenId, 0u);
+    ReleaseService(service);
 }
 
 HWTEST_F(InitGroupManagerUnitTest, TestUpdaterServiceFds, TestSize.Level1)
