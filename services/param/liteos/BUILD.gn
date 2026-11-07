@@ -128,6 +128,7 @@ static_library("param_client_lite") {
   sources = base_sources
   include_dirs = param_include_dirs
   defines = param_build_defines
+  deps = []
   public_configs = [ ":exported_header_files" ]
   external_deps = [ "bounds_checking_function:libsec_static" ]
 
@@ -166,9 +167,17 @@ static_library("param_client_lite") {
       defines += [ "DATA_PATH=\"${config_ohos_startup_init_lite_data_path}\"" ]
     }
     if (init_feature_begetctl_liteos) {
-      deps = [ ":lite_ohos_param_to" ]
+      deps += [ ":lite_ohos_param_to" ]
       include_dirs += [ "$root_out_dir/gen/init" ]
       defines += [ "PARAM_LOAD_CFG_FROM_CODE" ]
+    }
+
+    if (init_feature_param_load_from_cfg_file) {
+      defines += [ "PARAM_LOAD_CFG_FROM_FILE" ]
+      include_dirs +=
+          [ "//base/customization/config_policy/interfaces/inner_api/include" ]
+      deps +=
+          [ "//base/customization/config_policy/frameworks/config_policy:configpolicy_util" ]
     }
 
     if (defined(init_lite_memory_size)) {

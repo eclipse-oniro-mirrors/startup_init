@@ -81,6 +81,13 @@ executable("init") {
       "//base/startup/init/initsync:initsync",
       "//base/startup/init/services/param/liteos:param_init_lite",
     ]
+    if (init_feature_param_load_from_cfg_file) {
+      defines += [ "PARAM_LOAD_CFG_FROM_FILE" ]
+      include_dirs +=
+          [ "//base/customization/config_policy/interfaces/inner_api/include" ]
+      deps +=
+          [ "//base/customization/config_policy/frameworks/config_policy:configpolicy_util" ]
+    }
   }
   if (ohos_kernel_type == "linux") {
     defines += [

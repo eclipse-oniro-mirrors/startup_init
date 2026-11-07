@@ -27,6 +27,9 @@
 #include "init_stage.h"
 #endif
 #include "init_param.h"
+#ifdef PARAM_LOAD_CFG_FROM_FILE
+#include "config_policy_utils.h"
+#endif
 #include "loop_event.h"
 
 void SystemInit(void)
@@ -67,9 +70,19 @@ void SystemConfig(const char *uptime)
 #ifdef LITEOS_SUPPORT
     InitParamService();
     // parse parameters
+#ifdef PARAM_LOAD_CFG_FROM_FILE
+    CfgFiles *files = GetCfgFiles("etc/param");
+    for (int i = MAX_CFG_POLICY_DIRS_CNT - 1; files != NULL && i >= 0; i--) {
+        if (files->paths[i] != NULL) {
+            (void)LoadDefaultParams(files->paths[i], LOAD_PARAM_ONLY_ADD);
+        }
+    }
+    FreeCfgFiles(files);
+#else
     (void)LoadDefaultParams("/system/etc/param/ohos_const", LOAD_PARAM_NORMAL);
     (void)LoadDefaultParams("/vendor/etc/param", LOAD_PARAM_NORMAL);
     (void)LoadDefaultParams("/system/etc/param", LOAD_PARAM_ONLY_ADD);
+#endif
 
     (void)LoadPersistParams();
 #endif

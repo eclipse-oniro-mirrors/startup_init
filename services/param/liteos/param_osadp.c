@@ -228,6 +228,13 @@ __attribute__((weak)) void FreeSysParamMem(void *mem)
     free(mem);
 }
 
+#ifdef PARAM_LOAD_CFG_FROM_FILE
+int GetParamValue(const char *symValue, unsigned int symLen, char *paramValue, unsigned int paramLen)
+{
+    return (strncpy_s(paramValue, paramLen, symValue, symLen) == EOK) ? 0 : -1;
+}
+#endif
+
 #ifdef PARAM_WORKSPACE_DYNAMIC_ALLOC
 __attribute__((weak)) void *ReallocSysParamMem(void *mem, uint32_t newSize)
 {
