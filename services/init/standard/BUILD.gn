@@ -169,7 +169,7 @@ ohos_executable("init") {
   if (defined(global_parts_info) &&
       defined(global_parts_info.security_access_token)) {
     external_deps += [
-      "access_token:libnativetoken",
+      "access_token:libnativetoken_static",
       "access_token:libtoken_setproc",
     ]
     defines += [ "INIT_SUPPORT_ACCESS_TOKEN" ]
