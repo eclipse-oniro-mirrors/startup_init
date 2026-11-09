@@ -67,6 +67,16 @@ if (defined(ohos_lite)) {
     subsystem_name = "startup"
   }
 
+  ohos_prebuilt_etc("bootmode.cfg") {
+    source = "//base/startup/init/services/etc/bootmode.cfg"
+    part_name = "init"
+    subsystem_name = "startup"
+    install_images = [
+      "system",
+      "updater",
+    ]
+  }
+
   ohos_prebuilt_etc("watchdog.cfg") {
     source = "//base/startup/init/services/etc/watchdog.cfg"
     relative_install_dir = "init"
@@ -247,6 +257,7 @@ if (defined(ohos_lite)) {
   group("etc_files") {
     deps = [
       ":boot.group",
+      ":bootmode.cfg",
       ":console.cfg",
       ":features.json",
       ":group",
