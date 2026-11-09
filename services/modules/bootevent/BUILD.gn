@@ -25,6 +25,7 @@ config("bootevent_static_config") {
 }
 
 ohos_source_set("libbootevent_static") {
+  branch_protector_ret = "pac_ret"
   sources = [ "bootevent.c" ]
   include_dirs = [ ".." ]
   include_dirs += [

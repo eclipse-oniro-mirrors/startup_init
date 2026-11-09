@@ -54,6 +54,7 @@ config("initeng_static_config") {
 }
 
 ohos_source_set("libiniteng_static") {
+  branch_protector_ret = "pac_ret"
   sources = [ "init_eng_static.c" ]
   include_dirs = comm_include
   public_configs = [ ":initeng_static_config" ]

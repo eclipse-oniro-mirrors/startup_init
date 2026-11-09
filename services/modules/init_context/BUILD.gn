@@ -65,6 +65,7 @@ config("initcontext_static_config") {
 }
 
 ohos_source_set("initcontext_static") {
+  branch_protector_ret = "pac_ret"
   sources = [ "init_context_static.c" ]
   include_dirs = comm_include
   defines = [ "INIT_SUPPORT_CHIPSET_INIT" ]
