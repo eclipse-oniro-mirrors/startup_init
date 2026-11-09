@@ -284,9 +284,10 @@ const char *OH_GetDistributionOSReleaseType(void);
  * @return <ul>
  *         <li>0 if the operation is successful.</li>
  *         <li>201 if the caller does not have ohos.permission.ACCESS_DISK_PHY_INFO.</li>
+ *         <li>401 if the caller passes an invalid input parameter.</li>
  *         </ul>
  * @permission ohos.permission.ACCESS_DISK_PHY_INFO
- * @since 26.2.0
+ * @since 26.1.0
  */
 int32_t OH_GetDiskSN(char *diskSn);
  
@@ -299,7 +300,7 @@ int32_t OH_GetDiskSN(char *diskSn);
  *         from the same thread. The pointer must not be freed by the caller.
  *         This function is thread-safe. Note that other functions in this module
  *         (e.g. AclGetSerial) return pointers to static buffers and are NOT thread-safe.
- * @since 26.2.0
+ * @since 26.1.0
  */
 const char *OH_GetOdid(void);
 

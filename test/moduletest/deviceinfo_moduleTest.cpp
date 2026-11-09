@@ -132,7 +132,7 @@ HWTEST_F(DeviceInfoModuleTest, DeviceInfoOHGetDiskSN_002, TestSize.Level0)
 {
     GTEST_LOG_(INFO) << "DeviceInfoOHGetDiskSN_002 start";
     int32_t ret = OH_GetDiskSN(nullptr);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, BOARD_INFO_INVALID_PARAM_CODE);
     GTEST_LOG_(INFO) << "DeviceInfoOHGetDiskSN_002 end";
 }
 
