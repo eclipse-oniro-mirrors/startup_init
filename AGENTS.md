@@ -92,6 +92,25 @@ touching the related code; do **not** guess semantics from source alone.
 Before editing, state to yourself: (1) task category, (2) which doc(s) below
 you read, (3) which constraint in §3 applies. If you skip this, stop and read.
 
+### 2.0 In-repo knowledge base (`docs/knowledge/`)
+
+A six-part knowledge base generated from this repo's source lives under
+`docs/knowledge/` (Chinese). It documents current code reality — real paths,
+symbols, and numeric limits — and complements the concept docs above.
+
+| Question | Read first |
+| --- | --- |
+| Business positioning, responsibility boundary, inputs/outputs | [docs/knowledge/business-context.md](docs/knowledge/business-context.md) |
+| Layering, boot sequence, non-functional design, architecture constraints | [docs/knowledge/architecture.md](docs/knowledge/architecture.md) |
+| Hard coding rules (single thread, SetPerms order, command limits, ABI) | [docs/knowledge/coding-standards.md](docs/knowledge/coding-standards.md) |
+| Terms: job/trigger, ondemand, fd-holder, sandbox, seccomp, group cfg, ... | [docs/knowledge/glossary.md](docs/knowledge/glossary.md) |
+| Entities: Service, Trigger/Job, ParamNode, ServiceSocket, Sandbox, GroupNode, DeviceUdevConf | [docs/knowledge/init-Entity.md](docs/knowledge/init-Entity.md) |
+| Mechanisms: two-stage boot, cfg parse, fork+SetPerms, restart policy, ondemand, param service, trigger engine, loopevent, plugin/hook, seccomp, sandbox, fd_holder, control_fd, ueventd | [docs/knowledge/init-Technology.md](docs/knowledge/init-Technology.md) |
+
+Suggested on-demand order: glossary (unclear term) → business-context (unclear
+scope) → architecture → the Entity/Technology chapter for the module you touch
+→ coding-standards before writing code. Do not load all six files at once.
+
 ### 2.1 Task-based routing
 
 | Working on / task | Read this doc first | Key concept to load |
