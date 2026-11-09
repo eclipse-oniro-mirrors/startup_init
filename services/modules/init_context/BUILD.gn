@@ -23,6 +23,7 @@ comm_include = [
 ]
 
 ohos_shared_library("init_context") {
+  branch_protector_ret = "pac_ret"
   sources = [ "init_context.c" ]
 
   include_dirs = comm_include
