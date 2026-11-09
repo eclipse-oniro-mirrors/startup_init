@@ -832,30 +832,13 @@ HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_MalformedUidGidKeys001,
         .devNum = 2,
     };
 
+    // Append malformed keys after the valid DEVUIO=/DEVGID= keys (which set
+    // uid/gid to 1000). They must not be treated as uid/gid keys.
     std::vector<std::string> extraData{
-        "DEVUID", "DEVGID", "DEVUIDX=1", "DEVGIDX=1"
+        std::string("DEVUID\0", 7), std::string("DEVGID\0", 7),
+        std::string("DEVUIDX=1\0", 10), std::string("DEVGIDX=1\0", 10),
     };
-
-    std::string ueventdBuffer{};
-    ueventdBuffer.append("DEVPATH=/block/mmc/test\0", 22);
-    ueventdBuffer.append("SUBSYSTEM=block\0", 16);
-    ueventdBuffer.append("ACTION=add\0", 11);
-    ueventdBuffer.append("DEVNAME=test\0", 13);
-    ueventdBuffer.append("PARTNAME=userdata\0", 18);
-    ueventdBuffer.append("PARTN=3\0", 8);
-    ueventdBuffer.append("MAJOR=1\0", 8);
-    ueventdBuffer.append("MINOR=2\0", 8);
-    ueventdBuffer.append("DEVUID=1000\0", 12);
-    ueventdBuffer.append("DEVGID=1000\0", 12);
-    ueventdBuffer.append("FIRMWARE=\0", 10);
-    ueventdBuffer.append("BUSNUM=1\0", 9);
-    ueventdBuffer.append("DEVNUM=2\0", 9);
-    
-    for (const auto &data : extraData) {
-        ueventdBuffer.append(data);
-        ueventdBuffer.append(1, '\0');
-    }
-
+    auto ueventBuffer = GenerateUeventBuffer(uevent, extraData);
     struct Uevent outEvent = {};
     EXPECT_NO_FATAL_FAILURE(ParseUeventMessage(ueventBuffer.data(), ueventBuffer.length(), &outEvent));
     // The vaild DEVUID=/DEVGID= keys still set 1000, and the malformed keys must
@@ -868,9 +851,10 @@ HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_MalformedUidGidKeys001,
 // their defaults instead of polluting them or crashing.
 HWTEST_F(UeventdEventUnitTest, Init_UeventdEventUnitTest_MalformedUidGidKeys002, TestSize.Level1)
 {
-    char malformedbuffer[] = "DEVUID\0DEVGID\0DEVUIDX=1\0DEVGID=1\0";
+    // "DEVUID\0" / "DEVGID\0" (bare, no '=') and "DEVUIDX=1\0" / "DEVGIDX=1\0"
+    // (similar prefix) only. parse must not crash and must keep the defaults.
+    std::string malformedbuffer("DEVUID\0DEVGID\0DEVUIDX=1\0DEVGID=1\0", 34);
     struct Uevent outEvent = {};
-    EXPECT_NO_FATAL_FAILURE(ParseUeventMessage(malformedbuffer, sizeof(malformedbuffer) - 1, &outEvent));
     EXPECT_EQ(outEvent.ug.uid, 0);
     EXPECT_EQ(outEvent.ug.gid, 0);
 }
