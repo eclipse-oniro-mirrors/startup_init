@@ -333,6 +333,46 @@ public:
         return 0;
     }
 
+    int TestInvalidContentMsg(int type, const char *name)
+    {
+        if (g_worker == nullptr) {
+            g_worker = CreateAndGetStreamTask();
+        }
+        if (g_worker == nullptr) {
+            return 0;
+        }
+        constexpr uint32_t padSize = 4;
+        uint32_t msgSize = sizeof(ParamMessage) + sizeof(ParamMsgContent) + padSize;
+        ParamMessage *request = (ParamMessage *)CreateParamMessage(type, name, msgSize);
+        PARAM_CHECK(request != nullptr, return -1, "Failed to malloc for connect");
+        uint32_t offset = 0;
+        ParamMsgContent *content = (ParamMsgContent *)(request->data + offset);
+        content->type = PARAM_VALUE;
+        content->contentSize = 0;
+        offset += sizeof(ParamMsgContent);
+        request->msgSize = offset + sizeof(ParamMessage) + padSize;
+        int ret = ProcessMessage((const ParamTaskPtr)g_worker, (const ParamMessage *)request);
+        free(request);
+        return ret;
+    }
+
+    int TestNoContentMsg(int type, const char *name)
+    {
+        if (g_worker == nullptr) {
+            g_worker = CreateAndGetStreamTask();
+        }
+        if (g_worker == nullptr) {
+            return 0;
+        }
+        ParamMessage *request = (ParamMessage *)CreateParamMessage(type, name, sizeof(ParamMessage));
+        PARAM_CHECK(request != nullptr, return -1, "Failed to malloc for connect");
+        request->type = type;
+        request->msgSize = sizeof(ParamMessage);
+        int ret = ProcessMessage((const ParamTaskPtr)g_worker, (const ParamMessage *)request);
+        free(request);
+        return ret;
+    }
+
     int AddWatch(int type, const char *name, const char *value)
     {
         if (g_worker == nullptr) {
@@ -503,6 +543,25 @@ HWTEST_F(ParamServiceUnitTest, Init_TestServiceProcessMessage_001, TestSize.Leve
     EXPECT_EQ(ret, 0);
 }
 
+HWTEST_F(ParamServiceUnitTest, Init_TestServiceProcessMessage_002, TestSize.Level0)
+{
+    ParamServiceUnitTest test;
+    int ret = test.TestInvalidContentMsg(MSG_SET_PARAM, "test.fa.invalid.set");
+    EXPECT_NE(ret, 0);
+    char value[PARAM_BUFFER_SIZE] = {0};
+    uint32_t len = sizeof(value) - 1;
+    EXPECT_NE(SystemReadParam("test.fa.invalid.set", value, &len), 0);
+}
+
+HWTEST_F(ParamServiceUnitTest, Init_TestServiceProcessMessage_003, TestSize.Level0)
+{
+    ParamServiceUnitTest test;
+    int ret = test.TestNoContentMsg(MSG_SET_PARAM, "test.fa.invalid.nocontent");
+    EXPECT_NE(ret, 0);
+    ret = test.TestNoContentMsg(MSG_WAIT_PARAM, "test.fa.invalid.nocontent.wait");
+    EXPECT_NE(ret, 0);
+}
+
 HWTEST_F(ParamServiceUnitTest, Init_TestAddParamWait_001, TestSize.Level0)
 {
     ParamServiceUnitTest test;
@@ -522,6 +581,16 @@ HWTEST_F(ParamServiceUnitTest, Init_TestAddParamWait_003, TestSize.Level0)
     ParamServiceUnitTest test;
     int ret = test.TestAddParamWait3();
     EXPECT_EQ(ret, 0);
+}
+
+HWTEST_F(ParamServiceUnitTest, Init_TestAddParamWait_004, TestSize.Level0)
+{
+    ParamServiceUnitTest test;
+    int ret = test.TestInvalidContentMsg(MSG_WAIT_PARAM, "test.fa.invalid.wait");
+    EXPECT_NE(ret, 0);
+    char value[PARAM_BUFFER_SIZE] = {0};
+    uint32_t len = sizeof(value) - 1;
+    EXPECT_NE(SystemReadParam("test.fa.invalid.wait", value, &len), 0);
 }
 
 HWTEST_F(ParamServiceUnitTest, Init_TestAddParamWatch_001, TestSize.Level0)

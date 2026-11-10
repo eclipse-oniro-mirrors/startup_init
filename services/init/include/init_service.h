@@ -181,7 +181,7 @@ typedef struct Service {
     int importance;
     int startMode : 4; // startCondition/ startBoot / startNormal
     int endMode : 4; // preFork/ fork / exec / ready
-    int status : 4; // ServiceStatus
+    unsigned int status : 4; // ServiceStatus, 0..15
     uint64_t tokenId;
     char *apl;
     uint64_t period;
