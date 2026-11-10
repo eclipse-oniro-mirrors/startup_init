@@ -169,7 +169,6 @@ int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remote
 
     // check calling uid, app not have watch permission
     int uid = static_cast<int>(IPCSkeleton::GetCallingAppUid());
-    WATCHER_LOGI("AddWatcher %s calling uid:%d pid:%d", keyPrefix.c_str(), uid, GetCallingPid());
     if (uid >= PUBLIC_APP_BEGIN_UID && !CheckAppWatchPermission(keyPrefix)) {
         uint64_t tokenId = IPCSkeleton::GetCallingTokenID();
         WATCHER_LOGV("GetCallingTokenID: %llu", tokenId);
@@ -207,8 +206,8 @@ int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remote
         }
     }
     SendLocalChange(keyPrefix, remoteWatcherId);
-    WATCHER_LOGI("Add watcher %s remoteWatcherId: %u groupId %u success",
-        keyPrefix.c_str(), remoteWatcherId, group->GetGroupId());
+    WATCHER_LOGI("Add watcher %s remoteWatcherId: %u groupId %u uid %d success",
+        keyPrefix.c_str(), remoteWatcherId, group->GetGroupId(), uid);
     return 0;
 }
 
