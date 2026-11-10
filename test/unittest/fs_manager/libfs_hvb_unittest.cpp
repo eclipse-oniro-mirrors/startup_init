@@ -275,9 +275,11 @@ HWTEST_F(FsHvbUnitTest, Init_FsHvbDestoryVerityTarget_001, TestSize.Level0)
     DmVerityTarget target = {};
 
     target.paras = static_cast<char *>(calloc(1, 10));
-    EXPECT_NE(target.paras, nullptr);
+    ASSERT_NE(target.paras, nullptr);
     FsHvbDestoryVerityTarget(&target);
+    ASSERT_EQ(target.paras, nullptr);
     FsHvbDestoryVerityTarget(&target);
+    EXPECT_EQ(target.paras, nullptr);
 }
 
 HWTEST_F(FsHvbUnitTest, Init_VerifyExtHvbImage_001, TestSize.Level0)
@@ -596,7 +598,9 @@ HWTEST_F(FsHvbUnitTest, Init_FsHvbDestoryVerityTarget_002, TestSize.Level0)
 
     DmVerityTarget target = {};
     FsHvbDestoryVerityTarget(&target);
+    ASSERT_EQ(target.paras, nullptr);
     FsHvbDestoryVerityTarget(&target);
+    EXPECT_EQ(target.paras, nullptr);
 }
 
 HWTEST_F(FsHvbUnitTest, Init_FsHvbGetValueFromCmdLine_002, TestSize.Level0)
