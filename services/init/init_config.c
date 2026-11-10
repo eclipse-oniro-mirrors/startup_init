@@ -108,7 +108,7 @@ static void ParseAllImports(const cJSON *root, int depth)
     return;
 }
 
-void ReadConfig(void)
+static void RunLegacyBootModeConfig(void)
 {
     // parse cfg
     char buffer[32] = {0}; // 32 reason max leb
@@ -136,3 +136,207 @@ void ReadConfig(void)
         ReadFileInDir("/etc", ".cfg", ParseInitCfg, NULL);
     }
 }
+
+#if defined(OHOS_LITE)
+void ReadConfig(void)
+{
+    RunLegacyBootModeConfig();
+}
+#else
+
+static const char *GetJsonStringValue(const cJSON *item, const char *key)
+{
+    const cJSON *value = cJSON_GetObjectItem(item, key);
+    if (value == NULL || !cJSON_IsString(value)) {
+        return NULL;
+    }
+    return value->valuestring;
+}
+
+static bool MatchCmdLineCond(const cJSON *cond, const char *bootMode)
+{
+    const char *param = GetJsonStringValue(cond, "param");
+    const char *value = GetJsonStringValue(cond, "value");
+    if (param == NULL || value == NULL) {
+        return false;
+    }
+    bool exact = cJSON_IsTrue(cJSON_GetObjectItem(cond, "exact"));
+    if (!exact && strcmp(param, BOOT_MODE_NAME) == 0) {
+        return strcmp(bootMode, value) == 0;
+    }
+    char actual[32] = {0};
+    int ret = exact ? GetExactParameterFromCmdLine(param, actual, sizeof(actual))
+                    : GetParameterFromCmdLine(param, actual, sizeof(actual));
+    if (ret != 0) {
+        return false;
+    }
+    return strcmp(actual, value) == 0;
+}
+
+static bool MatchBootModeCond(const cJSON *cond, const char *bootMode)
+{
+    const char *type = GetJsonStringValue(cond, "type");
+    if (type == NULL) {
+        return false;
+    }
+    if (strcmp(type, "cmdline") == 0) {
+        return MatchCmdLineCond(cond, bootMode);
+    }
+    if (strcmp(type, "misc") == 0) {
+        const char *value = GetJsonStringValue(cond, "value");
+        char reason[64] = {0};
+        if (value == NULL || GetMiscBootReason(reason, sizeof(reason)) != 0) {
+            return false;
+        }
+        return strcmp(reason, value) == 0;
+    }
+    if (strcmp(type, "updater") == 0) {
+        return InUpdaterMode() != 0;
+    }
+    if (strcmp(type, "default") == 0) {
+        return true;
+    }
+    INIT_LOGI("unknown condition type %s in boot mode cfg", type);
+    return false;
+}
+
+static bool MatchBootModeEntry(const cJSON *entry, const char *bootMode)
+{
+    const cJSON *condition = cJSON_GetObjectItem(entry, "condition");
+    if (condition == NULL) {
+        return false;
+    }
+    if (cJSON_IsArray(condition)) {
+        const cJSON *item = NULL;
+        cJSON_ArrayForEach(item, condition) {
+            if (MatchBootModeCond(item, bootMode)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    return MatchBootModeCond(condition, bootMode);
+}
+
+static int ExecuteBootModeAction(const cJSON *action)
+{
+    const char *type = GetJsonStringValue(action, "action");
+    if (type == NULL) {
+        return -1;
+    }
+    const char *path = GetJsonStringValue(action, "path");
+    if (strcmp(type, "parse_default_cfg") == 0) {
+        const char *cfgPath = (path != NULL) ? path : INIT_CONFIGURATION_FILE;
+        INIT_LOGI("boot mode action: parse_default_cfg %s", cfgPath);
+        return (ParseInitCfg(cfgPath, NULL) == 0) ? 0 : -1;
+    }
+    if (path == NULL) {
+        INIT_LOGE("boot mode action %s missing path", type);
+        return -1;
+    }
+    if (strcmp(type, "read_dir") == 0) {
+        INIT_LOGI("boot mode action: read_dir %s", path);
+        return (ReadFileInDir(path, ".cfg", ParseInitCfg, NULL) == 0) ? 0 : -1;
+    }
+    if (strcmp(type, "parse_priority") == 0) {
+        INIT_LOGI("boot mode action: parse_priority %s", path);
+        return (ParseCfgByPriority(path) == 0) ? 0 : -1;
+    }
+    INIT_LOGI("unknown action type %s in boot mode cfg", type);
+    return -1;
+}
+
+static int ExecuteBootModeActions(const cJSON *actions)
+{
+    const cJSON *action = NULL;
+    int ret = -1;
+    cJSON_ArrayForEach(action, actions) {
+        if (ExecuteBootModeAction(action) == 0) {
+            ret = 0;
+        }
+    }
+    return ret;
+}
+
+static void RunDefaultBootModeActions(void)
+{
+    INIT_LOGI("use default boot mode actions");
+    (void)ParseInitCfg(INIT_CONFIGURATION_FILE, NULL);
+    (void)ParseCfgByPriority(INIT_CFG_FIEL_PATH);
+}
+
+static cJSON *LoadBootModeCfg(cJSON **root)
+{
+    char *cfgBuf = ReadFileToBuf(BOOT_MODE_CFG_PATH);
+    if (cfgBuf == NULL) {
+        INIT_LOGE("failed to read boot mode cfg %s", BOOT_MODE_CFG_PATH);
+        return NULL;
+    }
+    cJSON *cfgRoot = cJSON_Parse(cfgBuf);
+    free(cfgBuf);
+    if (cfgRoot == NULL) {
+        INIT_LOGE("failed to parse boot mode cfg %s", BOOT_MODE_CFG_PATH);
+        return NULL;
+    }
+    cJSON *bootModes = cJSON_GetObjectItem(cfgRoot, "boot_modes");
+    if (bootModes == NULL || !cJSON_IsArray(bootModes)) {
+        INIT_LOGE("boot mode cfg %s has no valid boot_modes", BOOT_MODE_CFG_PATH);
+        cJSON_Delete(cfgRoot);
+        return NULL;
+    }
+    *root = cfgRoot;
+    return bootModes;
+}
+
+void ReadConfig(void)
+{
+    // parse cfg
+    char buffer[32] = {0}; // 32 reason max leb
+    int ret = GetParameterFromCmdLine(BOOT_MODE_NAME, buffer, sizeof(buffer));
+    if (ret != 0) {
+        INIT_LOGE("failed to get boot mode from cmdline");
+    }
+    INIT_LOGI("ohos.boot.mode %s", buffer);
+
+    cJSON *root = NULL;
+    cJSON *bootModes = LoadBootModeCfg(&root);
+    if (bootModes == NULL) {
+        INIT_LOGW("boot mode cfg unavailable, run legacy boot mode config");
+        RunLegacyBootModeConfig();
+        return;
+    }
+
+    cJSON *matched = NULL;
+    cJSON *entry = NULL;
+    cJSON_ArrayForEach(entry, bootModes) {
+        if (MatchBootModeEntry(entry, buffer)) {
+            matched = entry;
+            break;
+        }
+    }
+
+    if (matched == NULL) {
+        INIT_LOGE("no boot mode matched, use default actions");
+        cJSON_Delete(root);
+        RunDefaultBootModeActions();
+        return;
+    }
+
+    const char *name = GetJsonStringValue(matched, "name");
+    INIT_LOGI("boot mode: %s", (name != NULL) ? name : "unknown");
+    cJSON *actions = cJSON_GetObjectItem(matched, "actions");
+    if (actions == NULL || !cJSON_IsArray(actions)) {
+        INIT_LOGE("boot mode %s has no valid actions", (name != NULL) ? name : "unknown");
+        cJSON_Delete(root);
+        RunDefaultBootModeActions();
+        return;
+    }
+    int loadRet = ExecuteBootModeActions(actions);
+    if (cJSON_IsTrue(cJSON_GetObjectItem(matched, "fallbackOnEmpty")) && loadRet != 0) {
+        INIT_LOGE("boot mode %s loaded no cfg (dir empty or all cfg invalid), fallback to default boot",
+            (name != NULL) ? name : "unknown");
+        RunDefaultBootModeActions();
+    }
+    cJSON_Delete(root);
+}
+#endif // OHOS_LITE

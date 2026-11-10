@@ -29,6 +29,13 @@ void ExecReboot(const char *value)
     return;
 }
 
+int GetMiscBootReason(char *reason, size_t size)
+{
+    (void)reason;
+    (void)size;
+    return -1;
+}
+
 int GetBootModeFromMisc(void)
 {
     return 0;

@@ -39,6 +39,14 @@ void clearMisc(void)
     (void)UpdateMiscMessage(NULL, "reboot", NULL, NULL);
 }
 
+int GetMiscBootReason(char *reason, size_t size)
+{
+    if (reason == NULL || size == 0) {
+        return -1;
+    }
+    return GetRebootReasonFromMisc(reason, size);
+}
+
 int GetBootModeFromMisc(void)
 {
     char cmd[32] = {0}; // 32 cmd length

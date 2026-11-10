@@ -125,7 +125,7 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/services/init/init_cgroup.c",
     "//base/startup/init/services/init/init_common_cmds.c",
     "//base/startup/init/services/init/init_common_service.c",
-    "//base/startup/init/services/init/init_config.c",
+    "init/init_config_test_wrapper.c",
     "//base/startup/init/services/init/init_group_manager.c",
     "//base/startup/init/services/init/init_service_file.c",
     "//base/startup/init/services/init/init_service_manager.c",
