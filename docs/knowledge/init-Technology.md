@@ -197,7 +197,7 @@ init 部件核心技术框架和机制的知识定义，涵盖价值认知、原
 |---|---|
 | 系统限制 | key/value ≤96/96 字节、const 值 ≤4096；每标签空间有限（写满报 `PARAM_CODE_REACHED_MAX=103`/`PARAM_CODE_MEMORY_NOT_ENOUGH=115`）；wait 默认 30 秒超时、set 15 秒；persist 批量落盘在 `/data` 就绪后 |
 | 并发约束 | 写单点（init 单线程）；读端多进程并发只读，靠 commitId 原子量 + futex 一致性；客户端库用 mutex 保护长连接 fd |
-| 安全约束 | DAC+MAC 双检不可绕过或弱化；`const.`/`ro.`/`ohos.boot.` 只读；JS 应用侧默认仅 get/watch；错误码 1000（DAC_RESULT_FORBIDED）/1002（SELINUX_RESULT_FORBIDED）表示拒绝 |
+| 安全约束 | DAC+MAC 双检不可绕过或弱化；`const.`/`ro.`/`ohos.boot.` 只读；JS 应用侧默认仅 get/watch；错误码 1001（DAC_RESULT_FORBIDED）/1002（SELINUX_RESULT_FORBIDED）表示拒绝 |
 
 ## 触发器引擎（trigger/条件 job）
 
@@ -210,7 +210,7 @@ init 部件核心技术框架和机制的知识定义，涵盖价值认知、原
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | `InitTriggerWorkSpace`（`services/param/trigger/trigger_processor.c:307`）创建 async event task（`ParamEventTaskCreate`）+ 执行队列（容量 64）。事件类型 EVENT_TRIGGER_BOOT/EVENT_TRIGGER_PARAM/EVENT_PARAM_WAIT/EVENT_PARAM_WATCH 经 `PostTrigger`→`SendTriggerEvent` 投递；`CheckTrigger` 匹配：boot 类按名字，param 类按 `param:<key>=<value>` 条件（最多 64 个子条件）评估；命中入队后 `ExecuteQueueWork`（单轮 ≤20 条）逐个 `DoTriggerExecute_`→`DoCmdByIndex`。服务批量拉起用 `AddCompleteJob` 动态构造 `boot-service:service-<mode>-<num>` job（`TriggerServices`，每 4 个服务一组） |
+| 核心机制 | `InitTriggerWorkSpace`（`services/param/trigger/trigger_processor.c:307`）创建 async event task（`ParamEventTaskCreate`）+ 执行队列（容量 64）。事件类型 EVENT_TRIGGER_BOOT/EVENT_TRIGGER_PARAM/EVENT_TRIGGER_PARAM_WAIT/EVENT_TRIGGER_PARAM_WATCH 经 `PostTrigger`→`SendTriggerEvent` 投递；`CheckTrigger` 匹配：boot 类按名字，param 类按 `param:<key>=<value>` 条件（最多 64 个子条件）评估；命中入队后 `ExecuteQueueWork`（单轮 ≤20 条）逐个 `DoTriggerExecute_`→`DoCmdByIndex`。服务批量拉起用 `AddCompleteJob` 动态构造 `boot-service:service-<mode>-<num>` job（`TriggerServices`，每 4 个服务一组） |
 | 关键流程 | 启动收尾 `PostInitTriggers`（standard/init.c:448）：pre-init → init → boot 服务 → post-init → normal 服务；重启前 `DoJobExecNow` 同步执行并触发 INIT_SHUT_DETECTOR hook |
 
 ### 使用方式（Usage）
