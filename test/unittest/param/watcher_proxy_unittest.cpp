@@ -129,6 +129,22 @@ public:
         return 0;
     }
 
+    int TestAddWatcherWithReply(const std::string &keyPrefix, uint32_t watcherId)
+    {
+        WatcherManagerPtr watcherManager = GetWatcherManager();
+        WATCHER_CHECK(watcherManager != nullptr, return -1, "Failed to create manager");
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
+        data.WriteString16(Str8ToStr16(keyPrefix));
+        data.WriteUint32(watcherId);
+        watcherManager->OnRemoteRequest(
+            static_cast<uint32_t>(IWatcherManagerIpcCode::COMMAND_ADD_WATCHER), data, reply, option);
+        return reply.ReadInt32();
+    }
+
     int TestRefreshWatcher(const std::string &keyPrefix, uint32_t watcherId)
     {
         WatcherManagerPtr watcherManager = GetWatcherManager();
@@ -376,4 +392,74 @@ HWTEST_F(WatcherProxyUnitTest, Init_TestStop_001, TestSize.Level0)
     test.TestAddRemoteWatcher(getpid(), watcherId);
     test.TestAddWatcher("test.permission.watcher.stop", watcherId);
     test.TestStop();
+}
+
+HWTEST_F(WatcherProxyUnitTest, Init_TestAppUid_AppRejected_001, TestSize.Level0)
+{
+    WatcherProxyUnitTest test;
+    uint32_t watcherId = 0;
+    test.TestAddRemoteWatcher(getpid(), watcherId);
+    // mock calling app uid in app range (>= PUBLIC_APP_BEGIN_UID) with non-whitelist key, expect blocked
+    setenv("MOCK_CALLING_APP_UID", "10000", 1);
+    int reply = test.TestAddWatcherWithReply("test.permission.appuid.reject", watcherId);
+    unsetenv("MOCK_CALLING_APP_UID");
+    EXPECT_NE(reply, 0);
+}
+
+HWTEST_F(WatcherProxyUnitTest, Init_TestAppUid_AppRejected_002, TestSize.Level0)
+{
+    WatcherProxyUnitTest test;
+    uint32_t watcherId = 0;
+    test.TestAddRemoteWatcher(getpid(), watcherId);
+    setenv("MOCK_CALLING_APP_UID", "10001", 1);
+    int reply = test.TestAddWatcherWithReply("test.permission.appuid.reject2", watcherId);
+    unsetenv("MOCK_CALLING_APP_UID");
+    EXPECT_NE(reply, 0);
+}
+
+HWTEST_F(WatcherProxyUnitTest, Init_TestAppUid_AppWhitelisted_001, TestSize.Level0)
+{
+    WatcherProxyUnitTest test;
+    uint32_t watcherId = 0;
+    test.TestAddRemoteWatcher(getpid(), watcherId);
+    setenv("MOCK_CALLING_APP_UID", "10000", 1);
+    int reply = test.TestAddWatcherWithReply("persist.global.locale", watcherId);
+    unsetenv("MOCK_CALLING_APP_UID");
+    EXPECT_EQ(reply, 0);
+    test.TestWatchAgentDump("persist.global.locale");
+}
+
+HWTEST_F(WatcherProxyUnitTest, Init_TestAppUid_AppWildcard_001, TestSize.Level0)
+{
+    WatcherProxyUnitTest test;
+    uint32_t watcherId = 0;
+    test.TestAddRemoteWatcher(getpid(), watcherId);
+    setenv("MOCK_CALLING_APP_UID", "10000", 1);
+    int reply = test.TestAddWatcherWithReply("test.permission.appuid.*", watcherId);
+    unsetenv("MOCK_CALLING_APP_UID");
+    EXPECT_NE(reply, 0);
+}
+
+HWTEST_F(WatcherProxyUnitTest, Init_TestAppUid_SystemProcess_001, TestSize.Level0)
+{
+    WatcherProxyUnitTest test;
+    uint32_t watcherId = 0;
+    test.TestAddRemoteWatcher(getpid(), watcherId);
+    // mock calling app uid below app range, expect allowed
+    setenv("MOCK_CALLING_APP_UID", "0", 1);
+    int reply = test.TestAddWatcherWithReply("test.permission.appuid.sys", watcherId);
+    unsetenv("MOCK_CALLING_APP_UID");
+    EXPECT_EQ(reply, 0);
+    test.TestWatchAgentDump("test.permission.appuid.sys");
+}
+
+HWTEST_F(WatcherProxyUnitTest, Init_TestAppUid_SystemUidBoundary_001, TestSize.Level0)
+{
+    WatcherProxyUnitTest test;
+    uint32_t watcherId = 0;
+    test.TestAddRemoteWatcher(getpid(), watcherId);
+    setenv("MOCK_CALLING_APP_UID", "9999", 1);
+    int reply = test.TestAddWatcherWithReply("test.permission.appuid.boundary", watcherId);
+    unsetenv("MOCK_CALLING_APP_UID");
+    EXPECT_EQ(reply, 0);
 }
