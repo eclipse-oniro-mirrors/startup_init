@@ -33,7 +33,7 @@ cfg `services` 数组定义的常驻进程实体，运行期结构 `Service`（`
 写参数即控制服务的约定前缀（`services/param/include/param_utils.h`）：`ohos.ctl.start=`/`ohos.ctl.stop=`、`ohos.servicectrl.`（samgr 用）、`ohos.startup.powerctrl=`（reboot/shutdown）。执行结果经 `startup.service.ctl.<name>`（值=ServiceStatus）与 `.pid` 参数回告（`NotifyServiceChange`）。
 
 ## 系统参数（syspara / param）
-全局键值对服务，key/value 各上限 96 字节、const 值 4096 字节（`PARAM_NAME_LEN_MAX` 等，`interfaces/innerkits/include/param/init_param.h`）。三类标签：`const.`（不可变，如产品名）、`persist.`（跨重启，存 `/data/service/el1/startup/parameters/persist_parameters`）、普通可写。`ro.`/`ohos.boot.` 前缀只读（`IS_READY_ONLY`）。存储为按 `.` 分段的二叉 trie，mmap 于 `/dev/__parameters__`（`services/param/base/param_trie.c`）。客户端 API：`SystemGetParameter`（`SystemReadParam`）、`SystemSetParameter`、`SystemWaitParameter`、`WatchParamCheck`/`SystemWatchParameter`。
+全局键值对服务，key/value 各上限 96 字节、const 值 4096 字节（`PARAM_NAME_LEN_MAX` 等，`interfaces/innerkits/include/param/init_param.h`）。三类标签：`const.`（不可变，如产品名）、`persist.`（跨重启，存 `/storage/data/system/param/public_persist_parameters`，私有持久化变体在 `/data/service/el1/public/startup/parameters/`，`param_utils.h` 的 `PARAM_PUBLIC/PRIVATE_PERSIST_SAVE_PATH`）、普通可写。`ro.`/`ohos.boot.` 前缀只读（`IS_READY_ONLY`）。存储为按 `.` 分段的二叉 trie，mmap 于 `/dev/__parameters__`（`services/param/base/param_trie.c`）。客户端 API：`SystemGetParameter`（`SystemReadParam`）、`SystemSetParameter`、`SystemWaitParameter`、`WatchParamCheck`/`SystemWatchParameter`。
 
 ## 参数 DAC / MAC
 - DAC：`*.para.dac` 文件按前缀定义 `user:group:mode[:type]`（如 `services/etc/param/ohos.para.dac`），位含读 0x0100/写 0x0080/watch 0x0040（`services/param/adapter/param_dac.c`）。

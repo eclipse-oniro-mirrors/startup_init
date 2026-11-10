@@ -20,7 +20,7 @@ startup_init 部件（`bundle.json` 部件名 `init`，子系统 `startup`）提
 - **不孵化应用进程**：ArkTS/JS/native/CJ 应用及渲染进程由 startup_appspawn 部件孵化；init 只按 `appspawn.cfg` 等配置拉起 appspawn 服务本体。
 - **不做 Binder/SA 服务端**：init 不注册 SystemAbility；SA 的按需拉起由 samgr（systemabilitymgr_samgr）经 init 提供的参数/socket 接口触发，SA 生命周期归 samgr 管理。
 - **不管理内核设备驱动**：设备模型归 HDF（hdf_core）；ueventd 只消费内核 netlink uevent 并创建设备节点。
-- **不负责 JS/TS API 实现**：`interfaces/kets/jskits` 只做 NAPI 封装转发到参数/设备信息接口，语言运行时归 arkcompiler。
+- **不负责 JS/TS API 实现**：`interfaces/kits/jskits` 只做 NAPI 封装转发到参数/设备信息接口，语言运行时归 arkcompiler。
 - **不承担 SELinux 策略内容管理**：`*.te`、`parameter_contexts`、`file_contexts` 由 base/security/selinux_adapter 维护；本仓只在 `secon` 字段解析、`setexeccon`、参数标签加载处对接。
 - **不做产品定制逻辑**：产品差异经 `/sys_prod`、`/chip_prod` 等组件化配置目录与特性开关（`begetd.gni` declare_args）注入，本仓不内置产品判断。
 - **ueventd 与 init 是不同进程**：ueventd 代码在本仓，但以独立服务（`services/etc/ueventd.cfg`，ondemand）运行，不与 PID 1 共享进程上下文。
@@ -96,7 +96,7 @@ init --> kernel : mount/pivot_root/reboot\nsetuid/caps/seccomp
 | 参数变更通知 | param_watcher SA → 应用回调 | WatchParamCheck 注册的监听方收到新值 |
 | `startup.service.ctl.<name>`/`.pid` 参数 | samgr、begetctl 等监控方 | 服务状态（SERVICE_STARTED/STOPPED/READY 等）与 pid 查询（`NotifyServiceChange()`） |
 | `startup.uevent.<parameter>` 参数 | 存储管理等子系统 | 设备节点 added/removed 通知（`ueventd/standard/ueventd_parameter.c`） |
-| persist 参数文件 `/data/service/el1/startup/parameters/persist_parameters` | 下次开机 `LoadPersistParams()` | 跨重启保留参数 |
+| persist 参数文件 `/storage/data/system/param/public_persist_parameters`（私有持久化变体 `/data/service/el1/public/startup/parameters/private_persist_parameters`） | 下次开机 `LoadPersistParams()` | 跨重启保留参数 |
 | 设备节点与 `/dev/block/by-name/*` 链接 | 块设备使用者（存储、升级、挂载） | 分区按名访问 |
 | 沙箱 namespace（system/chipset） | 被 sandbox:1 约束的服务、sub-init | 隔离挂载视图 |
 | 重启动作（`ExecReboot("panic"/"reboot"/...)`） | 内核 | critical 服务超限、`ohos.startup.powerctrl` 参数、begetctl reboot 命令 |

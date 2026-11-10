@@ -92,7 +92,7 @@ init 部件核心技术框架和机制的知识定义，涵盖价值认知、原
 |---|---|
 | 核心类 | `Service`（含 caps 数组、socket/file 列表、jobs 指针） |
 | 核心成员 | `attribute`（属性位）、`servPerm`（caps）、`onRestart`/`restartArg` |
-| 核心方法 | `ServiceStart`/`RunChildProcessInternal`/`InitServiceResources`/`SetPerms`/`KeepCapability`/`SetCapabilities`/`ServiceExec`（init_common_service.c）；`SetServiceEnterSandbox`（standard/init_service.c:389） |
+| 核心方法 | `ServiceStart`/`RunChildProcessInternal`/`InitServiceResources`/`SetPerms`/`KeepCapability`/`SetCapabilities`/`ServiceExec`（init_common_service.c）；`SetServiceEnterSandbox`（standard/init_service.c:400） |
 
 ### 约束与限制（Constraints）
 | 子维度 | 内容 |
@@ -151,7 +151,7 @@ init 部件核心技术框架和机制的知识定义，涵盖价值认知、原
 ### 使用方式（Usage）
 | 子维度 | 内容 |
 |---|---|
-| 核心 API | cfg：`"ondemand": true` + `socket` 字段（family/type/permissions/uid/gid/option）；运行期命令 `start_ondemand <name>`；samgr 侧写 `ohos.servicectrl.start|stop` 参数（经 libbegetutil `ServiceControl`） |
+| 核心 API | cfg：`"ondemand": true` + `socket` 字段（family/type/permissions/uid/gid/option）；运行期命令 `start_ondemand <name>`；samgr 侧经 libbegetutil `ServiceControl` 写 `ohos.ctl.start`/`ohos.ctl.stop` 参数（`ohos.servicectrl.` 前缀下另有 `timer_start`/`timer_stop`/`reboot.*` 等专用键） |
 
 ### 代码关联（Code）
 | 子维度 | 内容 |
@@ -276,7 +276,7 @@ init 部件核心技术框架和机制的知识定义，涵盖价值认知、原
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | 两层引擎：①hookmgr（`interfaces/innerkits/include/hookmgr.h`）：`HookMgrCreate/Add(stage,prio,hook,cookie)/Execute/Traversal`，`HOOK_INFO` 按 stage+优先级排序；bootstage 封装（`interfaces/innerkits/init_module_engine/include/bootstage.h`）定义 `INIT_BOOTSTAGE` 全集（GLOBAL_INIT=0、FIRST_STAGE=1、...、PRE_PARAM_SERVICE=10、PRE_PARAM_LOAD=20、PRE_CFG_LOAD=30、SERVICE_FORK_BEFORE=58、SERVICE_SET_PERMS=59/60、SERVICE_FORK_AFTER=61、SERVICE_REAP=65、BOOT_COMPLETE=100 等）与 `InitAdd*Hook` 内联注册函数，`GetBootStageHookMgr()`（`services/init/bootstagehooker.c`）为全局实例。②modulemgr（`interfaces/innerkits/include/modulemgr.h`）：`MODULE_CONSTRUCTOR`（`__attribute__((constructor))`）让模块加载即注册；`ModuleMgrInstall` 从 `/system/lib/<name>/` 加载 `<module>.z.so`。命令扩展：`AddCmdExecutor(cmdName, executor)` 注册插件命令（`services/init/standard/init_cmdexecutor.c:198`），索引编码 `(hash+1)<<16|cmdId`；核心用 `PluginExecCmdByName("loadSelinuxPolicy",...)` 等调用 |
+| 核心机制 | 两层引擎：①hookmgr（`interfaces/innerkits/include/hookmgr.h`）：`HookMgrCreate/Add(stage,prio,hook,cookie)/Execute/Traversal`，`HOOK_INFO` 按 stage+优先级排序；bootstage 封装（`interfaces/innerkits/init_module_engine/include/bootstage.h`）定义 `INIT_BOOTSTAGE` 全集（GLOBAL_INIT=0、FIRST_STAGE=1、...、PRE_PARAM_SERVICE=10、PRE_PARAM_LOAD=20、PRE_CFG_LOAD=30、SERVICE_FORK_BEFORE=58、SERVICE_SET_PERMS=59/60、SERVICE_FORK_AFTER=61、SERVICE_REAP=65、BOOT_COMPLETE=100 等）与 `InitAdd*Hook` 内联注册函数，`GetBootStageHookMgr()`（`services/init/bootstagehooker.c`）为全局实例。②modulemgr（`interfaces/innerkits/include/modulemgr.h`）：`MODULE_CONSTRUCTOR`（`__attribute__((constructor))`）让模块加载即注册；`ModuleMgrInstall` 从 `/system/lib/<name>/` 加载 `<module>.z.so`。命令扩展：`AddCmdExecutor(cmdName, executor)` 注册插件命令（实现 `AddCmdExecutor_`，`services/init/standard/init_cmdexecutor.c:29`），索引编码 `(hash+1)<<16|cmdId`；核心用 `PluginExecCmdByName("loadSelinuxPolicy",...)` 等调用 |
 | 关键流程 | 模块安装点：selinux 插件 `InitModuleMgrInstall("selinuxadp")`（selinux_static.c:25）；模块管理命令 `modulectl list/install/uninstall`（begetctl→control_fd ACTION_MODULEMGR） |
 
 ### 使用方式（Usage）
@@ -342,7 +342,7 @@ init 部件核心技术框架和机制的知识定义，涵盖价值认知、原
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | `InitSandbox`（`services/sandbox/sandbox.c:389`）：`UnshareNamespace(CLONE_NEWNS)` + `GetNamespaceFd("/proc/self/ns/mnt")` 保存句柄 + 解析 json 到挂载链表。`PrepareSandbox`（:540）：mkdir rootPath → `mount(NULL,"/",NULL,MS_REC|MS_SLAVE,NULL)`（断开传播）→ rootPath 自 bind → 逐项 bind mount path/file 列表（flags 表 bind/private/rec/move）→ symlink 列表 → `chdir(rootPath)` → `syscall(SYS_pivot_root, rootPath, rootPath)` → `umount2(".",MNT_DETACH)`。进入既有沙箱：`EnterSandbox(name)`（:625）`SetNamespace(sandbox->ns, CLONE_NEWNS)`。服务粒度：cfg `sandbox:1` + 全局开关参数 `const.sandbox`（`IsEnableSandbox`）→ `SetServiceEnterSandbox`（standard/init_service.c:389）。sub-init 上下文配合 `DoUmountOtherNsData`（standard/init_cmds.c:838）在对应沙箱内卸载 `/data` |
+| 核心机制 | `InitSandbox`（`services/sandbox/sandbox.c:389`）：`UnshareNamespace(CLONE_NEWNS)` + `GetNamespaceFd("/proc/self/ns/mnt")` 保存句柄 + 解析 json 到挂载链表。`PrepareSandbox`（:540）：mkdir rootPath → `mount(NULL,"/",NULL,MS_REC|MS_SLAVE,NULL)`（断开传播）→ rootPath 自 bind → 逐项 bind mount path/file 列表（flags 表 bind/private/rec/move）→ symlink 列表 → `chdir(rootPath)` → `syscall(SYS_pivot_root, rootPath, rootPath)` → `umount2(".",MNT_DETACH)`。进入既有沙箱：`EnterSandbox(name)`（:625）`SetNamespace(sandbox->ns, CLONE_NEWNS)`。服务粒度：cfg `sandbox:1` + 全局开关参数 `const.sandbox`（`IsEnableSandbox`）→ `SetServiceEnterSandbox`（standard/init_service.c:400）。sub-init 上下文配合 `DoUmountOtherNsData`（standard/init_cmds.c:838）在对应沙箱内卸载 `/data` |
 | 关键流程 | `mksandbox system|chipset` 命令（`DoMkSandbox`，standard/init_cmds.c:1225）：进默认 ns → 构建 → 回默认 ns |
 
 ### 使用方式（Usage）
@@ -441,7 +441,7 @@ init 部件核心技术框架和机制的知识定义，涵盖价值认知、原
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | 入口 `ueventd_main.c` `main()`（:179）支持 `-d`（daemon，默认）/`-r`（retrigger）/`-b`（early-boot）/`-l`（listen）。daemon 流程 `UeventdDaemon`（ueventd.c:92）：解析 `/etc/ueventd.config`、`/vendor/etc/ueventd.config`、`/vendor/etc/ueventd_factory.config` → ondemand 时 `GetControlSocket("ueventd")` 取 init 预建 netlink socket，否则 `UeventdSocketInit`（PF_NETLINK/SOCK_DGRAM|CLOEXEC|NONBLOCK/NETLINK_KOBJECT_UEVENT，`nl_groups=0xffffffff`，SO_RCVBUFFORCE 256KB，SO_PASSCRED）→ 首次运行（无 `/dev/.ueventd_trigger_done` 标志）`RetriggerUevent` 重放存量设备 → `ProcessUevent` 循环 → ondemand 空闲轮询（`UEVENTD_POLL_TIME=5 分钟`，`bootevent.boot.completed==true` 后超时退出）。事件处理 `HandleUevent`（:110）按 subsystem 分发：block→`HandleBlockDeviceEvent`（ueventd_device_handler.c:484）、firmware→`HandleFimwareDeviceEvent`（写 `/sys<syspath>/loading="-1"` 取消内核等待）、其他→`HandleOtherDeviceEvent`；add/change/online 先 `ChangeSysAttributePermissions` |
+| 核心机制 | 入口 `ueventd_main.c` `main()`（:179）支持 `-d`（daemon，默认）/`-r`（retrigger）/`-b`（early-boot）/`-l`（listen）。daemon 流程 `UeventdDaemon`（ueventd/ueventd_main.c:92）：解析 `/etc/ueventd.config`、`/vendor/etc/ueventd.config`、`/vendor/etc/ueventd_factory.config` → ondemand 时 `GetControlSocket("ueventd")` 取 init 预建 netlink socket，否则 `UeventdSocketInit`（PF_NETLINK/SOCK_DGRAM|CLOEXEC|NONBLOCK/NETLINK_KOBJECT_UEVENT，`nl_groups=0xffffffff`，SO_RCVBUFFORCE 256KB，SO_PASSCRED）→ 首次运行（无 `/dev/.ueventd_trigger_done` 标志）`RetriggerUevent` 重放存量设备 → `ProcessUevent` 循环 → ondemand 空闲轮询（`UEVENTD_POLL_TIME=5 分钟`，`bootevent.boot.completed==true` 后超时退出）。事件处理 `HandleUevent`（:110）按 subsystem 分发：block→`HandleBlockDeviceEvent`（ueventd_device_handler.c:484）、firmware→`HandleFimwareDeviceEvent`（写 `/sys<syspath>/loading="-1"` 取消内核等待）、其他→`HandleOtherDeviceEvent`；add/change/online 先 `ChangeSysAttributePermissions` |
 | 关键流程 | 设备节点：`CreateDeviceNodeWithPermissions`（:148）查 `GetDeviceNodePermissions` → mknod → chown/chmod；by-name：`CreateSymbolLinks`（:55）+ block 处理中生成 `/dev/block/platform/<ctrl>/by-name/<part>` 与 `/dev/block/by-name/<part>`（:292/:303）；SELinux `SetDeviceLable`（:95）逐级 restorecon 并把链接 label 复制到节点；参数通知：工作线程 `SystemSetParameter("startup.uevent.<parameter>","added"/"removed")`（ueventd/standard/ueventd_parameter.c:93，5 秒重试）；early-boot 直接 mknod 必需动态节点（tty/binder/console 等） |
 
 ### 使用方式（Usage）

@@ -45,7 +45,7 @@ init 部件核心业务实体的完整知识定义，涵盖静态概念、动态
 | 实体名称 | 触发器（Trigger，运行期）/ 作业（job，cfg 声明形态） |
 | 实体定义 | 一组带条件与命令序列的启动单元；cfg 中的 job 静态声明在加载时转为 trigger 节点，运行期按事件（boot 阶段/参数变化）入队执行 |
 | 核心特征 | `struct Trigger`（`services/param/include/trigger_manager.h`）：`flags`（QUEUE/RELATED/ONCE/SUBTRIGGER）、`type`（TRIGGER_BOOT/TRIGGER_PARAM/TRIGGER_UNKOWN）、`condition`、命令链表（每 job 命令数上限 `MAX_CMD_CNT_IN_ONE_JOB=200`，单 trigger 命令容量 `TRIGGER_MAX_CMD=4096`）、`triggerCount` |
-| 类型/分类 | TRIGGER_BOOT：保留名（pre-init/init/post-init/early-fs/reboot/suspend 等 16 个）与 `boot-service:` 动态 job；TRIGGER_PARAM：`param:<key>=<value>` 条件 job；另有内部等待/观察命令索引 `CMD_INDEX_FOR_PARA_WAIT/WATCH` |
+| 类型/分类 | TRIGGER_BOOT：保留名（pre-init/init/post-init/early-fs/reboot/suspend 等 14 个，`triggerTypeStr[]` 全集见 `services/param/trigger/trigger_processor.c`）与 `boot-service:` 动态 job；TRIGGER_PARAM：`param:<key>=<value>` 条件 job；另有内部等待/观察命令索引 `CMD_INDEX_FOR_PARA_WAIT/WATCH` |
 
 ### 上下文与场景
 | 子维度 | 内容 |
@@ -80,7 +80,7 @@ init 部件核心业务实体的完整知识定义，涵盖静态概念、动态
 | 实体名称 | 系统参数（键值对实体，ParamNode；安全标签 ParamSecurityNode） |
 | 实体定义 | 全系统共享的键值数据单元，key 按 `.` 分段存入共享内存 trie；身份 = key（≤96 字节）；值随标签类型有不同上限与可见性 |
 | 核心特征 | `struct ParamNode`（`services/param/include/param_common.h`）：`commitId`（u32 原子）、`type`、`keyLength/valueLength`、`data[]`（存 "key=value"）；`ParamSecurityNode`：`uid/gid/selinuxIndex/mode/type/memberNum/members[]`；commitId 标志位：MODIFY/TRIGGED/WAITED/PERSIST/COMMITID |
-| 类型/分类 | 标签三类：`const.`（只读、值上限 4096）、`persist.`（跨重启）、普通可写（值上限 96）；类型 int/bool/string（`GetParamMaxLen`：96/8/32，`services/param/base/param_trie.c:404`） |
+| 类型/分类 | 标签三类：`const.`（只读、值上限 4096）、`persist.`（跨重启）、普通可写（值上限 96）；类型 string/int/bool（`GetParamMaxLen`：96/32/8，`services/param/base/param_trie.c:404`） |
 
 ### 上下文与场景
 | 子维度 | 内容 |
@@ -91,7 +91,7 @@ init 部件核心业务实体的完整知识定义，涵盖静态概念、动态
 ### 规格与约束
 | 子维度 | 内容 |
 |---|---|
-| 业务规则 | key/value 长度上限 96/96、const 值 4096（`interfaces/innerkits/include/param/init_param.h:32-40`）；`const.`/`ro.`/`ohos.boot.` 只读；写需通过 DAC（`.para.dac` 前缀匹配，组员上限 `MAX_MEMBER_IN_GROUP=128`）+ SELinux 双检；参数文件加载顺序固定（cmdline→const→vendor→system→persist，`InitLoadParamFiles`）；persist 保存路径 `/data/service/el1/startup/parameters/persist_parameters`；wait 超时默认 30 秒、set 超时 15 秒 |
+| 业务规则 | key/value 长度上限 96/96、const 值 4096（`interfaces/innerkits/include/param/init_param.h:32-40`）；`const.`/`ro.`/`ohos.boot.` 只读；写需通过 DAC（`.para.dac` 前缀匹配，组员上限 `MAX_MEMBER_IN_GROUP=128`）+ SELinux 双检；参数文件加载顺序固定（cmdline→const→vendor→system→persist，`InitLoadParamFiles`）；persist 保存路径 `/storage/data/system/param/public_persist_parameters`（`PARAM_PUBLIC_PERSIST_SAVE_PATH`，标准系统 `__LINUX__` 分支 `DATA_PATH`；私有变体 `PARAM_PRIVATE_PERSIST_SAVE_PATH` 位于 `/data/service/el1/public/startup/parameters/`，旧文件名 `persist_parameters` 仅启动迁移 rename 使用）；wait 超时默认 30 秒、set 超时 15 秒 |
 | 并发约束 | 写只发生在 init 单线程；多进程读共享内存无锁（commitId 原子量 + futex 等待，`ReadCommitId`）；每标签子空间大小固定（`/etc/param/ohos.para.size`），写满返回 `PARAM_CODE_REACHED_MAX=103`/内存类错误码 |
 
 ### 知识关联

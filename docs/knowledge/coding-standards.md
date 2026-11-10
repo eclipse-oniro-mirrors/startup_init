@@ -33,5 +33,5 @@
 
 ## 日志与调试
 
-- **禁止**使用裸 printf/自定义输出，采用 `beget_ext.h`/`services/log` 的 `INIT_LOGD/LOGI/WAR/W ERROR/ATAL` 与模块级宏（如 `INIT_DMESG`、`INIT_FILE`、`INIT_AGENT`），级别受 `persist.init.debug.loglevel` 控制；破坏统一的日志通道会丢失开机阶段可观测性。
+- **禁止**使用裸 printf/自定义输出，采用 `beget_ext.h`/`services/log` 的 `INIT_LOGV/INIT_LOGD/INIT_LOGI/INIT_LOGW/INIT_LOGE/INIT_LOGF`（`services/log/init_log.h`）与模块级宏（如 `INIT_DMESG`、`INIT_FILE`、`INIT_AGENT`），级别受 `persist.init.debug.loglevel` 控制；破坏统一的日志通道会丢失开机阶段可观测性。
 - **禁止**在无任务要求时执行破坏性命令（`reboot [updater|flashd|suspend]`、`partitionslot setactive`、`param set persist.*` 系统级键、修改 fstab/misc）；这些命令直接作用于真实设备启动状态。
