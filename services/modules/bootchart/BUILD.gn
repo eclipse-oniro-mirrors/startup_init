@@ -14,6 +14,7 @@ import("//base/startup/init/begetd.gni")
 import("//build/ohos.gni")
 
 ohos_shared_library("bootchart") {
+  branch_protector_ret = "pac_ret"
   sources = [ "bootchart.c" ]
 
   include_dirs = [
@@ -48,6 +49,7 @@ config("libbootchart_static_config") {
 }
 
 ohos_source_set("libbootchart_static") {
+  branch_protector_ret = "pac_ret"
   sources = [ "bootchart_static.c" ]
   public_configs = [ ":libbootchart_static_config" ]
   public_configs += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]

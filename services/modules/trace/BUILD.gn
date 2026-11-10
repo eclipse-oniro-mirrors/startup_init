@@ -22,6 +22,7 @@ comm_include = [
 ]
 
 ohos_shared_library("inittrace") {
+  branch_protector_ret = "pac_ret"
   sources = [ "init_trace.c" ]
   include_dirs = comm_include
   deps = [ "//base/startup/init/interfaces/innerkits/init_module_engine:libinit_module_engine" ]
@@ -54,6 +55,7 @@ ohos_prebuilt_etc("inittrace_cfg") {
 }
 
 ohos_source_set("inittrace_static") {
+  branch_protector_ret = "pac_ret"
   sources = [ "init_trace_static.c" ]
   public_configs = [ ":inittrace_static_config" ]
   public_configs += [ "//base/startup/init/interfaces/innerkits/init_module_engine:init_module_engine_exported_config" ]

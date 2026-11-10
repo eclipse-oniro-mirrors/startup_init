@@ -19,6 +19,7 @@ config("libcrashhandler_config") {
 }
 
 ohos_source_set("libcrashhandler") {
+  branch_protector_ret = "pac_ret"
   sources = [ "crash_handler.c" ]
   include_dirs = [
     ".",
