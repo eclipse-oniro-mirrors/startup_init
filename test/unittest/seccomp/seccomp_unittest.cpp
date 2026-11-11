@@ -1104,6 +1104,105 @@ const char* TARGET_FILTER_NAME = APP_NAME;
         EXPECT_EQ(ret, 0);
     }
 
+    static bool CheckSetresuidArgsInRangeSubspawn()
+    {
+        int ret = syscall(__NR_setresuid, 10000, 10000, 10000);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetresuidArgsOutOfRangeSubspawn()
+    {
+        int ret = syscall(__NR_setresuid, 10000, 0, 10000);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetuidAllowedSubspawn()
+    {
+        int ret = syscall(__NR_setuid, 10000);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetuidBlockedSubspawn()
+    {
+        int ret = syscall(__NR_setuid, 0);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckSetuidBoundaryBelowSubspawn()
+    {
+        int ret = syscall(__NR_setuid, 9999);
+        if (ret == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    static bool CheckMountBlockedSubspawn()
+    {
+        (void)syscall(__NR_mount, nullptr, "/", nullptr, 0, nullptr);
+        return true;
+    }
+
+    static bool CheckReadAllowedSubspawn()
+    {
+        int fd = open("/dev/null", O_RDONLY);
+        if (fd < 0) {
+            return false;
+        }
+        char buf[1];
+        int ret = read(fd, buf, 0);
+        close(fd);
+        return ret >= 0;
+    }
+
+    void TestSubspawnFilterLoad()
+    {
+        int ret = CheckSyscall(INDIVIDUAL, SUBSPAWN_NAME, CheckGetpid, true);
+        EXPECT_EQ(ret, 0);
+    }
+
+    void TestSubspawnNormalAppAllowlist()
+    {
+        int ret = CheckSyscall(INDIVIDUAL, SUBSPAWN_NAME, CheckReadAllowedSubspawn, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, SUBSPAWN_NAME, CheckGetpid, true);
+        EXPECT_EQ(ret, 0);
+    }
+
+    void TestSubspawnSetuidFilter()
+    {
+        int ret = CheckSyscall(INDIVIDUAL, SUBSPAWN_NAME, CheckSetuidAllowedSubspawn, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, SUBSPAWN_NAME, CheckSetuidBlockedSubspawn, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, SUBSPAWN_NAME, CheckSetuidBoundaryBelowSubspawn, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, SUBSPAWN_NAME, CheckSetresuidArgsInRangeSubspawn, true);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, SUBSPAWN_NAME, CheckSetresuidArgsOutOfRangeSubspawn, false);
+        EXPECT_EQ(ret, 0);
+
+        ret = CheckSyscall(INDIVIDUAL, SUBSPAWN_NAME, CheckMountBlockedSubspawn, false);
+        EXPECT_EQ(ret, 0);
+    }
+
     void TestSetUidGidFilter()
     {
         // system blocklist
@@ -2186,6 +2285,41 @@ HWTEST_F(SeccompUnitTest, Init_Seccomp_SeccompCustomFilterLoaded001, TestSize.Le
 {
     SeccompUnitTest test;
     test.TestSeccompCustomFilterLoaded();
+}
+#endif
+
+#if defined __aarch64__
+/**
+ * @tc.name: TestSubspawnFilterLoad
+ * @tc.desc: Verify subspawn seccomp filter is loaded and BPF is active.
+ * @tc.type: FUNC
+ */
+HWTEST_F(SeccompUnitTest, Init_Seccomp_SubspawnFilterLoad001, TestSize.Level0)
+{
+    SeccompUnitTest test;
+    test.TestSubspawnFilterLoad();
+}
+
+/**
+ * @tc.name: TestSubspawnNormalAppAllowlist
+ * @tc.desc: Verify subspawn allows normal_app whitelisted syscalls.
+ * @tc.type: FUNC
+ */
+HWTEST_F(SeccompUnitTest, Init_Seccomp_SubspawnNormalAppAllowlist001, TestSize.Level0)
+{
+    SeccompUnitTest test;
+    test.TestSubspawnNormalAppAllowlist();
+}
+
+/**
+ * @tc.name: TestSubspawnSetuidFilter
+ * @tc.desc: Verify subspawn setuid/setresuid arg filtering and unauthorized syscall blocking.
+ * @tc.type: FUNC
+ */
+HWTEST_F(SeccompUnitTest, Init_Seccomp_SubspawnSetuidFilter001, TestSize.Level0)
+{
+    SeccompUnitTest test;
+    test.TestSubspawnSetuidFilter();
 }
 #endif
 }

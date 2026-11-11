@@ -146,7 +146,8 @@ template("ohos_prebuilt_seccomp") {
       }
       if (invoker.process_type == "system" &&
           invoker.filtername != "appspawn" &&
-          invoker.filtername != "nwebspawn" && uid_is_root == false) {
+          invoker.filtername != "nwebspawn" &&
+          invoker.filtername != "subspawn" && uid_is_root == false) {
         sources += [ "//base/startup/init/services/modules/seccomp/seccomp_policy/system_uid_filter.seccomp.policy" ]
       }
 
