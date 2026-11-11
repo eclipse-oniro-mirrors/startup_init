@@ -327,13 +327,7 @@ static void ReportByUserServiceStartInfo(Service *service, int64_t pid)
     if (service == NULL) {
         return;
     }
-    bool isSaspawn = false;
-#ifdef INIT_FEATURE_SUPPORT_SASPAWN
-    isSaspawn = ((service->attribute & SERVICE_ATTR_SASPAWN) == SERVICE_ATTR_SASPAWN);
-#endif
-    if (isSaspawn) {
-        ReportServiceStart(service->name, pid, SERVICES_EXIT_INFO_IS_SASPAWN);
-    } else if (!IsOnDemandService(service)) {
+    if (!IsOnDemandService(service)) {
         ReportServiceStart(service->name, pid, SERVICES_EXIT_INFO_NOT_SASPAWN);
     }
 }
@@ -693,16 +687,8 @@ void ReportServiceByUserExit(ServiceByUserId *instance, pid_t pid, int procStat)
     if (instance == NULL || instance->templateService == NULL) {
         return;
     }
-    bool isSaspawn = false;
-#ifdef INIT_FEATURE_SUPPORT_SASPAWN
-    const Service *service = instance->templateService;
-    isSaspawn = ((service->attribute & SERVICE_ATTR_SASPAWN) == SERVICE_ATTR_SASPAWN);
-#endif
     if (WIFSIGNALED(procStat)) {
-        ReportChildProcessExit(instance->instanceKey, pid, WTERMSIG(procStat),
-            isSaspawn ? SERVICES_EXIT_INFO_IS_SASPAWN : SERVICES_EXIT_INFO_NOT_SASPAWN);
-    } else if (WIFEXITED(procStat) && isSaspawn) {
-        ReportChildProcessExit(instance->instanceKey, pid, WEXITSTATUS(procStat), SERVICES_EXIT_INFO_IS_SASPAWN);
+        ReportChildProcessExit(instance->instanceKey, pid, WTERMSIG(procStat), SERVICES_EXIT_INFO_NOT_SASPAWN);
     }
 }
 

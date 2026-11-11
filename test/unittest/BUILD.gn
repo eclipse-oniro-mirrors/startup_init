@@ -532,6 +532,8 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/services/modules/sysevent/startup_time_event.c",
     "//base/startup/init/services/modules/sysevent/sys_event.c",
     "//base/startup/init/test/unittest/modules/sysevent_unittest.cpp",
+    "//base/startup/init/test/unittest/modules/init_hisysevent_unittest.cpp",
+    "//base/startup/init/test/unittest/modules/init_hisysevent_stub.cpp",
   ]
 
   include_dirs += [

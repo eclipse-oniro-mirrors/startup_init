@@ -843,15 +843,8 @@ static int IsServiceInvalid(Service *service, ServiceArgs *pathArgs)
 
 static void ReportServiceStartInfor(Service *service, int64_t pid)
 {
-    bool isSaspawn = false;
-#ifdef INIT_FEATURE_SUPPORT_SASPAWN
-    isSaspawn = ((service->attribute & SERVICE_ATTR_SASPAWN) == SERVICE_ATTR_SASPAWN);
-#endif
-    if (isSaspawn) {
-        ReportServiceStart(service->name, pid, SERVICES_EXIT_INFO_IS_SASPAWN);
-    } else if (!IsOnDemandService(service)) {
+    if (!IsOnDemandService(service)) {
         ReportServiceStart(service->name, pid, SERVICES_EXIT_INFO_NOT_SASPAWN);
-    } else { //Do nothing.
     }
 }
 

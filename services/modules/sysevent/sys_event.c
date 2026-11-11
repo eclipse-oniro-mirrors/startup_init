@@ -19,6 +19,14 @@
 #include "hisysevent_c.h"
 #include "plugin_adapter.h"
 
+#ifdef STARTUP_INIT_TEST
+/* In test builds, redirect OH_HiSysEvent_Write macro to the stub function. */
+#undef OH_HiSysEvent_Write
+int StubOhHiSysEventWrite(const char *domain, const char *eventName,
+    int type, const void *params, size_t paramCount);
+#define OH_HiSysEvent_Write StubOhHiSysEventWrite
+#endif
+
 #define STARTUP_DOMAIN "INIT"
 
 #define KEY_TOTAL_TIME  "TOTAL_TIME"

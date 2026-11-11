@@ -205,6 +205,7 @@ ohos_unittest("init_begetctl_unittest") {
     "//base/startup/init/services/modules/sysevent/init_hisysevent.c",
     "//base/startup/init/services/modules/sysevent/startup_time_event.c",
     "//base/startup/init/services/modules/sysevent/sys_event.c",
+    "//base/startup/init/test/unittest/modules/init_hisysevent_stub.cpp",
 
     # crashhandler模块
     "//base/startup/init/services/modules/crashhandler/crash_handler.c",
