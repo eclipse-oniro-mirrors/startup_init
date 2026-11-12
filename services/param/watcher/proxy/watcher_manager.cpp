@@ -168,7 +168,7 @@ int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remote
         return -1, "Failed to verify keyPrefix.");
 
     // check calling uid, app not have watch permission
-    int uid = GetCallingUid();
+    int uid = static_cast<int>(IPCSkeleton::GetCallingAppUid());
     if (uid >= PUBLIC_APP_BEGIN_UID && !CheckAppWatchPermission(keyPrefix)) {
         uint64_t tokenId = IPCSkeleton::GetCallingTokenID();
         WATCHER_LOGV("GetCallingTokenID: %llu", tokenId);
@@ -206,8 +206,8 @@ int32_t WatcherManager::AddWatcher(const std::string &keyPrefix, uint32_t remote
         }
     }
     SendLocalChange(keyPrefix, remoteWatcherId);
-    WATCHER_LOGI("Add watcher %s remoteWatcherId: %u groupId %u success",
-        keyPrefix.c_str(), remoteWatcherId, group->GetGroupId());
+    WATCHER_LOGI("Add watcher %s remoteWatcherId: %u groupId %u uid %d success",
+        keyPrefix.c_str(), remoteWatcherId, group->GetGroupId(), uid);
     return 0;
 }
 
