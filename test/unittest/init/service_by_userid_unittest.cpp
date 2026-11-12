@@ -50,7 +50,7 @@ using namespace std;
 namespace init_ut {
 extern "C" {
 void ProcessSignal(const struct signalfd_siginfo *siginfo);
-void ReportChildExitStatus(Service *service, const char *serviceName, pid_t pid, int procStat, bool isSaspawn);
+void ReportChildExitStatus(Service *service, const char *serviceName, pid_t pid, int procStat);
 }
 
 namespace {
@@ -1487,11 +1487,39 @@ HWTEST_F(ServiceByUserIdUnitTest, ReportChildExitStatus_001, TestSize.Level2)
     constexpr int saspawnExitCode = 8;
     Service service = MakeStackService();
 
-    ReportChildExitStatus(&service, TEST_SERVICE, 54001, normalExitCode << 8, false);
+    ReportChildExitStatus(&service, TEST_SERVICE, 54001, normalExitCode << 8);
     EXPECT_EQ(service.lastErrno, normalExitCode);
 
-    ReportChildExitStatus(&service, TEST_SERVICE, 54002, saspawnExitCode << 8, true);
+    ReportChildExitStatus(&service, TEST_SERVICE, 54002, saspawnExitCode << 8);
     EXPECT_EQ(service.lastErrno, saspawnExitCode);
+}
+
+/*
+ * @tc.name: ReportChildExitStatus_002
+ * @tc.desc: Verify WIFSIGNALED true branch (signal-terminated child) does not set lastErrno.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ServiceByUserIdUnitTest, ReportChildExitStatus_002, TestSize.Level2)
+{
+    Service service = MakeStackService();
+    // procStat=9 → WIFSIGNALED=true (SIGKILL), takes the signal-terminated early-return branch
+    // lastErrno should remain INIT_OK (not overwritten by WEXITSTATUS path)
+    ReportChildExitStatus(&service, TEST_SERVICE, 54003, 9);
+    EXPECT_EQ(service.lastErrno, INIT_OK);
+}
+
+/*
+ * @tc.name: ReportChildExitStatus_003
+ * @tc.desc: Verify !WIFEXITED true branch (neither normal exit nor signal termination) does not set lastErrno.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ServiceByUserIdUnitTest, ReportChildExitStatus_003, TestSize.Level2)
+{
+    Service service = MakeStackService();
+    // procStat=0x7f(127) → WIFSIGNALED=false, WIFEXITED=false, takes the !WIFEXITED early-return branch
+    // lastErrno should remain INIT_OK (not overwritten by WEXITSTATUS path)
+    ReportChildExitStatus(&service, TEST_SERVICE, 54004, 0x7f);
+    EXPECT_EQ(service.lastErrno, INIT_OK);
 }
 
 HWTEST_F(ServiceByUserIdUnitTest, ReapHandlesExitFailureOnceAndMissingTemplate, TestSize.Level0)

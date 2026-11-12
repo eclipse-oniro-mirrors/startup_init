@@ -62,12 +62,11 @@ static bool ReapByUserChild(pid_t pid, int procStat, const struct signalfd_sigin
 #endif
 
 INIT_STATIC void ReportChildExitStatus(Service *service, const char *serviceName, pid_t pid,
-    int procStat, bool isSaspawn)
+    int procStat)
 {
     if (WIFSIGNALED(procStat)) {
         INIT_LOGW("Child process %s(pid %d) exit with signal : %d", serviceName, pid, WTERMSIG(procStat));
-        ReportChildProcessExit(serviceName, pid, WTERMSIG(procStat),
-            isSaspawn ? SERVICES_EXIT_INFO_IS_SASPAWN : SERVICES_EXIT_INFO_NOT_SASPAWN);
+        ReportChildProcessExit(serviceName, pid, WTERMSIG(procStat), SERVICES_EXIT_INFO_NOT_SASPAWN);
 #ifdef INIT_FEATURE_SUPPORT_SASPAWN
         SetSaSpawnFailedTag(service);
 #endif
@@ -85,15 +84,11 @@ INIT_STATIC void ReportChildExitStatus(Service *service, const char *serviceName
     if (service != NULL) {
         service->lastErrno = WEXITSTATUS(procStat);
     }
-    if (isSaspawn) {
-        ReportChildProcessExit(serviceName, pid, WEXITSTATUS(procStat), SERVICES_EXIT_INFO_IS_SASPAWN);
-    }
 }
 
 static pid_t HandleSigChild(const struct signalfd_siginfo *siginfo)
 {
     int procStat = 0;
-    bool isSaspawn = false;
     pid_t sigPID = waitpid(-1, &procStat, WNOHANG);
     if (sigPID <= 0) {
         return sigPID;
@@ -107,14 +102,7 @@ static pid_t HandleSigChild(const struct signalfd_siginfo *siginfo)
     const char *serviceName = (service == NULL) ? "Unknown" : service->name;
     (void)ProcessServiceDied(service);
 
-#ifdef INIT_FEATURE_SUPPORT_SASPAWN
-    if (service != NULL) {
-        isSaspawn = ((service->attribute & SERVICE_ATTR_SASPAWN) == SERVICE_ATTR_SASPAWN);
-        INIT_LOGI("Is the service supported Saspawn %d", isSaspawn);
-    }
-#endif
-
-    ReportChildExitStatus(service, serviceName, sigPID, procStat, isSaspawn);
+    ReportChildExitStatus(service, serviceName, sigPID, procStat);
     CmdServiceProcessDelClient(sigPID);
     StopSubInit(sigPID);
     INIT_LOGW("Service warning %s, SIGCHLD received, pid:%d uid:%d status:%d.",
