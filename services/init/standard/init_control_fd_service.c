@@ -111,18 +111,16 @@ static void DumpOneService(const Service *service)
 #undef XX
         {INIT_OK, ""}
     };
-
     const InitArgInfo startModeMap[] = {
         {"condition", START_MODE_CONDITION},
         {"boot", START_MODE_BOOT},
         {"normal", START_MODE_NORMAL}
     };
-
     const static char *serviceStatusMap[] = {
         "created", "starting", "running", "ready",
-        "stopping", "stopped", "suspended", "freezed", "disabled", "critical"
+        "stopping", "stopped", "error", "suspended", "freezed", "disabled", "critical",
+        [11 ... 15] = "invalid"
     };
-
     printf("\tservice name: [%s] \n", service->name);
     printf("\tservice pid: [%d] \n", service->pid);
     printf("\tservice token id: [%u] \n", (uint32_t)service->tokenId);
@@ -144,7 +142,6 @@ static void DumpOneService(const Service *service)
     DumpServiceArgs("writepid file", &service->writePidArgs);
     DumpServiceJobs(service);
     DumpServiceSocket(service);
-
     printf("\tservice perms groupId %d \n", service->servPerm.gIDCnt);
     for (int i = 0; i < service->servPerm.gIDCnt; i++) {
         printf("\t\tservice perms groupId %u \n", service->servPerm.gIDArray[i]);
@@ -153,7 +150,6 @@ static void DumpOneService(const Service *service)
     for (int i = 0; i < (int)service->servPerm.capsCnt; i++) {
         printf("\t\tservice perms capability %u \n", service->servPerm.caps[i]);
     }
-
     DumpServiceHookExecute(service->name, NULL);
 }
 

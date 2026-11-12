@@ -293,12 +293,13 @@ INIT_STATIC int ReadHyperholdSwitchMarker(char *buf, ssize_t *readLen)
         BEGET_LOGI("open hyperhold failed, no switch marker");
         return -1;
     }
-    *readLen = pread(fd, buf, HYPERHOLD_SWITCH_SIZE, HYPERHOLD_SWITCH_OFFSET);
+    *readLen = pread(fd, buf, HYPERHOLD_SWITCH_SIZE - 1, HYPERHOLD_SWITCH_OFFSET);
     close(fd);
     if (*readLen <= 0 || buf[0] == '\0') {
         BEGET_LOGI("hyperhold content empty, no switch marker");
         return -1;
     }
+    buf[*readLen] = '\0';
     return 0;
 }
 
@@ -394,12 +395,13 @@ bool IsDmMergeRemountEnabled(void)
         BEGET_LOGI("open hyperhold failed, dm_merge remount not enabled");
         return false;
     }
-    ssize_t readLen = pread(fd, buf, HYPERHOLD_SWITCH_SIZE, HYPERHOLD_SWITCH_OFFSET);
+    ssize_t readLen = pread(fd, buf, HYPERHOLD_SWITCH_SIZE - 1, HYPERHOLD_SWITCH_OFFSET);
     close(fd);
     if (readLen <= 0 || buf[0] == '\0') {
         BEGET_LOGI("hyperhold switch marker empty, use per-partition remount");
         return false;
     }
+    buf[readLen] = '\0';
     if (strncmp(buf, HYPERHOLD_SWITCH_ENABLE, strlen(HYPERHOLD_SWITCH_ENABLE)) == 0) {
         BEGET_LOGI("hyperhold 'enable' marker found, dm_merge remount enabled");
         return true;
@@ -416,12 +418,13 @@ bool IsHyperholdEnableMarkerSet(void)
         BEGET_LOGI("open hyperhold failed, enable marker not set");
         return false;
     }
-    ssize_t readLen = pread(fd, buf, HYPERHOLD_SWITCH_SIZE, HYPERHOLD_SWITCH_OFFSET);
+    ssize_t readLen = pread(fd, buf, HYPERHOLD_SWITCH_SIZE - 1, HYPERHOLD_SWITCH_OFFSET);
     close(fd);
     if (readLen <= 0 || buf[0] == '\0') {
         BEGET_LOGI("hyperhold switch marker empty");
         return false;
     }
+    buf[readLen] = '\0';
     if (strncmp(buf, HYPERHOLD_SWITCH_ENABLE, strlen(HYPERHOLD_SWITCH_ENABLE)) == 0) {
         BEGET_LOGI("hyperhold 'enable' marker found");
         return true;

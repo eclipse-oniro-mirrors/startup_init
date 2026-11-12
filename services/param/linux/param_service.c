@@ -178,7 +178,8 @@ static int HandleParamSet(const ParamTaskPtr worker, const ParamMessage *msg)
 {
     uint32_t offset = 0;
     ParamMsgContent *valueContent = GetNextContent(msg, &offset);
-    PARAM_CHECK(valueContent != NULL, return -1, "Invalid msg for %s", msg->key);
+    PARAM_CHECK(valueContent != NULL && valueContent->contentSize >= 1,
+        return -1, "Invalid msg for %s", msg->key);
     ParamSecurityLabel srcLabel = {0};
     struct ucred cr = {-1, -1, -1};
     socklen_t crSize = sizeof(cr);
@@ -258,7 +259,7 @@ static int HandleParamWaitAdd(const ParamTaskPtr worker, const ParamMessage *msg
     uint32_t timeout = 0;
 #endif
     ParamMsgContent *valueContent = GetNextContent(msg, &offset);
-    PARAM_CHECK(valueContent != NULL, return -1, "Invalid msg");
+    PARAM_CHECK(valueContent != NULL && valueContent->contentSize >= 1, return -1, "Invalid msg");
     PARAM_CHECK(valueContent->contentSize <= PARAM_CONST_VALUE_LEN_MAX, return -1, "Invalid msg");
     ParamMsgContent *timeoutContent = GetNextContent(msg, &offset);
     if (timeoutContent != NULL && timeoutContent->contentSize >= sizeof(uint32_t)) {
