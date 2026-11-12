@@ -336,8 +336,15 @@ private:
 
 // Opt-in only: use an isolated, non-critical ondemand test service. This is an
 // interface recovery loop, not a high-load or samgr/SA availability test.
-HWTEST_F(ServiceControlTest, DISABLED_OnDemandRecovery, TestSize.Level1)
+// Body starts a service and SIGKILLs it 20 times, so it must not run in the
+// regular module-test job. A "DISABLED_" case would still be counted as blocked.
+HWTEST_F(ServiceControlTest, OnDemandRecovery, TestSize.Level1)
 {
+    // Only an explicit switch enables this, never an ambient env variable.
+    const char *enableRecovery = std::getenv("INIT_ONDEMAND_TEST_RECOVERY_ENABLE");
+    if (enableRecovery == nullptr || std::string(enableRecovery) != "1") {
+        return;
+    }
     const char *configuredName = std::getenv("INIT_ONDEMAND_TEST_SERVICE");
     ASSERT_NE(configuredName, nullptr) << "Set an isolated ondemand test service explicitly";
     const std::string serviceName(configuredName);

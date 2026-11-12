@@ -44,6 +44,12 @@ ohos_shared_library("libparamtestmodule") {
 }
 
 ohos_moduletest("InitModuleTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "../unittest/init_unittest_blocklist.txt"
+  }
   module_out_path = "init/init"
 
   sources = [
