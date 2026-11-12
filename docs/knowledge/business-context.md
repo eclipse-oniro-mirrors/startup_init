@@ -11,7 +11,7 @@ startup_init 部件（`bundle.json` 部件名 `init`，子系统 `startup`）提
 - 提供 ueventd 进程（设备热插拔 netlink 监听、设备节点与 `/dev/block/by-name` 符号链接创建、固件事件处理，`ueventd/`）；
 - 构建 system/chipset 沙箱（namespace + pivot_root）并按服务粒度进入（`services/sandbox/sandbox.c`）；
 - 生成并加载 seccomp 系统调用过滤策略（`services/modules/seccomp/`）；
-- 提供 `begetctl` 调试命令行工具与 `libbegetutil`/`libsystemparam` 等 inner-kits，供其他子系统链接（`interfaces/innerkits/`）；
+- 提供 `begetctl` 调试命令行工具与 `libbegetutil`/`libsystemparam` 等 inner-kits，供其余子系统链接（`interfaces/innerkits/`）；
 - 提供 DeviceInfo 系统能力（SA 3902，`device_info/`）与参数监听代理（param_watcher SA 3901，`services/param/watcher/`）。
 
 本仓同时适配 mini/small（lite，`services/init/lite/`、`services/etc_lite/`）与 standard（Linux 内核，`services/init/standard/`）三类系统（`bundle.json` adapted_system_type: `["mini","small","standard"]`）。
@@ -46,7 +46,7 @@ package "startup_init" {
   component "param_watcher SA (3901)" as pw
 }
 actor "系统服务\n(libbegetutil 客户端)" as clients
-actor "AMS/samgr 等\n服务控制方" as ctl
+actor "AbilityManagerService/samgr 等\n服务控制方" as ctl
 actor "appspawn" as appspawn
 actor "JS/TS 应用\n(@ohos.systemparameter)" as js
 
@@ -81,7 +81,7 @@ init --> kernel : mount/pivot_root/reboot\nsetuid/caps/seccomp
 | 系统参数文件 `*.para`/`*.para.dac`/`ohos.para.size` | `/etc/param`、`/system/etc/param`、`/vendor/etc/param` 等 | 参数键值、DAC 规则、标签空间大小 | `InitLoadParamFiles()`/`LoadSpecialParam()` |
 | fstab | cmdline 或 `/system/etc/fstab.required` | 必需分区挂载项（含 `hvb` flag） | 第一阶段 `MountRequiredPartitions()` |
 | 参数 socket 消息 | libbegetutil/libsystemparam 客户端、param_watcher SA | `ParamMessage`（MSG_SET_PARAM/MSG_WAIT_PARAM/MSG_ADD_WATCHER/MSG_DEL_WATCHER/MSG_NOTIFY_PARAM/MSG_SAVE_PARAM） | 客户端调用 SystemSetParameter/WaitParameter/WatchParam 等 |
-| 服务控制参数 | samgr/AMS/begetctl | `ohos.servicectrl.*`、`ohos.ctl.start|stop=`、`ohos.startup.powerctrl=` | 参数写入触发 trigger |
+| 服务控制参数 | samgr/AbilityManagerService/begetctl | `ohos.servicectrl.*`、`ohos.ctl.start|stop=`、`ohos.startup.powerctrl=` | 参数写入触发 trigger |
 | 信号 | 子进程/内核 | SIGCHLD（服务退出回收）、SIGTERM（停机） | signalfd 任务 `SignalInit()` |
 | netlink uevent | 内核 | add/change/remove 设备事件 | ueventd 主循环 `ProcessUevent()` |
 | ueventd 配置 | `/etc/ueventd.config`、`/vendor/etc/ueventd.config`、`/vendor/etc/ueventd_factory.config` | 设备节点权限表（INI） | ueventd 启动 |

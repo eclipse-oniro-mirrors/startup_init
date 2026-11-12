@@ -27,7 +27,7 @@
 
 ## API 与构建
 
-- **禁止**在 inner-kits 头文件中增删函数、改签名或返回值而不更新 `libbegetutil.versionscript`/`libsystemparam.versionscript`/`libbeget_proxy.versionscript` 与 `bundle.json` inner_kits 清单；导出面泄漏或缺失都会破坏其他子系统构建。
+- **禁止**在 inner-kits 头文件中增删函数、改签名或返回值而不更新 `libbegetutil.versionscript`/`libsystemparam.versionscript`/`libbeget_proxy.versionscript` 与 `bundle.json` inner_kits 清单；导出面泄漏或缺失都会破坏其余子系统构建。
 - **禁止**在 `services/loopevent`、`services/utils` 中引用 `services/init` 的头文件（依赖方向见架构文档）；初始化内部结构体（Service/Trigger/ParamWorkspace）时使用对应 `Init*`/`Add*` 函数，不手工构造后直接挂入全局表。
 - **禁止**在标准系统代码路径使用 lite-only 能力或反之：`loadcfg`、lite 服务字段（无 trigger/条件 job、无 Linux-only 字段）只存在于 `services/init/lite/`；标准系统新增命令必须同时登记通用表或标准表并说明 `careContext`（chipset 上下文命令需支持 sub-init 转发，见 `ExecuteCmdInSubInit`）。
 

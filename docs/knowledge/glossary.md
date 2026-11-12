@@ -62,7 +62,7 @@ chipset 域命令的执行代理进程：cfg 中 `/chipset`、`/vendor`、`/chip
 服务/应用的 syscall 白名单机制：策略文件 `services/modules/seccomp/seccomp_policy/*.seccomp.policy`（节：`@allowList/@blockList/@returnValue/@priority...`），构建期由 `scripts/generate_code_from_policy.py` 生成 `lib<name>_filter.z.so`，运行期 `SetSeccompPolicyWithName` dlopen 后 `seccomp(SECCOMP_SET_MODE_FILTER, TSYNC|LOG)` 装载（`services/modules/seccomp/seccomp_policy.c`）。`filtername` 等于服务名或 `system`/`spawn` 等类型名；`@returnValue` 决定 KILL_PROCESS/TRAP/ERRNO 等动作。
 
 ## ueventd
-独立服务进程（`services/etc/ueventd.cfg`，ondemand，init 预建其 netlink socket）：监听 `NETLINK_KOBJECT_UEVENT`，为 block/firmware/其他子系统创建设备节点（权限查 `ueventd.config` INI 表）、生成 `/dev/block/by-name` 符号链接、写 `startup.uevent.<parameter>` 参数通知。init 第一阶段 `StartUeventd` 在 init 进程内做一轮 `RetriggerUevent` 用于拉起必需分区设备。
+独立服务进程（`services/etc/ueventd.cfg`，ondemand，init 预建其 netlink socket）：监听 `NETLINK_KOBJECT_UEVENT`，为 block/firmware/其余子系统创建设备节点（权限查 `ueventd.config` INI 表）、生成 `/dev/block/by-name` 符号链接、写 `startup.uevent.<parameter>` 参数通知。init 第一阶段 `StartUeventd` 在 init 进程内做一轮 `RetriggerUevent` 用于拉起必需分区设备。
 
 ## bootevent / bootchart
 启动性能观测的两种机制：bootevent 插件（`services/modules/bootevent/`）记录服务 fork 时间与启动事件参数；bootchart 插件（`services/modules/bootchart/`）采样 CPU/IO 输出 bootchart 数据，是 init 唯一含采样线程的组件。

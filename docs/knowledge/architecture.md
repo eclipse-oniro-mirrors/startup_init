@@ -123,7 +123,7 @@ dinfo --> innerkits : SystemReadParam
   - **what**：`PARAM_NAME_LEN_MAX=96`、`PARAM_VALUE_LEN_MAX=96`、`PARAM_CONST_VALUE_LEN_MAX=4096`（`interfaces/innerkits/include/param/init_param.h`）；`PARAM_CODE_*`（100..117）与 `INIT_*` 错误码枚举不得增删改值。
   - **why**：kits/三方应用按既有语义编码处理；变更即兼容性事故。
 - **cfg/参数加载顺序固定**
-  - **what**：目录优先级 `/system` < `/chipset` < `/sys_prod` < `/chip_prod`；参数文件先 `ohos_const`（不可覆盖）后其他；SELinux 策略加载在 `SystemConfig` 中位置固定（"Do not move position!"）。
+  - **what**：目录优先级 `/system` < `/chipset` < `/sys_prod` < `/chip_prod`；参数文件先 `ohos_const`（不可覆盖）后其余；SELinux 策略加载在 `SystemConfig` 中位置固定（"Do not move position!"）。
   - **why**：顺序决定产品覆盖语义与安全策略生效时机，错位会导致以低权限身份执行早期初始化。
 - **插件不得硬编码进核心**
   - **what**：可选特性通过 `MODULE_CONSTRUCTOR` + hook/`AddCmdExecutor` 注册；核心路径只保留 `PluginExecCmdByName` 等调用点。

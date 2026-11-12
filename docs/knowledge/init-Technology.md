@@ -79,7 +79,7 @@ init 部件核心技术框架和机制的知识定义，涵盖价值认知、原
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | `ServiceStart`（`services/init/init_common_service.c:902`）：`IsServiceInvalid` 路径校验（`/data/` 前缀容错）→ INIT_SERVICE_FORK_BEFORE hook → pre-start job → `fork()`。父进程 `HandleServicePostFork`（记 pid、`ProcessServiceAdd`、`NotifyServiceChange(SERVICE_STARTED)`、INIT_SERVICE_FORK_AFTER hook）。子进程 `RunChildProcessInternal`（:767）：chipset 上下文 `SetSubInitContext` → 关闭他服务 ondemand fd → `SetServiceEnterSandbox`（失败仅告警）→ `SetAccessToken` → `InitServiceResources`（:551）：`SetServiceEnv` → on-start job → `ClearEnvironment`（解阻塞 SIGCHLD/SIGTERM）→ 非 ondemand `CreateSocketForService`+`SetSocketEnvForService` → `CreateServiceFile` → console/kmsg → `PublishHoldFds` → `BindCpuCore` → `WritePid` → `SetPerms` → `SetServiceContent`（secon setexeccon）→ `ServiceExec`（execv；saspawn 走 `InitServiceBySaspawn`） |
+| 核心机制 | `ServiceStart`（`services/init/init_common_service.c:902`）：`IsServiceInvalid` 路径校验（`/data/` 前缀容错）→ INIT_SERVICE_FORK_BEFORE hook → pre-start job → `fork()`。父进程 `HandleServicePostFork`（记 pid、`ProcessServiceAdd`、`NotifyServiceChange(SERVICE_STARTED)`、INIT_SERVICE_FORK_AFTER hook）。子进程 `RunChildProcessInternal`（:767）：chipset 上下文 `SetSubInitContext` → 关闭其余服务 ondemand fd → `SetServiceEnterSandbox`（失败仅告警）→ `SetAccessToken` → `InitServiceResources`（:551）：`SetServiceEnv` → on-start job → `ClearEnvironment`（解阻塞 SIGCHLD/SIGTERM）→ 非 ondemand `CreateSocketForService`+`SetSocketEnvForService` → `CreateServiceFile` → console/kmsg → `PublishHoldFds` → `BindCpuCore` → `WritePid` → `SetPerms` → `SetServiceContent`（secon setexeccon）→ `ServiceExec`（execv；saspawn 走 `InitServiceBySaspawn`） |
 | 关键流程 | `SetPerms`（:295-355）固定顺序：①INIT_SERVICE_SET_PERMS_BEFORE hook ②`KeepCapability`（securebits：setuid 场景 SECBIT_NO_SETUID_FIXUP，否则 SECBIT_KEEP_CAPS，`services/init/adapter/init_adapter.c:32`）③`ServiceSetGid`（setgid+setgroups）④**`SetSystemSeccompPolicy`（先于 setuid；跳过 appspawn/nwebspawn，转插件命令 "SetSeccompPolicy"）** ⑤`setuid`（uid=0 且配 caps 时 `DropCapability` 逐项收紧 capbset）⑥`SetCapabilities`（capset + ambient raise）⑦INIT_SERVICE_SET_PERMS hook。失败分支分别以 `INIT_EGIDSET/INIT_ESECCOMP/INIT_EUIDSET/INIT_ECAP` 退出 |
 
 ### 使用方式（Usage）
@@ -337,7 +337,7 @@ init 部件核心技术框架和机制的知识定义，涵盖价值认知、原
 ### 解决的问题（Problem）
 | 子维度 | 内容 |
 |---|---|
-| 业务痛点 | system 与 chipset 两域服务的可见挂载面需要收敛（尤其芯片侧目录不得反向污染主域），同时不能影响其他进程的挂载视图 |
+| 业务痛点 | system 与 chipset 两域服务的可见挂载面需要收敛（尤其芯片侧目录不得反向污染主域），同时不能影响其余进程的挂载视图 |
 | 技术目标 | 用私有 mount namespace + pivot_root 为每域构建独立根，并允许单个服务按需切入 |
 
 ### 原理（Principles）
@@ -442,7 +442,7 @@ init 部件核心技术框架和机制的知识定义，涵盖价值认知、原
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | 入口 `ueventd_main.c` `main()`（:179）支持 `-d`（daemon，默认）/`-r`（retrigger）/`-b`（early-boot）/`-l`（listen）。daemon 流程 `UeventdDaemon`（ueventd/ueventd_main.c:92）：解析 `/etc/ueventd.config`、`/vendor/etc/ueventd.config`、`/vendor/etc/ueventd_factory.config` → ondemand 时 `GetControlSocket("ueventd")` 取 init 预建 netlink socket，否则 `UeventdSocketInit`（PF_NETLINK/SOCK_DGRAM|CLOEXEC|NONBLOCK/NETLINK_KOBJECT_UEVENT，`nl_groups=0xffffffff`，SO_RCVBUFFORCE 256KB，SO_PASSCRED）→ 首次运行（无 `/dev/.ueventd_trigger_done` 标志）`RetriggerUevent` 重放存量设备 → `ProcessUevent` 循环 → ondemand 空闲轮询（`UEVENTD_POLL_TIME=5 分钟`，`bootevent.boot.completed==true` 后超时退出）。事件处理 `HandleUevent`（:110）按 subsystem 分发：block→`HandleBlockDeviceEvent`（ueventd_device_handler.c:484）、firmware→`HandleFimwareDeviceEvent`（写 `/sys<syspath>/loading="-1"` 取消内核等待）、其他→`HandleOtherDeviceEvent`；add/change/online 先 `ChangeSysAttributePermissions` |
+| 核心机制 | 入口 `ueventd_main.c` `main()`（:179）支持 `-d`（daemon，默认）/`-r`（retrigger）/`-b`（early-boot）/`-l`（listen）。daemon 流程 `UeventdDaemon`（ueventd/ueventd_main.c:92）：解析 `/etc/ueventd.config`、`/vendor/etc/ueventd.config`、`/vendor/etc/ueventd_factory.config` → ondemand 时 `GetControlSocket("ueventd")` 取 init 预建 netlink socket，否则 `UeventdSocketInit`（PF_NETLINK/SOCK_DGRAM|CLOEXEC|NONBLOCK/NETLINK_KOBJECT_UEVENT，`nl_groups=0xffffffff`，SO_RCVBUFFORCE 256KB，SO_PASSCRED）→ 第一次运行（无 `/dev/.ueventd_trigger_done` 标志）`RetriggerUevent` 重放存量设备 → `ProcessUevent` 循环 → ondemand 空闲轮询（`UEVENTD_POLL_TIME=5 分钟`，`bootevent.boot.completed==true` 后超时退出）。事件处理 `HandleUevent`（:110）按 subsystem 分发：block→`HandleBlockDeviceEvent`（ueventd_device_handler.c:484）、firmware→`HandleFimwareDeviceEvent`（写 `/sys<syspath>/loading="-1"` 取消内核等待）、其余→`HandleOtherDeviceEvent`；add/change/online 先 `ChangeSysAttributePermissions` |
 | 关键流程 | 设备节点：`CreateDeviceNodeWithPermissions`（:148）查 `GetDeviceNodePermissions` → mknod → chown/chmod；by-name：`CreateSymbolLinks`（:55）+ block 处理中生成 `/dev/block/platform/<ctrl>/by-name/<part>` 与 `/dev/block/by-name/<part>`（:292/:303）；SELinux `SetDeviceLable`（:95）逐级 restorecon 并把链接 label 复制到节点；参数通知：工作线程 `SystemSetParameter("startup.uevent.<parameter>","added"/"removed")`（ueventd/standard/ueventd_parameter.c:93，5 秒重试）；early-boot 直接 mknod 必需动态节点（tty/binder/console 等） |
 
 ### 使用方式（Usage）

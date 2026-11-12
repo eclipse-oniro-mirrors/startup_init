@@ -57,7 +57,7 @@ init 部件核心业务实体的完整知识定义，涵盖静态概念、动态
 | 子维度 | 内容 |
 |---|---|
 | 业务规则 | 条件 job 的 condition 最多 `MAX_CONDITION_NUMBER=64` 个子条件；`trigger` 命令可显式激活具名 job；lite 系统无 trigger 引擎（`DoJob` 同步执行，`services/init/lite/init_jobs.c`）；条件中引用的参数必须可读（DAC），否则永不满足 |
-| 并发约束 | trigger 队列消费在 init 单线程 async event task（`InitTriggerWorkSpace`，trigger_processor.c:307）内串行；不得在 hook/命令中同步等待其他 trigger 完成 |
+| 并发约束 | trigger 队列消费在 init 单线程 async event task（`InitTriggerWorkSpace`，trigger_processor.c:307）内串行；不得在 hook/命令中同步等待其余 trigger 完成 |
 
 ### 知识关联
 | 子维度 | 内容 |
@@ -86,7 +86,7 @@ init 部件核心业务实体的完整知识定义，涵盖静态概念、动态
 | 子维度 | 内容 |
 |---|---|
 | 交互流程 | 创建/更新：客户端 `SystemSetParameter` → paramservice socket MSG_SET_PARAM → `SystemSetParam`（`services/param/linux/param_service.c:139`）→ `CheckParameterSet`（DAC+MAC）→ `WriteParam`（trie 写入、commitId 原子递增）→ persist 前缀再 `WritePersistParam` → `CheckAndSendTrigger`（触发条件 job/wait/watch 事件）；读取：客户端 mmap 只读工作区（`services/param/linux/param_request.c`），`SystemReadParam`/`CachedParameterGet`；删除不适用（参数一经写入仅可改值） |
-| 状态流转 | 不存在 → 存在（首次 set）→ 值更新（commitId 递增、清 TRIGGED/WAITED 标志）→（persist）批量落盘；写中状态由读端 futex 等 commitId 稳定感知 |
+| 状态流转 | 不存在 → 存在（第一次 set）→ 值更新（commitId 递增、清 TRIGGED/WAITED 标志）→（persist）批量落盘；写中状态由读端 futex 等 commitId 稳定感知 |
 
 ### 规格与约束
 | 子维度 | 内容 |
