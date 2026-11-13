@@ -12,9 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <chrono>
+#include <string>
+
 #include <gtest/gtest.h>
 
 #include "if_system_ability_manager.h"
+#include "ipc_skeleton.h"
 #include "param_stub.h"
 #include "iservice_registry.h"
 #include "iwatcher.h"
@@ -48,8 +52,20 @@ public:
         return 0;
     }
 };
-
 using WatcherManagerPtr = WatcherManager *;
+
+static int g_testCallingAppUid = -1;
+int OHOS::IPCSkeleton::GetCallingAppUid()
+{
+    return g_testCallingAppUid;
+}
+
+class TestAppUid {
+public:
+    explicit TestAppUid(int uid) { g_testCallingAppUid = uid; }
+    ~TestAppUid() { g_testCallingAppUid = -1; }
+};
+
 class WatcherProxyUnitTest : public ::testing::Test {
 public:
     WatcherProxyUnitTest() {}
@@ -62,6 +78,7 @@ public:
             GetParamSecurityLabel()->cred.gid = 0;
         }
         SetTestPermissionResult(0);
+        g_testCallingAppUid = -1;
     }
     void TearDown() {}
     void TestBody() {}
@@ -127,6 +144,22 @@ public:
         EXPECT_EQ(reply.ReadInt32(), 0);
         EXPECT_EQ(watcherManager->GetWatcherGroup(keyPrefix) != nullptr, 1);
         return 0;
+    }
+
+    int TestAddWatcherWithReply(const std::string &keyPrefix, uint32_t watcherId)
+    {
+        WatcherManagerPtr watcherManager = GetWatcherManager();
+        WATCHER_CHECK(watcherManager != nullptr, return -1, "Failed to create manager");
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        data.WriteInterfaceToken(IWatcherManager::GetDescriptor());
+        data.WriteString16(Str8ToStr16(keyPrefix));
+        data.WriteUint32(watcherId);
+        watcherManager->OnRemoteRequest(
+            static_cast<uint32_t>(IWatcherManagerIpcCode::COMMAND_ADD_WATCHER), data, reply, option);
+        return reply.ReadInt32();
     }
 
     int TestRefreshWatcher(const std::string &keyPrefix, uint32_t watcherId)
@@ -367,6 +400,93 @@ HWTEST_F(WatcherProxyUnitTest, Init_TestInvalid_001, TestSize.Level0)
 {
     WatcherProxyUnitTest test;
     test.TestInvalid("test.permission.watcher.test1");
+}
+
+HWTEST_F(WatcherProxyUnitTest, Init_TestAppUid_SystemProcess_001, TestSize.Level0)
+{
+    WatcherProxyUnitTest test;
+    uint32_t watcherId = 0;
+    test.TestAddRemoteWatcher(getpid(), watcherId);
+    // mock calling app uid below app range, expect allowed
+    TestAppUid appUid(0);
+    int reply = test.TestAddWatcherWithReply("test.permission.appuid.sys", watcherId);
+    EXPECT_EQ(reply, 0);
+    test.TestWatchAgentDump("test.permission.appuid.sys");
+}
+
+HWTEST_F(WatcherProxyUnitTest, Init_TestAppUid_SystemUidBoundary_001, TestSize.Level0)
+{
+    WatcherProxyUnitTest test;
+    uint32_t watcherId = 0;
+    test.TestAddRemoteWatcher(getpid(), watcherId);
+    TestAppUid appUid(9999);
+    int reply = test.TestAddWatcherWithReply("test.permission.appuid.boundary", watcherId);
+    EXPECT_EQ(reply, 0);
+}
+
+HWTEST_F(WatcherProxyUnitTest, Init_TestAppUid_AppWhitelisted_001, TestSize.Level0)
+{
+    WatcherProxyUnitTest test;
+    uint32_t watcherId = 0;
+    test.TestAddRemoteWatcher(getpid(), watcherId);
+    TestAppUid appUid(10000);
+    int reply = test.TestAddWatcherWithReply("persist.global.locale", watcherId);
+    EXPECT_EQ(reply, 0);
+    test.TestWatchAgentDump("persist.global.locale");
+}
+
+HWTEST_F(WatcherProxyUnitTest, Init_TestAppUid_AppRejected_001, TestSize.Level0)
+{
+    WatcherProxyUnitTest test;
+    uint32_t watcherId = 0;
+    test.TestAddRemoteWatcher(getpid(), watcherId);
+    // mock calling app uid in app range (>= PUBLIC_APP_BEGIN_UID) with non-whitelist key, expect blocked
+    TestAppUid appUid(10000);
+    int reply = test.TestAddWatcherWithReply("test.permission.appuid.reject", watcherId);
+    EXPECT_NE(reply, 0);
+}
+
+HWTEST_F(WatcherProxyUnitTest, Init_TestAppUid_AppRejected_002, TestSize.Level0)
+{
+    WatcherProxyUnitTest test;
+    uint32_t watcherId = 0;
+    test.TestAddRemoteWatcher(getpid(), watcherId);
+    TestAppUid appUid(10001);
+    int reply = test.TestAddWatcherWithReply("test.permission.appuid.reject2", watcherId);
+    EXPECT_NE(reply, 0);
+}
+
+HWTEST_F(WatcherProxyUnitTest, Init_TestAppUid_AppWildcard_001, TestSize.Level0)
+{
+    WatcherProxyUnitTest test;
+    uint32_t watcherId = 0;
+    test.TestAddRemoteWatcher(getpid(), watcherId);
+    TestAppUid appUid(10000);
+    int reply = test.TestAddWatcherWithReply("test.permission.appuid.*", watcherId);
+    EXPECT_NE(reply, 0);
+}
+
+HWTEST_F(WatcherProxyUnitTest, Init_TestAppUid_Performance_001, TestSize.Level0)
+{
+    WatcherProxyUnitTest test;
+    uint32_t watcherId = 0;
+    test.TestAddRemoteWatcher(getpid(), watcherId);
+    // interface performance: AddWatcher through IPC entry, expect less than 1ms per call
+    TestAppUid appUid(0);
+    const int loopTimes = 100;
+    int failed = 0;
+    auto start = std::chrono::steady_clock::now();
+    for (int i = 0; i < loopTimes; i++) {
+        std::string keyPrefix = "test.permission.appuid.perf." + std::to_string(i);
+        if (test.TestAddWatcherWithReply(keyPrefix, watcherId) != 0) {
+            failed++;
+        }
+    }
+    auto costUs = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::steady_clock::now() - start).count();
+    printf("Init_TestAppUid_Performance_001: %d calls, avg %lld us\n", loopTimes, costUs / loopTimes);
+    EXPECT_EQ(failed, 0);
+    EXPECT_LT(costUs / loopTimes, 1000);
 }
 
 HWTEST_F(WatcherProxyUnitTest, Init_TestStop_001, TestSize.Level0)
