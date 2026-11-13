@@ -539,6 +539,12 @@ static void TestBeforeInit(void)
 static pid_t g_currPid = 0;
 static __attribute__((constructor(101))) void ParamTestStubInit(void)
 {
+#ifndef OHOS_LITE
+    // Cache-only workers must not recreate the parent test process's services.
+    if (getenv(SYSPARA_TEST_CHILD_CASE) != nullptr) {
+        return;
+    }
+#endif
     g_currPid = getpid();
     printf("Init unit test start %u \n", g_currPid);
     EnableInitLog(INIT_INFO);
@@ -577,10 +583,10 @@ static __attribute__((constructor(101))) void ParamTestStubInit(void)
 
 __attribute__((destructor)) static void ParamTestStubExit(void)
 {
-    PARAM_LOGI("ParamTestStubExit %u %u \n", g_currPid, getpid());
     if (g_currPid != getpid()) {
         return;
     }
+    PARAM_LOGI("ParamTestStubExit %u %u \n", g_currPid, getpid());
 #ifndef OHOS_LITE
     StopParamService();
 
