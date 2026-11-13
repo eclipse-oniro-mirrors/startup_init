@@ -20,6 +20,7 @@
 #include <memory>
 #include <gtest/gtest.h>
 #include <sys/stat.h>
+#include <sys/sysmacros.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <selinux/selinux.h>
@@ -35,6 +36,42 @@ namespace UeventdUt {
 namespace {
     std::string g_testRoot{"/data/ueventd"};
     int g_oldRootFd = -1;
+}
+
+static int CreateDevNode(const std::string &path, mode_t mode, unsigned int major, unsigned int minor)
+{
+    if (mknod(path.c_str(), S_IFCHR | mode, makedev(major, minor)) < 0 && errno != EEXIST) {
+        std::cout << "Cannot create device node " << path << ", err = " << errno << std::endl;
+        return -1;
+    }
+    return 0;
+}
+
+static int PrepareChrootDevNodes()
+{
+    const std::string devDir = g_testRoot + "/dev";
+    if (mkdir(devDir.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) < 0 && errno != EEXIST) {
+        std::cout << "Cannot create directory " << devDir << ", err = " << errno << std::endl;
+        return -1;
+    }
+    struct DevNodeInfo {
+        const char *name;
+        mode_t mode;
+        unsigned int major;
+        unsigned int minor;
+    };
+    const DevNodeInfo nodes[] = {
+        { "/urandom", S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, 1, 9 },
+        { "/random", S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, 1, 8 },
+        { "/null", S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH, 1, 3 },
+        { "/zero", S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, 1, 5 },
+    };
+    for (const auto &node : nodes) {
+        if (CreateDevNode(devDir + node.name, node.mode, node.major, node.minor) < 0) {
+            return -1;
+        }
+    }
+    return 0;
 }
 
 class UeventdEventUnitTest : public testing::Test {
@@ -60,6 +97,9 @@ static void SetUpTestCase(void)
     int ret = mkdir(g_testRoot.c_str(), S_IRWXU | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
     if (ret < 0) {
         std::cout << "Cannot create directory " << g_testRoot << " err = " << errno << std::endl;
+        ASSERT_TRUE(0);
+    }
+    if (PrepareChrootDevNodes() < 0) {
         ASSERT_TRUE(0);
     }
     if (SwitchRoot() < 0) {

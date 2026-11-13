@@ -77,7 +77,7 @@ int RemountMainEntry(int argc, const char *argv[]);
 
 static void CreateTestFile(const char *fileName, const char *data)
 {
-    FILE *tmpFile = fopen(fileName, "wr");
+    FILE *tmpFile = fopen(fileName, "w");
     if (tmpFile != nullptr) {
         fprintf(tmpFile, "%s", data);
         (void)fflush(tmpFile);
@@ -853,6 +853,7 @@ HWTEST_F(RemountOverlayUnitTest, Init_RemountRofsOverlay_005_dmMergeEnabledSucc,
     EXPECT_EQ(ret, REMOUNT_SUCC);
     RemountSetStubFstab(nullptr);
     RemountSetStubResult(STUB_IS_DM_MERGE_REMOUNT_ENABLED, 0);
+    RemountSetStubResult(STUB_MKDIR, 0);
     unlink("/mnt/overlay_merge/.dm_merge");
     rmdir("/mnt/overlay_merge");
     DeleteRemountResultFlag();
@@ -965,7 +966,13 @@ HWTEST_F(RemountOverlayUnitTest, Init_RemoveDirContent_001, TestSize.Level0)
     CreateTestFile(regFile.c_str(), "test");
     CreateTestFile(subFile.c_str(), "sub");
     int ret = RemoveDirContent(testDir.c_str());
-    EXPECT_EQ(ret, -1);
+    // 成功返回 0，仅 opendir 失败返回 -1；内容清空但目录本身保留。
+    EXPECT_EQ(ret, 0);
+    struct stat st{};
+    EXPECT_EQ(stat(testDir.c_str(), &st), 0);
+    EXPECT_EQ(stat(regFile.c_str(), &st), -1);
+    EXPECT_EQ(stat(subFile.c_str(), &st), -1);
+    EXPECT_EQ(stat(subDir.c_str(), &st), -1);
     rmdir(subDir.c_str());
     rmdir(testDir.c_str());
 }

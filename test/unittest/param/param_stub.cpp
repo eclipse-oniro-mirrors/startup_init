@@ -45,6 +45,11 @@ extern "C" {
 #endif
 #endif
 
+#ifndef OHOS_LITE
+// Defined in services/modules/udid/udid_adp.c; not compiled for OHOS_LITE.
+void SetDevUdid(void);
+#endif
+
 static int g_stubResult[STUB_MAX] = { 0 };
 static int g_testRandom = 2; // 2 is test random
 
@@ -382,7 +387,8 @@ void PrepareCmdLineData()
         "ohos.required_mount.vendor="
         "/dev/block/platform/fe310000.sdhci/by-name/vendor@/vendor@ext4@ro,barrier=1@wait,required "
         "ohos.required_mount.misc="
-        "/dev/block/platform/fe310000.sdhci/by-name/misc@none@none@none@wait,required ohos.boot.eng_mode=on ";
+        "/dev/block/platform/fe310000.sdhci/by-name/misc@none@none@none@wait,required ohos.boot.eng_mode=on "
+        "sn=0023456789 ";
     CreateTestFile(BOOT_CMD_LINE, cmdLine);
 }
 
@@ -487,6 +493,11 @@ void PrepareInitUnitTestEnv(void)
 
     int32_t loglevel = GetIntParameter("persist.init.debug.loglevel", INIT_ERROR);
     SetInitLogLevel((InitLogLevel)loglevel);
+
+#ifndef OHOS_LITE
+    // UT 进程不加载 udid 模块，这里显式写入 const.product.devUdid。
+    SetDevUdid();
+#endif
 
     // for test int get
     SystemWriteParam("test.int.get", "-101");
