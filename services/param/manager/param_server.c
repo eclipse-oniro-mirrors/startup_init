@@ -430,6 +430,19 @@ static int ProcessParamFile(const char *fileName, void *context)
     return ret;
 }
 
+#ifdef PARAM_LOAD_CFG_FROM_FILE
+static int ProcessParamFileMini(const char *fileName, void *context)
+{
+    static const char *exclude[] = {"ctl.", "selinux.restorecon_recursive"};
+    uint32_t mode = *(int *)context;
+    int ret = LoadDefaultParam_(fileName, mode, exclude, ARRAY_LENGTH(exclude), LoadOneParam_);
+    if (ret == PARAM_DEFAULT_PARAM_MEMORY_NOT_ENOUGH) {
+        PARAM_LOGE("[startup_failed]default_param memory is not enough %d", SYS_PARAM_INIT_FAILED);
+    }
+    return ret;
+}
+#endif
+
 int LoadParamsFile(const char *fileName, bool onlyAdd)
 {
     return LoadDefaultParams(fileName, onlyAdd ? LOAD_PARAM_ONLY_ADD : LOAD_PARAM_NORMAL);
@@ -444,10 +457,18 @@ int LoadDefaultParams(const char *fileName, uint32_t mode)
         if (strstr(fileName, ".para.dac")) {
             return LoadSecurityLabel(fileName);
         } else {
+#ifdef PARAM_LOAD_CFG_FROM_FILE
+            return ProcessParamFileMini(fileName, &mode);
+#else
             return ProcessParamFile(fileName, &mode);
+#endif
         }
     } else {
+#ifdef PARAM_LOAD_CFG_FROM_FILE
+        (void)ReadFileInDir(fileName, ".para", ProcessParamFileMini, &mode);
+#else
         (void)ReadFileInDir(fileName, ".para", ProcessParamFile, &mode);
+#endif
         (void)ReadFileInDir(fileName, ".para.import", LoadParamFromImport, &mode);
         return LoadSecurityLabel(fileName);
     }

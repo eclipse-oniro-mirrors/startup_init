@@ -27,6 +27,11 @@ group("startup_init") {
     }
   }
 
+  if (defined(ohos_lite) && ohos_kernel_type == "liteos_m" &&
+      init_feature_param_load_from_cfg_file) {
+    deps = [ "etc:etc_files" ]
+  }
+
   # for standard
   if (!defined(ohos_lite)) {
     deps = [

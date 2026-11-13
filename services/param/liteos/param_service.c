@@ -22,6 +22,9 @@
 #ifdef PARAM_LOAD_CFG_FROM_CODE
 #include "param_cfg.h"
 #endif
+#ifdef PARAM_LOAD_CFG_FROM_FILE
+#include "config_policy_utils.h"
+#endif
 #ifdef __LITEOS_M__
 #include "ohos_init.h"
 #include "cmsis_os2.h"
@@ -59,6 +62,24 @@ static const char *StringTrim(char *buffer, int size, const char *name)
 }
 #endif
 
+#ifdef PARAM_LOAD_CFG_FROM_FILE
+static void LoadParamFromCfgFiles(void)
+{
+    CfgFiles *files = GetCfgFiles("etc/param");
+    if (files == NULL) {
+        PARAM_LOGE("no etc/param directory found, load params from build instead");
+        return;
+    }
+    for (int i = MAX_CFG_POLICY_DIRS_CNT - 1; i >= 0; i--) {
+        if (files->paths[i] == NULL) {
+            continue;
+        }
+        (void)LoadDefaultParams(files->paths[i], LOAD_PARAM_ONLY_ADD);
+    }
+    FreeCfgFiles(files);
+}
+#endif
+
 int InitParamService(void)
 {
     PARAM_LOGI("InitParamService %s", DATA_PATH);
@@ -73,6 +94,9 @@ int InitParamService(void)
     // from build
 #ifndef PARAM_CONST_FLASH_ONLY
     LoadParamFromBuild();
+#ifdef PARAM_LOAD_CFG_FROM_FILE
+    LoadParamFromCfgFiles();
+#else
 #ifdef PARAM_LOAD_CFG_FROM_CODE
     char *buffer = calloc(1, PARAM_VALUE_LEN_MAX);
     PARAM_CHECK(buffer != NULL, return ret, "failed malloc for buffer");
@@ -85,6 +109,7 @@ int InitParamService(void)
             ret, g_paramDefCfgNodes[i].name, g_paramDefCfgNodes[i].value);
     }
     free(buffer);
+#endif
 #endif
 #endif
 

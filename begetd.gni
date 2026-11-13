@@ -48,6 +48,9 @@ declare_args() {
   init_lite_param_name_len_max = 96
   init_lite_persist_all = true
 
+  # Load params from etc/param by config policy priority, disabled by default.
+  init_feature_param_load_from_cfg_file = false
+
   # Read const.* params directly from Flash instead of preloading into RAM.
   init_lite_param_const_flash_only = false
 
