@@ -28,7 +28,7 @@ int32_t OH_BoardInfo_GetBoardSn(char *boardSn)
 {
     if (boardSn == NULL) {
         BEGET_LOGE("GetBoardSn invalid param, boardSn is null");
-        return 0;
+        return 401;
     }
     int ret = AclGetBoardSerial(boardSn, BOARD_SERIAL_LEN);
     if (ret != 0) {

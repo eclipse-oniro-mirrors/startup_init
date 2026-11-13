@@ -43,6 +43,7 @@ const char *OH_BoardInfo_GetCpuId(void);
  * @return <ul>
  *    <li>0 if the operation is successful.</li>
  *    <li>201 if the caller does not have ohos.permission.ACCESS_BOARD_INFO.</li>
+ *    <li>401 If the caller passes null or invalid parameters</li>
  *    </ul>
  * @permission ohos.permission.ACCESS_BOARD_INFO
  * @throws 201
