@@ -44,6 +44,10 @@ extern "C" {
 
 #define DEFAULT_ERROR (-65535)
 
+#ifndef OHOS_LITE
+#define SYSPARA_TEST_CHILD_CASE "INIT_SYSPARA_TEST_CHILD_CASE"
+#endif
+
 #ifndef PARAM_SUPPORT_SELINUX
 typedef struct ParameterNode {
     const char *paraName;
