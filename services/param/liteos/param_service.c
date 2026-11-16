@@ -94,9 +94,6 @@ int InitParamService(void)
     // from build
 #ifndef PARAM_CONST_FLASH_ONLY
     LoadParamFromBuild();
-#ifdef PARAM_LOAD_CFG_FROM_FILE
-    LoadParamFromCfgFiles();
-#else
 #ifdef PARAM_LOAD_CFG_FROM_CODE
     char *buffer = calloc(1, PARAM_VALUE_LEN_MAX);
     PARAM_CHECK(buffer != NULL, return ret, "failed malloc for buffer");
@@ -109,6 +106,8 @@ int InitParamService(void)
             ret, g_paramDefCfgNodes[i].name, g_paramDefCfgNodes[i].value);
     }
     free(buffer);
+#ifdef PARAM_LOAD_CFG_FROM_FILE
+    LoadParamFromCfgFiles();
 #endif
 #endif
 #endif
