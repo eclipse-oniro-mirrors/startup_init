@@ -1,0 +1,7 @@
+{
+    global:
+      OH_BoardInfo_GetBoardSn;
+      OH_BoardInfo_GetCpuId;
+    local:
+      *;
+};

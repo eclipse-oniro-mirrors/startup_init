@@ -19,7 +19,6 @@ ohos_shared_library("deviceinfo_ndk") {
     "src/deviceinfo.c",
     "src/syscap_ndk.c",
     "src/deviceinfo_impl.cpp",
-    "src/boardinfo.c",
   ]
   include_dirs = [ "./include" ]
   deps = [
@@ -45,5 +44,28 @@ ohos_shared_library("deviceinfo_ndk") {
   part_name = "init"
   subsystem_name = "startup"
   version_script = "deviceinfo_ndk.map"
+  ldflags = [ "-Wl,--exclude-libs,ALL" ]
+}
+
+ohos_shared_library("boardinfo_ndk") {
+  cflags = [ "-fstack-protector-all" ]
+  sources = [
+    "src/boardinfo.c",
+  ]
+  include_dirs = [ "./include" ]
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/interfaces/innerkits:libbeget_proxy",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "c_utils:utils",
+    "ipc:ipc_single",
+    "samgr:samgr_proxy",
+  ]
+  innerapi_tags = [ "ndk" ]
+  part_name = "init"
+  subsystem_name = "startup"
+  version_script = "boardinfo_ndk.map"
   ldflags = [ "-Wl,--exclude-libs,ALL" ]
 }

@@ -1,0 +1,10 @@
+[
+    {
+        "first_introduced": "26",
+        "name": "OH_BoardInfo_GetCpuId"
+    },
+    {
+        "first_introduced": "26",
+        "name": "OH_BoardInfo_GetBoardSn"
+    }
+]

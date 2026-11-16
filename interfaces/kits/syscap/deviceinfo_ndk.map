@@ -32,8 +32,6 @@
       OH_GetVersionId;
       OH_GetDiskSN;
       OH_GetOdid;
-      OH_BoardInfo_GetBoardSn;
-      OH_BoardInfo_GetCpuId;
       OH_IsApiVersionGreaterOrEqual;
       canIUse;
     local:

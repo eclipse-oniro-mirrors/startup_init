@@ -19,7 +19,10 @@ group("kitsgroup") {
       "//base/startup/init/interfaces/innerkits:libbeget_proxy",
       "//base/startup/init/interfaces/innerkits:libbegetutil",
     ]
-    deps += [ "syscap:deviceinfo_ndk" ]
+    deps += [
+      "syscap:deviceinfo_ndk",
+      "syscap:boardinfo_ndk",
+    ]
     if (support_jsapi) {
       deps += [
         "cj:cj_device_info_ffi",
