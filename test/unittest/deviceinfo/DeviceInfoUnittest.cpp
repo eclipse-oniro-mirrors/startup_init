@@ -361,7 +361,7 @@ HWTEST_F(DeviceInfoUnittest, Init_AclApiRegression_001, TestSize.Level1)
     EXPECT_NE(nullptr, cpuId);
  
     int32_t ret = OH_BoardInfo_GetBoardSn(nullptr);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, 401);
  
     char aclBoardSn[256] = { 0 };
     char boardSn[256] = { 0 };
