@@ -143,7 +143,8 @@ static const DYNAMIC_DEVICE_NODE DYNAMIC_DEVICES[] = {
     { DEV_NODE_PATH_PREFIX"tty",              S_IFCHR | DEFAULT_RW_MODE },
     { DEV_NODE_PATH_PREFIX"binder",           S_IFCHR | DEFAULT_RW_MODE },
     { DEV_NODE_PATH_PREFIX"console",          S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP },
-    { DEV_NODE_PATH_PREFIX"mapper/control",          S_IFCHR | DEFAULT_RW_MODE }
+    { DEV_NODE_PATH_PREFIX"mapper/control",          S_IFCHR | DEFAULT_RW_MODE },
+    { DEV_NODE_PATH_PREFIX"dsg_ca",          S_IFCHR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP }
 };
 
 static void HandleRequiredDynamicDeviceNodes(const struct Uevent *uevent)

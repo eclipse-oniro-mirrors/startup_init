@@ -713,6 +713,8 @@ int LoadPolicy()
     return 0;
 }
 
+void InitBoolPolicy() {}
+
 static int g_selinuxOptResult = 0;
 int setcon(const char *name)
 {

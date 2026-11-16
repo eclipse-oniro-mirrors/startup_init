@@ -98,6 +98,7 @@ static int LoadSelinuxPolicy(int id, const char *name, int argc, const char **ar
         setcon(processContext);
     }
     (void)RestoreconRecurse("/dev");
+    InitBoolPolicy();
     return 0;
 }
 
