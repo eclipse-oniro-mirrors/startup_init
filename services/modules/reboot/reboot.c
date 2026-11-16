@@ -242,6 +242,23 @@ static int DoRebootPenglai(int id, const char *name, int argc, const char **argv
     return ret;
 }
 
+PLUGIN_STATIC int DoRebootSafemode(int id, const char *name, int argc, const char **argv)
+{
+    UNUSED(id);
+    PLUGIN_LOGI("DoRebootSafemode argc %d %s", argc, name);
+    if (argc >= 1) {
+        PLUGIN_LOGI("DoRebootSafemode argv %s", argv[0]);
+#ifndef OHOS_LITE
+        ReportStartupReboot(argv[0]);
+#endif
+        ParseRebootReason(name, argc, argv);
+        (void)UpdateMiscMessage(argv[0], "safemode", "safemode:", "boot_safe");
+    } else {
+        PLUGIN_LOGW("DoRebootSafemode invalid parameter, reboot in normal mode");
+    }
+    return DoRoot_("reboot", RB_AUTOBOOT);
+}
+
 PLUGIN_STATIC int DoRebootFlashed(int id, const char *name, int argc, const char **argv)
 {
     UNUSED(id);
@@ -319,6 +336,7 @@ static void RebootAdpInit(void)
     AddRebootCmdExecutor("suspend", DoRebootSuspend);
     AddRebootCmdExecutor("panic", DoRebootPanic);
     AddRebootCmdExecutor("penglai", DoRebootPenglai);
+    AddRebootCmdExecutor("safemode", DoRebootSafemode);
     (void)AddCmdExecutor("panic", DoRebootPanic);
 }
 
