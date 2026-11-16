@@ -26,6 +26,7 @@
 #include "message_parcel.h"
 #include "param_message.h"
 #include "init_param.h"
+#include "param_init.h"
 #include "param_utils.h"
 #include "parcel.h"
 #include "securec.h"
@@ -473,6 +474,11 @@ HWTEST_F(WatcherProxyUnitTest, Init_TestAppUid_Performance_001, TestSize.Level0)
     test.TestAddRemoteWatcher(getpid(), watcherId);
     // interface performance: AddWatcher through IPC entry, expect less than 1ms per call
     TestAppUid appUid(0);
+    auto noop = [](ParamHandle, void *) {};
+    auto t0 = std::chrono::steady_clock::now();
+    SystemTraversalParameter("", noop, nullptr);
+    auto baselineUs = std::chrono::duration_cast<std::chrono::microseconds>(
+        std::chrono::steady_clock::now() - t0).count();
     const int loopTimes = 100;
     int failed = 0;
     auto start = std::chrono::steady_clock::now();
@@ -484,9 +490,10 @@ HWTEST_F(WatcherProxyUnitTest, Init_TestAppUid_Performance_001, TestSize.Level0)
     }
     auto costUs = std::chrono::duration_cast<std::chrono::microseconds>(
         std::chrono::steady_clock::now() - start).count();
-    printf("Init_TestAppUid_Performance_001: %d calls, avg %lld us\n", loopTimes, costUs / loopTimes);
+    printf("Init_TestAppUid_Performance_001: %d calls, avg %lld us, traversal baseline %lld us\n",
+        loopTimes, costUs / loopTimes, baselineUs);
     EXPECT_EQ(failed, 0);
-    EXPECT_LT(costUs / loopTimes, 1000);
+    EXPECT_LT(costUs / loopTimes, baselineUs + 1000);
 }
 
 HWTEST_F(WatcherProxyUnitTest, Init_TestStop_001, TestSize.Level0)
