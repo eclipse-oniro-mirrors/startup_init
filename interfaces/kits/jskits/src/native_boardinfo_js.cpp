@@ -34,7 +34,7 @@
 #define BINFO_LOGI(fmt, ...) STARTUP_LOGI(DEVICEINFO_JS_DOMAIN, BINFO_TAG, fmt, ##__VA_ARGS__)
 #define BINFO_LOGE(fmt, ...) STARTUP_LOGE(DEVICEINFO_JS_DOMAIN, BINFO_TAG, fmt, ##__VA_ARGS__)
 
-#define BOARD_INFO_VALUE_LEN 256
+#define BOARD_INFO_VALUE_LEN 16
 
 namespace OHOS {
 namespace device_info {

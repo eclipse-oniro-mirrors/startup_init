@@ -331,7 +331,7 @@ HWTEST_F(DeviceInfoUnittest, Init_GetCpuIdEmpty_001, TestSize.Level1)
  
 HWTEST_F(DeviceInfoUnittest, Init_GetBoardSerialBasic_001, TestSize.Level1)
 {
-    char boardSn[256] = { 0 };
+    char boardSn[16] = { 0 };
     int32_t ret = OH_BoardInfo_GetBoardSn(boardSn);
     EXPECT_TRUE(ret == 0 || ret == BOARD_INFO_PERMISSION_DENIED_CODE);
 }
@@ -340,7 +340,7 @@ HWTEST_F(DeviceInfoUnittest, Init_GetBoardSerialPermissionDenied_001, TestSize.L
 {
     g_tokenType = OHOS::Security::AccessToken::TOKEN_HAP;
     g_tokenVerifyResult = OHOS::Security::AccessToken::TypePermissionState::PERMISSION_DENIED;
-    char boardSn[256] = { 0 };
+    char boardSn[16] = { 0 };
     int32_t ret = OH_BoardInfo_GetBoardSn(boardSn);
     EXPECT_EQ(ret, BOARD_INFO_PERMISSION_DENIED_CODE);
     g_tokenVerifyResult = 0;
@@ -348,7 +348,7 @@ HWTEST_F(DeviceInfoUnittest, Init_GetBoardSerialPermissionDenied_001, TestSize.L
  
 HWTEST_F(DeviceInfoUnittest, Init_GetBoardSerialHdiUnavailable_001, TestSize.Level1)
 {
-    char boardSn[256] = { 0 };
+    char boardSn[16] = { 0 };
     int32_t ret = OH_BoardInfo_GetBoardSn(boardSn);
     EXPECT_TRUE(ret == 0 || ret == BOARD_INFO_PERMISSION_DENIED_CODE);
 }
@@ -363,8 +363,8 @@ HWTEST_F(DeviceInfoUnittest, Init_AclApiRegression_001, TestSize.Level1)
     int32_t ret = OH_BoardInfo_GetBoardSn(nullptr);
     EXPECT_EQ(ret, 401);
  
-    char aclBoardSn[256] = { 0 };
-    char boardSn[256] = { 0 };
+    char aclBoardSn[16] = { 0 };
+    char boardSn[16] = { 0 };
     int aclRet = AclGetBoardSerial(aclBoardSn, sizeof(aclBoardSn));
     EXPECT_TRUE(aclRet == 0 || aclRet == SYSPARAM_PERMISSION_DENIED);
     ret = OH_BoardInfo_GetBoardSn(boardSn);

@@ -63,7 +63,7 @@ static ::taihe::string CallAclBoardInfo(const char* name, AclBoardInfoFunc acl)
 
 ::taihe::string getboardSn()
 {
-    char buf[256] = {0};
+    char buf[16] = {0};
     int ret = AclGetBoardSerial(buf, sizeof(buf));
     if (ret == SYSPARAM_PERMISSION_DENIED) {
         taihe::set_business_error(BOARD_INFO_PERMISSION_DENIED_CODE, BOARD_INFO_PERMISSION_DENIED_MSG);
