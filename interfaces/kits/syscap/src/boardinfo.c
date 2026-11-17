@@ -18,6 +18,7 @@
 #include <stdint.h>
  
 #define BOARD_SERIAL_LEN 256
+#define BOARD_PARAM_NULL 401
  
 const char *OH_BoardInfo_GetCpuId(void)
 {
@@ -28,7 +29,7 @@ int32_t OH_BoardInfo_GetBoardSn(char *boardSn)
 {
     if (boardSn == NULL) {
         BEGET_LOGE("GetBoardSn invalid param, boardSn is null");
-        return 401;
+        return BOARD_PARAM_NULL;
     }
     int ret = AclGetBoardSerial(boardSn, BOARD_SERIAL_LEN);
     if (ret != 0) {

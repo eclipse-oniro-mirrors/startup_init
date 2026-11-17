@@ -46,7 +46,6 @@ const char *OH_BoardInfo_GetCpuId(void);
  *    <li>401 If the caller passes null or invalid parameters</li>
  *    </ul>
  * @permission ohos.permission.ACCESS_BOARD_INFO
- * @throws 201
  * @since 26.1.0
  */
 int32_t OH_BoardInfo_GetBoardSn(char *boardSn);
