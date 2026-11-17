@@ -48,6 +48,11 @@ ohos_shared_library("deviceinfo_ndk") {
 }
 
 ohos_shared_library("boardinfo_ndk") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   cflags = [ "-fstack-protector-all" ]
   sources = [
     "src/boardinfo.c",
