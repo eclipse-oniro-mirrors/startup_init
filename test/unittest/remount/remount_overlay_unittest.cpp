@@ -957,7 +957,7 @@ HWTEST_F(RemountOverlayUnitTest, Init_NormalizeDmName_001, TestSize.Level0)
 
 HWTEST_F(RemountOverlayUnitTest, Init_RemoveDirContent_001, TestSize.Level0)
 {
-    std::string testDir = "/tmp/test_rmcontent_001";
+    std::string testDir = "/data/local/tmp/test_rmcontent_001";
     std::string subDir = testDir + "/subdir";
     std::string regFile = testDir + "/regfile";
     std::string subFile = subDir + "/subfile";
