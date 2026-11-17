@@ -39,7 +39,7 @@ namespace {
     std::string g_testRoot{"/data/ueventd"};
     int g_oldRootFd = -1;
     bool g_chrootDevReady = false;
-    const char * const g_devNodeNames[] = {"/urandom", "/random", "/null", "/zero"};
+    const char * const DEV_NODE_NAMES[] = {"/urandom", "/random", "/null", "/zero"};
 }
 
 static int CreateDevNode(const std::string &path, mode_t mode, unsigned int major, unsigned int minor)
@@ -54,7 +54,7 @@ static int CreateDevNode(const std::string &path, mode_t mode, unsigned int majo
 static int UnmountChrootDevNodes()
 {
     const std::string devDir = g_testRoot + "/dev";
-    for (const char *name : g_devNodeNames) {
+    for (const char *name : DEV_NODE_NAMES) {
         const std::string target = devDir + name;
         if (umount2(target.c_str(), MNT_DETACH) < 0 && errno != EINVAL && errno != ENOENT) {
             std::cout << "Cannot unmount " << target << ", err = " << errno << std::endl;
@@ -63,10 +63,12 @@ static int UnmountChrootDevNodes()
     return 0;
 }
 
+static int MkdirRecursive(const std::string &path);
+
 static int PrepareChrootDevNodes()
 {
     const std::string devDir = g_testRoot + "/dev";
-    if (mkdir(devDir.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) < 0 && errno != EEXIST) {
+    if (MkdirRecursive(devDir) < 0) {
         std::cout << "Cannot create directory " << devDir << ", err = " << errno << std::endl;
         return -1;
     }
@@ -92,8 +94,8 @@ static int PrepareChrootDevNodes()
         if (mount(source.c_str(), target.c_str(), nullptr, MS_BIND, nullptr) == 0) {
             continue;
         }
-        std::cout << "Cannot bind mount " << source << " to "
-                  << target << ", err = " << errno << std::endl;
+        std::cout << "Cannot bind mount " << source << " to " <<
+                  target << ", err = " << errno << std::endl;
         // Fall back to mknod.
         if (CreateDevNode(target, node.mode, node.major, node.minor) < 0) {
             return -1;
@@ -104,12 +106,12 @@ static int PrepareChrootDevNodes()
 
 static int VerifyChrootDevNodes()
 {
-    for (const char *name : g_devNodeNames) {
+    for (const char *name : DEV_NODE_NAMES) {
         const std::string path = std::string("/dev") + name;
         int fd = open(path.c_str(), O_RDONLY | O_CLOEXEC);
         if (fd < 0) {
-            std::cout << "Device node " << path << "is not usable, err = "
-                      << errno << std::endl;
+            std::cout << "Device node " << path << "is not usable, err = " <<
+                      errno << std::endl;
             return -1;
         }
         close(fd);
@@ -130,7 +132,7 @@ static int MkdirRecursive(const std::string &path)
         }
         std::string cur = path.substr(0, next);
         if (!cur.empty() && mkdir(cur.c_str(), S_IRWXU) < 0 && errno != EEXIST) {
-            retrun -1;
+            return -1;
         }
         pos = next + 1;
     }
