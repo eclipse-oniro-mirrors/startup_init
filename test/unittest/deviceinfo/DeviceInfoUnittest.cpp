@@ -270,7 +270,7 @@ HWTEST_F(DeviceInfoUnittest, Init_TestDeviceInfoProxy_001, TestSize.Level1)
     EXPECT_NE(nullptr, serialNumber);
     serialNumber = AclGetCpuVendor();
     EXPECT_NE(nullptr, serialNumber);
-    char boardSn[256] = {0};
+    char boardSn[16] = {0};
     int ret = AclGetBoardSerial(boardSn, sizeof(boardSn));
     EXPECT_GE(ret, SYSPARAM_PERMISSION_DENIED);
     serialNumber = AclGetBoardVendor();
