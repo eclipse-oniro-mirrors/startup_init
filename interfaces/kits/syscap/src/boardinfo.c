@@ -17,7 +17,7 @@
 #include <stddef.h>
 #include <stdint.h>
  
-#define BOARD_SERIAL_LEN 16
+#define BOARD_SERIAL_LEN 17
 #define BOARD_PARAM_NULL 401
  
 const char *OH_BoardInfo_GetCpuId(void)
