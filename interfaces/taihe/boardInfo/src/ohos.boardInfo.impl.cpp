@@ -31,6 +31,7 @@
 
 #define BINFO_LOGV(fmt, ...) STARTUP_LOGV(DEVICEINFO_JS_DOMAIN, BINFO_TAG, fmt, ##__VA_ARGS__)
 #define BINFO_LOGE(fmt, ...) STARTUP_LOGE(DEVICEINFO_JS_DOMAIN, BINFO_TAG, fmt, ##__VA_ARGS__)
+#define BOARD_INFO_VALUE_LEN 17
 
 namespace {
 
@@ -63,7 +64,7 @@ static ::taihe::string CallAclBoardInfo(const char* name, AclBoardInfoFunc acl)
 
 ::taihe::string getboardSn()
 {
-    char buf[17] = {0};
+    char buf[BOARD_INFO_VALUE_LEN] = {0};
     int ret = AclGetBoardSerial(buf, sizeof(buf));
     if (ret == SYSPARAM_PERMISSION_DENIED) {
         taihe::set_business_error(BOARD_INFO_PERMISSION_DENIED_CODE, BOARD_INFO_PERMISSION_DENIED_MSG);
