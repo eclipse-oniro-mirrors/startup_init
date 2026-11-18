@@ -39,7 +39,21 @@ namespace {
     std::string g_testRoot{"/data/ueventd"};
     int g_oldRootFd = -1;
     bool g_chrootDevReady = false;
-    const char * const DEV_NODE_NAMES[] = {"/urandom", "/random", "/null", "/zero"};
+    bool g_rootRestored = false;
+
+    struct DevNodeInfo {
+        const char *name;
+        mode_t mode;
+        unsigned int major;
+        unsigned int minor;
+    };
+
+    const DevNodeInfo DEV_NODES[] = {
+        { "/urandom", S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, 1, 9 },
+        { "/random", S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, 1, 8 },
+        { "/null", S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH, 1, 3 },
+        { "/zero", S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, 1, 5 },
+    };
 }
 
 static int CreateDevNode(const std::string &path, mode_t mode, unsigned int major, unsigned int minor)
@@ -51,16 +65,15 @@ static int CreateDevNode(const std::string &path, mode_t mode, unsigned int majo
     return 0;
 }
 
-static int UnmountChrootDevNodes()
+static void UnmountChrootDevNodes()
 {
     const std::string devDir = g_testRoot + "/dev";
-    for (const char *name : DEV_NODE_NAMES) {
-        const std::string target = devDir + name;
+    for (const auto &node : DEV_NODES) {
+        const std::string target = devDir + node.name;
         if (umount2(target.c_str(), MNT_DETACH) < 0 && errno != EINVAL && errno != ENOENT) {
             std::cout << "Cannot unmount " << target << ", err = " << errno << std::endl;
         }
     }
-    return 0;
 }
 
 static int MkdirRecursive(const std::string &path);
@@ -74,30 +87,23 @@ static int PrepareChrootDevNodes()
     }
     // Remove stale bind mounts.
     UnmountChrootDevNodes();
-    struct DevNodeInfo {
-        const char *name;
-        mode_t mode;
-        unsigned int major;
-        unsigned int minor;
-    };
-    const DevNodeInfo nodes[] = {
-        { "/urandom", S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, 1, 9 },
-        { "/random", S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, 1, 8 },
-        { "/null", S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH, 1, 3 },
-        { "/zero", S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, 1, 5 },
-    };
-    for (const auto &node : nodes) {
+    for (const auto &node : DEV_NODES) {
         const std::string target = devDir + node.name;
         const std::string source = std::string("/dev") + node.name;
-        unlink(target.c_str());
-        
+        // mount(2) with MS_BIND requires the target to exist, so create a placeholder first.
+        int fd = open(target.c_str(), O_CREAT | O_WRONLY | O_CLOEXEC, 0600);
+        if (fd >= 0) {
+            close(fd);
+        }
         if (mount(source.c_str(), target.c_str(), nullptr, MS_BIND, nullptr) == 0) {
             continue;
         }
         std::cout << "Cannot bind mount " << source << " to " <<
                   target << ", err = " << errno << std::endl;
-        // Fall back to mknod.
+        // Remove the placeholder before falling back to mknod.
+        unlink(target.c_str());
         if (CreateDevNode(target, node.mode, node.major, node.minor) < 0) {
+            UnmountChrootDevNodes();
             return -1;
         }
     }
@@ -106,11 +112,11 @@ static int PrepareChrootDevNodes()
 
 static int VerifyChrootDevNodes()
 {
-    for (const char *name : DEV_NODE_NAMES) {
-        const std::string path = std::string("/dev") + name;
+    for (const auto &node : DEV_NODES) {
+        const std::string path = std::string("/dev") + node.name;
         int fd = open(path.c_str(), O_RDONLY | O_CLOEXEC);
         if (fd < 0) {
-            std::cout << "Device node " << path << "is not usable, err = " <<
+            std::cout << "Device node " << path << " is not usable, err = " <<
                       errno << std::endl;
             return -1;
         }
@@ -131,7 +137,9 @@ static int MkdirRecursive(const std::string &path)
             next = path.size();
         }
         std::string cur = path.substr(0, next);
-        if (!cur.empty() && mkdir(cur.c_str(), S_IRWXU) < 0 && errno != EEXIST) {
+        if (!cur.empty() &&
+            mkdir(cur.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) < 0 &&
+            errno != EEXIST) {
             return -1;
         }
         pos = next + 1;
@@ -143,6 +151,8 @@ class UeventdEventUnitTest : public testing::Test {
 public:
 static void SetUpTestCase(void)
 {
+    g_chrootDevReady = false;
+    g_rootRestored = false;
     struct stat st{};
     bool isExist = true;
 
@@ -174,7 +184,9 @@ static void SetUpTestCase(void)
     }
     if (VerifyChrootDevNodes() < 0) {
         std::cout << "Device nodes are not usable after chroot, skip uevent tests" << std::endl;
-        RestoreRoot();
+        if (RestoreRoot() == 0) {
+            g_rootRestored = true;
+        }
         UnmountChrootDevNodes();
         RemoveDir(g_testRoot);
         return;
@@ -184,11 +196,16 @@ static void SetUpTestCase(void)
 
 static void TearDownTestCase(void)
 {
+    if (g_rootRestored) {
+        // Root has already been restored and test data cleaned up by SetUpTestCase.
+        return;
+    }
     // Switch back to old root
     if (RestoreRoot() < 0) {
         std::cout << "Old root directory is not valid\n";
         return;
     }
+    g_rootRestored = true;
     std::cout << "Change root back done\n";
     // Unmount the bind mounted device nodes before removing the test data.
     UnmountChrootDevNodes();
@@ -272,12 +289,14 @@ static int SwitchRoot()
         std::cout << "Failed to change working directory to " << g_testRoot << ", err = " << errno << std::endl;
         close(g_oldRootFd);
         g_oldRootFd = -1;
+        return -1;
     }
 
     if (chroot(g_testRoot.c_str()) < 0) {
         std::cout << "Failed to change root directory to " << g_testRoot << ", err = " << errno << std::endl;
         close(g_oldRootFd);
         g_oldRootFd = -1;
+        return -1;
     }
     std::cout << "Change root to " << g_testRoot << " done\n";
     return 0;
