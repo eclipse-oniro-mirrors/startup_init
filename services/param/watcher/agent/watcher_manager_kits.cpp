@@ -197,7 +197,7 @@ int32_t WatcherManagerKits::DelWatcher(const std::string &keyPrefix, ParameterCh
         std::lock_guard<std::mutex> lock(mutex_);
         int ret = watcherManager->DelWatcher(keyPrefix, remoteWatcherId_);
         WATCHER_CHECK(ret == 0, return -1, "Failed to delete watcher for %s", keyPrefix.c_str());
-        auto it = watchers_.find(keyPrefix); // delete watcher    
+        auto it = watchers_.find(keyPrefix); // delete watcher
         if (it != watchers_.end()) {
             watchers_.erase(it);
         }
