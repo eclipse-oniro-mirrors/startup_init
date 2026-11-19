@@ -447,8 +447,9 @@ void WatcherManager::RunLoop()
 
 void WatcherManager::StartLoop()
 {
-    // do not create new thread after stop
-    if (stop_ || pRecvThread_ != nullptr) {
+    // create thread only when running and none exists: skip while StopLoop is in progress,
+    // avoid duplicate thread and keep stop_ semantics owned by StopLoop
+    if (!stop_ && pRecvThread_ == nullptr) {
         pRecvThread_ = new (std::nothrow)std::thread([this] {this->RunLoop();});
         WATCHER_CHECK(pRecvThread_ != nullptr, return, "failed create thread");
     }
@@ -494,6 +495,9 @@ int WatcherManager::GetServerFdLocked(bool retry)
 
 void WatcherManager::OnStart()
 {
+    // reset stop flag so StartLoop can recreate recv thread after SA idle unload and reload;
+    // safwk serializes OnStop/OnStart, so no recv thread is running here
+    stop_ = false;
     int level = GetIntParameter(INIT_DEBUG_LEVEL, (int)INIT_ERROR);
     SetInitLogLevel((InitLogLevel)level);
     if (deathRecipient_ == nullptr) {
@@ -687,18 +691,24 @@ void WatcherManager::Clear(void)
 {
     WATCHER_LOGV("Clear");
     std::lock_guard<std::mutex> lock(watcherMutex_);
-    remoteWatchers_->TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
-        list->RemoveNode(node);
-        auto group = ConvertTo<WatcherGroup>(node);
-        WATCHER_LOGV("Delete watcher group %u", group->GetGroupId());
-        delete group;
-    });
-    watcherGroups_->TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
-        list->RemoveNode(node);
-        auto remoteWatcher = ConvertTo<RemoteWatcher>(node);
-        WATCHER_LOGV("Delete remote watcher %u", remoteWatcher->GetRemoteWatcherId());
-        delete remoteWatcher;
-    });
+    // OnStop is legal before any watcher activity (idle unload with zero clients),
+    // the lists are lazily created in AddRemoteWatcher/GetGroupId and may stay nullptr
+    if (remoteWatchers_ != nullptr) {
+        remoteWatchers_->TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+            list->RemoveNode(node);
+            auto group = ConvertTo<WatcherGroup>(node);
+            WATCHER_LOGV("Delete watcher group %u", group->GetGroupId());
+            delete group;
+        });
+    }
+    if (watcherGroups_ != nullptr) {
+        watcherGroups_->TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+            list->RemoveNode(node);
+            auto remoteWatcher = ConvertTo<RemoteWatcher>(node);
+            WATCHER_LOGV("Delete remote watcher %u", remoteWatcher->GetRemoteWatcherId());
+            delete remoteWatcher;
+        });
+    }
     delete remoteWatchers_;
     remoteWatchers_ = nullptr;
     delete watcherGroups_;
