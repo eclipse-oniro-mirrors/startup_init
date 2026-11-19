@@ -56,6 +56,14 @@ if (!defined(ohos_lite)) {
       "USE_MBEDTLS",
       "DINFO_TAG=\"DeviceInfoService\"",
     ]
+    # env config is PC-only, gated on init_feature_custom_sandbox. The
+    # -DCUSTOM_SANDBOX cflag wraps env implementation in #ifdef; non-PC compiles
+    # stubs returning SYSPARAM_PERMISSION_DENIED.
+    if (init_feature_custom_sandbox) {
+      cflags = [ "-DCUSTOM_SANDBOX" ]
+    } else {
+      cflags = []
+    }
     deps = [
       "//base/startup/init/interfaces/innerkits:deviceinfo_stub",
       "//base/startup/init/interfaces/innerkits:libbegetutil",
@@ -72,6 +80,10 @@ if (!defined(ohos_lite)) {
       "safwk:system_ability_fwk",
       "samgr:samgr_proxy",
     ]
+    # access_token is used by both CheckPermission (UDID/Serial/DiskSN/BoardSerial
+    # permission checks, always-on) and ResolveUserId (appenv GetHapTokenInfo,
+    # CUSTOM_SANDBOX-gated). Do NOT tie it to init_feature_custom_sandbox — doing
+    # so would silently break non-PC permission checks.
     if (defined(global_parts_info) &&
         defined(global_parts_info.security_access_token)) {
         external_deps += [ "access_token:libaccesstoken_sdk" ]
@@ -89,6 +101,38 @@ if (!defined(ohos_lite)) {
     part_name = "init"
     subsystem_name = "startup"
   }
+
+  # appenv CLI is PC-only, compiled when init_feature_custom_sandbox is true.
+  if (init_feature_custom_sandbox) {
+    ohos_executable("appenv") {
+      sources = [ "appenv.cpp" ]
+
+      branch_protector_ret = "pac_ret"
+      sanitize = {
+        cfi = true
+        cfi_cross_dso = true
+        debug = false
+      }
+
+      include_dirs = [
+        ".",
+        "//base/startup/init/interfaces/innerkits/include",
+      ]
+      deps = [
+        "//base/startup/init/interfaces/innerkits:libbeget_proxy",
+      ]
+      external_deps = [
+        "c_utils:utils",
+        "hilog:libhilog",
+        "ipc:ipc_single",
+        "samgr:samgr_proxy",
+      ]
+      install_images = [ "system" ]
+      install_enable = true
+      part_name = "init"
+      subsystem_name = "startup"
+    }
+  }
 }
 
 group("device_info_group") {
@@ -98,5 +142,10 @@ group("device_info_group") {
       ":device_info_profile",
       ":deviceinfoservice",
     ]
+    # appenv CLI is PC-only (init_feature_custom_sandbox); non-PC products
+    # do not build or install it.
+    if (init_feature_custom_sandbox) {
+      deps += [ ":appenv" ]
+    }
   }
 }

@@ -263,6 +263,67 @@ const char *AclGetBiosReleaseDate(void)
 #endif
 }
 
+
+#ifdef CUSTOM_SANDBOX
+int SetEnvConfig(const char *key, const char *value, int userId)
+{
+    if (key == nullptr || value == nullptr) {
+        return SYSPARAM_INVALID_INPUT;
+    }
+#ifdef PARAM_FEATURE_DEVICEINFO
+    OHOS::device_info::DeviceInfoKits &instance = OHOS::device_info::DeviceInfoKits::GetInstance();
+    return instance.SetEnvConfig(std::string(key), std::string(value), static_cast<int32_t>(userId));
+#else
+    return SYSPARAM_PERMISSION_DENIED;
+#endif
+}
+
+int GetEnvConfig(const char *key, char *value, int size, int userId)
+{
+    if (key == nullptr || value == nullptr || size <= 0) {
+        return SYSPARAM_INVALID_INPUT;
+    }
+    (void)memset_s(value, size, 0, size);
+#ifdef PARAM_FEATURE_DEVICEINFO
+    std::string result = {};
+    OHOS::device_info::DeviceInfoKits &instance = OHOS::device_info::DeviceInfoKits::GetInstance();
+    int ret = instance.GetEnvConfig(std::string(key), result, static_cast<int32_t>(userId));
+    BEGET_CHECK_RETURN_VALUE(ret == 0, ret);
+    return strcpy_s(value, size, result.c_str());
+#else
+    return SYSPARAM_PERMISSION_DENIED;
+#endif
+}
+
+int RemoveEnvConfig(const char *key, int userId)
+{
+    if (key == nullptr) {
+        return SYSPARAM_INVALID_INPUT;
+    }
+#ifdef PARAM_FEATURE_DEVICEINFO
+    OHOS::device_info::DeviceInfoKits &instance = OHOS::device_info::DeviceInfoKits::GetInstance();
+    return instance.RemoveEnvConfig(std::string(key), static_cast<int32_t>(userId));
+#else
+    return SYSPARAM_PERMISSION_DENIED;
+#endif
+}
+#else // !CUSTOM_SANDBOX
+// Non-PC stubs: versionscript exports the symbols for ABI stability, but they
+// are never called (appenv CLI is not built on non-PC products).
+int SetEnvConfig(const char *key, const char *value, int userId)
+{
+    return SYSPARAM_PERMISSION_DENIED;
+}
+int GetEnvConfig(const char *key, char *value, int size, int userId)
+{
+    return SYSPARAM_PERMISSION_DENIED;
+}
+int RemoveEnvConfig(const char *key, int userId)
+{
+    return SYSPARAM_PERMISSION_DENIED;
+}
+#endif // CUSTOM_SANDBOX
+
 #ifdef __cplusplus
 #if __cplusplus
 }

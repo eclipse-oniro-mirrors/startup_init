@@ -196,6 +196,53 @@ int32_t DeviceInfoKits::GetDiskSN(std::string& result)
     return ret;
 }
 
+#ifdef CUSTOM_SANDBOX
+int32_t DeviceInfoKits::SetEnvConfig(const std::string& key, const std::string& value, int32_t userId)
+{
+    std::unique_lock<std::mutex> lock(lock_);
+    auto deviceService = GetService(lock);
+    DINFO_CHECK(deviceService != nullptr, return -1, "failed get deviceinfo manager");
+    int ret = deviceService->SetEnvConfig(key, value, userId);
+    if (ret == NOT_FOUND_SERVICE_ERROR_NUMBER) {
+        auto newDeviceService = RetryGetService(lock);
+        DINFO_CHECK(newDeviceService != nullptr, return -1, "failed get deviceinfo manager again");
+        ret = newDeviceService->SetEnvConfig(key, value, userId);
+    }
+    DINFO_LOGI("SetEnvConfig key=%s userId=%d ret = %d", key.c_str(), userId, ret);
+    return ret;
+}
+
+int32_t DeviceInfoKits::GetEnvConfig(const std::string& key, std::string& value, int32_t userId)
+{
+    std::unique_lock<std::mutex> lock(lock_);
+    auto deviceService = GetService(lock);
+    DINFO_CHECK(deviceService != nullptr, return -1, "failed get deviceinfo manager");
+    int ret = deviceService->GetEnvConfig(key, value, userId);
+    if (ret == NOT_FOUND_SERVICE_ERROR_NUMBER) {
+        auto newDeviceService = RetryGetService(lock);
+        DINFO_CHECK(newDeviceService != nullptr, return -1, "failed get deviceinfo manager again");
+        ret = newDeviceService->GetEnvConfig(key, value, userId);
+    }
+    DINFO_LOGI("GetEnvConfig key=%s userId=%d ret = %d", key.c_str(), userId, ret);
+    return ret;
+}
+
+int32_t DeviceInfoKits::RemoveEnvConfig(const std::string& key, int32_t userId)
+{
+    std::unique_lock<std::mutex> lock(lock_);
+    auto deviceService = GetService(lock);
+    DINFO_CHECK(deviceService != nullptr, return -1, "failed get deviceinfo manager");
+    int ret = deviceService->RemoveEnvConfig(key, userId);
+    if (ret == NOT_FOUND_SERVICE_ERROR_NUMBER) {
+        auto newDeviceService = RetryGetService(lock);
+        DINFO_CHECK(newDeviceService != nullptr, return -1, "failed get deviceinfo manager again");
+        ret = newDeviceService->RemoveEnvConfig(key, userId);
+    }
+    DINFO_LOGI("RemoveEnvConfig key=%s userId=%d ret = %d", key.c_str(), userId, ret);
+    return ret;
+}
+#endif // CUSTOM_SANDBOX
+
 int32_t DeviceInfoKits::CallRemoteBoardInfo(const char* name,
     int32_t (IDeviceInfo::*method)(std::string&),
     std::string& result,

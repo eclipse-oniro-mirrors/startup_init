@@ -31,6 +31,8 @@ group("testgroup") {
         "unittest/single_test/fstab_mount:fstab_mount_unittest",
         "unittest/single_test/libfs_dm_snapshot:fs_dm_snapshot_unittest",
         "unittest/single_test/libfs_dm:fs_dm_unittest",
+        # appenv (env config) SA + CLI unit tests (separate target).
+        "unittest:device_info_appenv_ut",
       ]
     } else {
       if (ohos_kernel_type == "liteos_a" || ohos_kernel_type == "linux") {

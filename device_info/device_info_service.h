@@ -17,6 +17,7 @@
 #define DEVICE_INFO_SERVICE_H
 
 #include <atomic>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -41,6 +42,9 @@ public:
     int32_t GetUdid(std::string& result) override;
     int32_t GetSerialID(std::string& result) override;
     int32_t GetDiskSN(std::string& result) override;
+    int32_t SetEnvConfig(const std::string& key, const std::string& value, int32_t userId) override;
+    int32_t GetEnvConfig(const std::string& key, std::string& value, int32_t userId) override;
+    int32_t RemoveEnvConfig(const std::string& key, int32_t userId) override;
     int32_t GetCpuId(std::string& result) override;
     int32_t GetCpuArchitecture(std::string& result) override;
     int32_t GetCpuVendor(std::string& result) override;
@@ -75,6 +79,20 @@ private:
     std::shared_ptr<std::string> biosVendorCache_;
     std::shared_ptr<std::string> biosVersionCache_;
     std::shared_ptr<std::string> biosReleaseDateCache_;
+    // env config helpers: IDL base class always declares the three env methods
+    // as pure virtual, so DeviceInfoService must always override them (non-PC
+    // returns PERMISSION_DENIED). The helpers below are PC-only (CUSTOM_SANDBOX).
+#ifdef CUSTOM_SANDBOX
+    // Per-user appenv.conf path. Directory /data/service/el1/<userId>/appenv/
+    // is created by appspawn PRE_FORK root; SA only writes appenv.conf via tmp+rename.
+    std::mutex envConfigLock_;
+    // Returns resolved userId (>0 valid), 0 (invalid — caller rejects), or
+    // negative error code.
+    int32_t ResolveUserId(int32_t userId);
+    std::string GetEnvConfigPath(int32_t userId);
+    int32_t LoadEnvConfig(std::map<std::string, std::string>& config, int32_t userId);
+    int32_t SaveEnvConfig(const std::map<std::string, std::string>& config, int32_t userId);
+#endif
 #ifdef STARTUP_INIT_TEST
 public:
     void TestInjectBoardInfoCache(const std::string &boardSerial, const std::string &cpuId,

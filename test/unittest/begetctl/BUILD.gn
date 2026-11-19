@@ -327,6 +327,8 @@ ohos_unittest("init_begetctl_unittest") {
     "INIT_FILE",
     "INIT_DMESG",
     "ENABLE_HOOK_MGR",
+    # Tests compile device_info_service.cpp directly; need CUSTOM_SANDBOX.
+    "CUSTOM_SANDBOX",
   ]
   if (init_extra_static_modules != "") {
     sources += [

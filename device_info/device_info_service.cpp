@@ -15,11 +15,19 @@
 
 #include "device_info_service.h"
 
+#include <cctype>
+#include <cstring>
+#include <fstream>
+#include <sstream>
 #include <thread>
 #include <atomic>
+#include <cerrno>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #ifdef INIT_SUPPORT_ACCESS_TOKEN
 #include "accesstoken_kit.h"
+#include "hap_token_info.h"
 #endif
 #include "device_info_kits.h"
 #include "ipc_skeleton.h"
@@ -36,6 +44,7 @@
 #include "v1_0/iboard_info.h"
 using namespace OHOS::HDI::Boardinfo::V1_0;
 #endif
+
 namespace OHOS {
 #ifdef INIT_SUPPORT_ACCESS_TOKEN
 using namespace Security;
@@ -55,6 +64,49 @@ static const int DEVICE_INFO_EXIT_TIMEOUT_S = 60;
 static const int DEVICE_INFO_EXIT_TIMEOUT_S = 3;
 #endif
 static const int DEVICE_INFO_EXIT_WAITTIMES = 12;
+
+#ifdef CUSTOM_SANDBOX
+// env config is root-only: CallbackEnter rejects non-root callers. Root callers
+// derive the per-user path from the calling HAP token (or honor an explicit
+// --user override). userId == APPENV_USERID_FROM_TOKEN (-1) means token-derived.
+static constexpr size_t ENV_KEY_MAX_LEN = 256;
+static constexpr size_t ENV_VALUE_MAX_LEN = 4095;
+static constexpr size_t ENV_CONFIG_MAX_ENTRIES = 256;
+static constexpr int32_t APPENV_USERID_FROM_TOKEN = -1;
+// Valid explicit --user range. Matches OpenHarmony app user IDs (system apps
+// start at 100). 0 is root and must be rejected; 1-99 are reserved system uids.
+static constexpr int32_t APPENV_USERID_MIN = 100;
+static constexpr int32_t APPENV_USERID_MAX = 999;
+
+static bool IsValidEnvKey(const std::string& key)
+{
+    if (key.empty() || key.size() > ENV_KEY_MAX_LEN) {
+        return false;
+    }
+    if (!isalpha(static_cast<unsigned char>(key[0])) && key[0] != '_') {
+        return false;
+    }
+    for (char c : key) {
+        if (!isalnum(static_cast<unsigned char>(c)) && c != '_') {
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool IsValidEnvValue(const std::string& value)
+{
+    if (value.size() > ENV_VALUE_MAX_LEN) {
+        return false;
+    }
+    for (char c : value) {
+        if (c == '\n' || c == '\r' || c == '\0') {
+            return false;
+        }
+    }
+    return true;
+}
+#endif // CUSTOM_SANDBOX
 
 static int UnloadDeviceInfoSa(void)
 {
@@ -80,7 +132,7 @@ int32_t DeviceInfoService::GetUdid(std::string& result)
     int ret = ERR_FAIL;
     char localDeviceInfo[UDID_LEN] = {0};
     ret = GetDevUdid_(localDeviceInfo, UDID_LEN);
-    DINFO_CHECK(ret == 0, return ret, "Failed to get dev udid");
+    DINFO_CHECK(ret == 0, return ret, "failed get dev udid");
     result = std::string(localDeviceInfo);
     return ret;
 }
@@ -89,7 +141,7 @@ int32_t DeviceInfoService::GetSerialID(std::string& result)
 {
     int ret = ERR_FAIL;
     const char *serialNumber = GetSerial_();
-    DINFO_CHECK(serialNumber != nullptr, return ret, "Failed to get serialNumber");
+    DINFO_CHECK(serialNumber != nullptr, return ret, "failed get serialNumber");
     result = std::string(serialNumber);
     return 0;
 }
@@ -99,7 +151,7 @@ int32_t DeviceInfoService::GetDiskSN(std::string& result)
     int ret = ERR_FAIL;
     char diskSN[DISK_SN_LEN] = {0};
     ret = GetDiskSN_(diskSN, DISK_SN_LEN);
-    DINFO_CHECK(ret == 0, return ret, "Failed to get disk SN");
+    DINFO_CHECK(ret == 0, return ret, "failed get disk SN");
     result = std::string(diskSN);
     return ret;
 }
@@ -260,6 +312,276 @@ int32_t DeviceInfoService::GetBiosReleaseDate(std::string& result)
     return 0;
 }
 
+#ifdef CUSTOM_SANDBOX
+std::string DeviceInfoService::GetEnvConfigPath(int32_t userId)
+{
+    return "/data/service/el1/" + std::to_string(userId) + "/appenv/appenv.conf";
+}
+
+// Resolve per-user userId. When userId == APPENV_USERID_FROM_TOKEN (-1), derive
+// from the calling HAP token via GetHapTokenInfo. Returns the resolved userId
+// (>=100 valid), 0 (derivation failed or userID==0 — caller rejects with
+// SYSPARAM_INVALID_USERID), or SYSPARAM_USERID_OUT_OF_RANGE for explicit --user
+// values outside [100,999] (including 0, 1-99, negative, >999).
+int32_t DeviceInfoService::ResolveUserId(int32_t userId)
+{
+    if (userId != APPENV_USERID_FROM_TOKEN) {
+        if (userId < APPENV_USERID_MIN || userId > APPENV_USERID_MAX) {
+            return SYSPARAM_USERID_OUT_OF_RANGE;
+        }
+        return userId;
+    }
+#ifdef INIT_SUPPORT_ACCESS_TOKEN
+    auto tokenID = IPCSkeleton::GetCallingFullTokenID();
+    HapTokenInfo info;
+    int32_t ret = AccessTokenKit::GetHapTokenInfo(tokenID, info);
+    if (ret != RET_SUCCESS) {
+        DINFO_LOGE("GetHapTokenInfo failed ret=%{public}d tokenID=%{public}u, treat userId as 0",
+            ret, tokenID);
+        return 0;
+    }
+    return static_cast<int32_t>(info.userID);
+#else
+    DINFO_LOGE("INIT_SUPPORT_ACCESS_TOKEN undefined, cannot resolve userId from token");
+    return 0;
+#endif
+}
+
+int32_t DeviceInfoService::LoadEnvConfig(std::map<std::string, std::string>& config, int32_t userId)
+{
+    std::string path = GetEnvConfigPath(userId);
+    // Distinguish "file does not exist" (treat as empty config) from other open
+    // failures (EACCES/EIO/SELinux deny etc.) via access(F_OK): ifstream is not
+    // required to set errno, and treating a failed read as empty would let the
+    // caller's SaveEnvConfig overwrite the file with partial data.
+    if (access(path.c_str(), F_OK) != 0) {
+        if (errno == ENOENT) {
+            DINFO_LOGI("env config file not exist, treat as empty");
+            return 0;
+        }
+        DINFO_LOGE("access %{public}s failed: %{public}s (uid=%{public}d)",
+            path.c_str(), strerror(errno), static_cast<int>(getuid()));
+        return ERR_FAIL;
+    }
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        DINFO_LOGE("open %{public}s failed: %{public}s (uid=%{public}d)",
+            path.c_str(), strerror(errno), static_cast<int>(getuid()));
+        return ERR_FAIL;
+    }
+    std::string line;
+    while (std::getline(file, line)) {
+        if (line.empty() || line[0] == '#') {
+            continue;
+        }
+        size_t pos = line.find('=');
+        if (pos == std::string::npos) {
+            continue;
+        }
+        std::string key = line.substr(0, pos);
+        std::string value = line.substr(pos + 1);
+        if (!IsValidEnvKey(key) || !IsValidEnvValue(value)) {
+            DINFO_LOGW("skip invalid env config line");
+            continue;
+        }
+        config[key] = value;
+    }
+    return 0;
+}
+
+int32_t DeviceInfoService::SaveEnvConfig(const std::map<std::string, std::string>& config, int32_t userId)
+{
+    // Directory is created by appspawn PRE_FORK root hook before any env set
+    // call; SA only writes appenv.conf via tmp+fsync+rename, no mkdir fallback.
+    // Same pattern as param_persistadp.c:BatchSavePersistParamEnd — fopen +
+    // fputs + fflush + fsync(fileno) + fclose + rename, with explicit fail
+    // checks at every IO step to prevent half-written files reaching the
+    // rename (rename itself is atomic, but only the *result* is atomic; the
+    // tmp file content must be fully written and synced first).
+    std::string path = GetEnvConfigPath(userId);
+    std::string tmpPath = path + ".tmp";
+    FILE *fp = fopen(tmpPath.c_str(), "w");
+    if (fp == nullptr) {
+        DINFO_LOGE("open %{public}s for write failed: %{public}s (uid=%{public}d)",
+            tmpPath.c_str(), strerror(errno), static_cast<int>(getuid()));
+        return ERR_FAIL;
+    }
+    bool writeOk = true;
+    for (const auto& [key, value] : config) {
+        // key/value have passed IsValidEnvKey/IsValidEnvValue (no \n/\r/\0),
+        // so concatenation into one line is safe. Use fputs rather than
+        // fprintf("%s=...") to avoid % interpretation in key/value.
+        std::string line = key + "=" + value + "\n";
+        if (fputs(line.c_str(), fp) == EOF) {
+            writeOk = false;
+            break;
+        }
+    }
+    if (!writeOk || fflush(fp) != 0) {
+        DINFO_LOGE("write/flush %{public}s failed: %{public}s", tmpPath.c_str(), strerror(errno));
+        (void)fclose(fp);
+        (void)unlink(tmpPath.c_str());
+        return ERR_FAIL;
+    }
+    // fsync before close: fflush only pushes stdio buffer to the OS page cache;
+    // fsync forces the data to disk so that a crash after rename cannot leave
+    // the new file empty or partially written (the directory entry rename is
+    // atomic, but the *data* under it must already be durable).
+    (void)fsync(fileno(fp));
+    if (fclose(fp) != 0) {
+        DINFO_LOGE("fclose %{public}s failed: %{public}s", tmpPath.c_str(), strerror(errno));
+        (void)unlink(tmpPath.c_str());
+        return ERR_FAIL;
+    }
+    if (rename(tmpPath.c_str(), path.c_str()) != 0) {
+        DINFO_LOGE("rename to %{public}s failed: %{public}d", path.c_str(), errno);
+        (void)unlink(tmpPath.c_str());
+        return ERR_FAIL;
+    }
+    return 0;
+}
+
+int32_t DeviceInfoService::SetEnvConfig(const std::string& key, const std::string& value, int32_t userId)
+{
+    DINFO_LOGI("SetEnvConfig key %{public}s userId %{public}d from uid %{public}d pid %{public}d",
+        key.c_str(), userId, static_cast<int>(IPCSkeleton::GetCallingUid()),
+        static_cast<int>(IPCSkeleton::GetCallingPid()));
+    if (!IsValidEnvKey(key) || !IsValidEnvValue(value)) {
+        DINFO_LOGE("invalid env key or value format");
+        return SYSPARAM_INVALID_INPUT;
+    }
+    // CallbackEnter already enforced GetCallingUid() == 0; derive the per-user
+    // path from the calling token (or honor an explicit --user override).
+    int32_t resolvedUserId = ResolveUserId(userId);
+    if (resolvedUserId < 0) {
+        return resolvedUserId;  // SYSPARAM_USERID_OUT_OF_RANGE
+    }
+    if (resolvedUserId == 0) {
+        DINFO_LOGE("SetEnvConfig rejected: resolved userId is 0 (invalid)");
+        return SYSPARAM_INVALID_USERID;
+    }
+    std::lock_guard<std::mutex> lock(envConfigLock_);
+    std::map<std::string, std::string> config;
+    int32_t ret = LoadEnvConfig(config, resolvedUserId);
+    if (ret != 0) {
+        return ret;
+    }
+    if (config.find(key) == config.end() && config.size() >= ENV_CONFIG_MAX_ENTRIES) {
+        DINFO_LOGE("env config entries reach limit %{public}zu", ENV_CONFIG_MAX_ENTRIES);
+        return SYSPARAM_ENV_CONFIG_FULL;
+    }
+    config[key] = value;
+    ret = SaveEnvConfig(config, resolvedUserId);
+    if (ret == 0) {
+        DINFO_LOGI("SetEnvConfig key %{public}s success, total entries %{public}zu",
+            key.c_str(), config.size());
+    }
+    return ret;
+}
+
+int32_t DeviceInfoService::GetEnvConfig(const std::string& key, std::string& value, int32_t userId)
+{
+    DINFO_LOGI("GetEnvConfig key %{public}s userId %{public}d from uid %{public}d pid %{public}d",
+        key.c_str(), userId, static_cast<int>(IPCSkeleton::GetCallingUid()),
+        static_cast<int>(IPCSkeleton::GetCallingPid()));
+    if (key.empty()) {
+        return SYSPARAM_INVALID_INPUT;
+    }
+    int32_t resolvedUserId = ResolveUserId(userId);
+    if (resolvedUserId < 0) {
+        return resolvedUserId;  // SYSPARAM_USERID_OUT_OF_RANGE
+    }
+    if (resolvedUserId == 0) {
+        DINFO_LOGE("GetEnvConfig rejected: resolved userId is 0 (invalid)");
+        return SYSPARAM_INVALID_USERID;
+    }
+    std::lock_guard<std::mutex> lock(envConfigLock_);
+    std::map<std::string, std::string> config;
+    int32_t ret = LoadEnvConfig(config, resolvedUserId);
+    if (ret != 0) {
+        return ret;
+    }
+    auto it = config.find(key);
+    if (it == config.end()) {
+        DINFO_LOGE("key %{public}s not found", key.c_str());
+        return SYSPARAM_NOT_FOUND;
+    }
+    value = it->second;
+    return 0;
+}
+
+int32_t DeviceInfoService::RemoveEnvConfig(const std::string& key, int32_t userId)
+{
+    DINFO_LOGI("RemoveEnvConfig key %{public}s userId %{public}d from uid %{public}d pid %{public}d",
+        key.c_str(), userId, static_cast<int>(IPCSkeleton::GetCallingUid()),
+        static_cast<int>(IPCSkeleton::GetCallingPid()));
+    if (key.empty()) {
+        return SYSPARAM_INVALID_INPUT;
+    }
+    int32_t resolvedUserId = ResolveUserId(userId);
+    if (resolvedUserId < 0) {
+        return resolvedUserId;  // SYSPARAM_USERID_OUT_OF_RANGE
+    }
+    if (resolvedUserId == 0) {
+        DINFO_LOGE("RemoveEnvConfig rejected: resolved userId is 0 (invalid)");
+        return SYSPARAM_INVALID_USERID;
+    }
+    std::lock_guard<std::mutex> lock(envConfigLock_);
+    std::map<std::string, std::string> config;
+    int32_t ret = LoadEnvConfig(config, resolvedUserId);
+    if (ret != 0) {
+        return ret;
+    }
+    auto it = config.find(key);
+    if (it == config.end()) {
+        DINFO_LOGI("key %{public}s not exist, return NOT_FOUND", key.c_str());
+        return SYSPARAM_NOT_FOUND;
+    }
+    config.erase(it);
+    ret = SaveEnvConfig(config, resolvedUserId);
+    if (ret == 0) {
+        DINFO_LOGI("RemoveEnvConfig key %{public}s success, total entries %{public}zu",
+            key.c_str(), config.size());
+    }
+    return ret;
+}
+#else // !CUSTOM_SANDBOX
+// Non-PC stubs: IDL-generated base class declares these as pure virtual, so
+// overrides must exist to make DeviceInfoService instantiable. Never reached at
+// runtime (appenv CLI is not built on non-PC).
+int32_t DeviceInfoService::SetEnvConfig(const std::string& key, const std::string& value, int32_t userId)
+{
+    return SYSPARAM_PERMISSION_DENIED;
+}
+int32_t DeviceInfoService::GetEnvConfig(const std::string& key, std::string& value, int32_t userId)
+{
+    return SYSPARAM_PERMISSION_DENIED;
+}
+int32_t DeviceInfoService::RemoveEnvConfig(const std::string& key, int32_t userId)
+{
+    return SYSPARAM_PERMISSION_DENIED;
+}
+#endif // CUSTOM_SANDBOX
+
+// Env config commands (SET/GET/REMOVE_ENV_CONFIG) require a root caller. On
+// non-PC products CUSTOM_SANDBOX is undefined and the env code path is stubbed
+// out, so reject up front. On PC products, enforce GetCallingUid() == 0.
+// Returns 0 on pass, SYSPARAM_PERMISSION_DENIED on reject.
+static int32_t CheckEnvRootPermission()
+{
+#ifdef CUSTOM_SANDBOX
+    uid_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != 0) {
+        DINFO_LOGE("env config rejected: calling uid %{public}d is not root", callingUid);
+        return SYSPARAM_PERMISSION_DENIED;
+    }
+    return 0;
+#else
+    DINFO_LOGE("env config rejected: CUSTOM_SANDBOX not enabled on this product");
+    return SYSPARAM_PERMISSION_DENIED;
+#endif
+}
+
 int32_t DeviceInfoService::CallbackEnter(uint32_t code)
 {
     {
@@ -291,6 +613,13 @@ int32_t DeviceInfoService::CallbackEnter(uint32_t code)
         case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_BIOS_VENDOR):
         case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_BIOS_VERSION):
         case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_BIOS_RELEASE_DATE): {
+            break;
+        }
+        case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_SET_ENV_CONFIG):
+        case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_REMOVE_ENV_CONFIG):
+        case static_cast<uint32_t>(IDeviceInfoIpcCode::COMMAND_GET_ENV_CONFIG): {
+            int32_t ret = CheckEnvRootPermission();
+            BEGET_CHECK_RETURN_VALUE(ret == 0, ret);
             break;
         }
         default: {
@@ -380,5 +709,4 @@ void DeviceInfoService::ThreadForUnloadSa(void)
     }
 }
 } // namespace device_info
-
 } // namespace OHOS

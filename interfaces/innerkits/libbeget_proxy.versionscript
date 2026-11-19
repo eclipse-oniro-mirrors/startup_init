@@ -16,6 +16,9 @@
     AclGetDevUdid;
     AclGetSerial;
     AclGetDiskSN;
+    SetEnvConfig;
+    GetEnvConfig;
+    RemoveEnvConfig;
     AclGetCpuId;
     AclGetCpuArchitecture;
     AclGetCpuVendor;

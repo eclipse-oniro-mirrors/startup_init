@@ -28,4 +28,7 @@ interface OHOS.device_info.IDeviceInfo {
     void GetBiosVendor([out] String biosvendor);
     void GetBiosVersion([out] String biosversion);
     void GetBiosReleaseDate([out] String biosreleasedate);
+    void SetEnvConfig([in] String key, [in] String value, [in] int userId);
+    void GetEnvConfig([in] String key, [out] String value, [in] int userId);
+    void RemoveEnvConfig([in] String key, [in] int userId);
 }

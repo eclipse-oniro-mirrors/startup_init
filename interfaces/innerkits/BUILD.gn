@@ -428,6 +428,13 @@ if (defined(ohos_lite)) {
       "INIT_AGENT",
       "_GNU_SOURCE",
     ]
+    # env config C API is PC-only, gated on init_feature_custom_sandbox.
+    # versionscript still exports the symbols (as stubs) so ABI is stable.
+    if (init_feature_custom_sandbox) {
+      cflags = [ "-DCUSTOM_SANDBOX" ]
+    } else {
+      cflags = []
+    }
     sources = [
       "//base/startup/init/device_info/device_info.cpp",
       "service_watcher/service_watcher.c",
