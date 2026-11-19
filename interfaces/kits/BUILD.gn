@@ -21,7 +21,7 @@ group("kitsgroup") {
     ]
     deps += [
       "syscap:deviceinfo_ndk",
-      "syscap:boardinfo_ndk",
+      "syscap:boardinfo",
     ]
     if (support_jsapi) {
       deps += [
