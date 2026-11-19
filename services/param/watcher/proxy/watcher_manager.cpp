@@ -433,14 +433,16 @@ void WatcherManager::RunLoop()
             curr += msg->msgSize;
         }
     }
+    int exitServerFd = INVALID_SOCKET;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (serverFd_ >= 0) {
             close(serverFd_);
             serverFd_ = INVALID_SOCKET;
         }
+        exitServerFd = serverFd_;
     }
-    WATCHER_LOGE("Exit runLoop serverFd %d", serverFd_);
+    WATCHER_LOGE("Exit runLoop serverFd %d", exitServerFd);
 }
 
 void WatcherManager::StartLoop()
@@ -508,10 +510,10 @@ void WatcherManager::OnStart()
 
 void WatcherManager::StopLoop()
 {
-    WATCHER_LOGI("Watcher manager StopLoop serverFd_ %d", serverFd_);
     stop_ = true;
     {
         std::lock_guard<std::mutex> lock(mutex_);
+        WATCHER_LOGI("Watcher manager StopLoop serverFd_ %d", serverFd_);
         if (serverFd_ >= 0) {
             shutdown(serverFd_, SHUT_RDWR);
             close(serverFd_);
