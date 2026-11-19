@@ -53,6 +53,7 @@ ohos_shared_library("boardinfo") {
     cfi_cross_dso = true
     debug = false
   }
+  output_extension = "so"
   cflags = [ "-fstack-protector-all" ]
   sources = [
     "src/boardinfo.c",
