@@ -47,7 +47,7 @@ ohos_shared_library("deviceinfo_ndk") {
   ldflags = [ "-Wl,--exclude-libs,ALL" ]
 }
 
-ohos_shared_library("boardinfo_ndk") {
+ohos_shared_library("boardinfo") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
