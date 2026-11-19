@@ -506,18 +506,13 @@ HWTEST_F(WatcherProxyUnitTest, Init_TestStop_001, TestSize.Level0)
     test.TestStop();
 }
 
-// StopLoop without StartLoop: recvThread == nullptr branch is skipped join,
-// and OnStop is idempotent (second call has no side effect)
 HWTEST_F(WatcherProxyUnitTest, Init_TestStop_002, TestSize.Level0)
 {
     WatcherManager *watcherManager = new (std::nothrow) WatcherManager(0, true);
     ASSERT_NE(watcherManager, nullptr);
-
     // never StartLoop, so StopLoop takes recvThread == nullptr branch
     watcherManager->OnStop();
-
     // second OnStop is idempotent
     watcherManager->OnStop();
-
     delete watcherManager;
 }

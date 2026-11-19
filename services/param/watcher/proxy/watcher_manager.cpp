@@ -691,8 +691,6 @@ void WatcherManager::Clear(void)
 {
     WATCHER_LOGV("Clear");
     std::lock_guard<std::mutex> lock(watcherMutex_);
-    // OnStop is legal before any watcher activity (idle unload with zero clients),
-    // the lists are lazily created in AddRemoteWatcher/GetGroupId and may stay nullptr
     if (remoteWatchers_ != nullptr) {
         remoteWatchers_->TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
             list->RemoveNode(node);
