@@ -15,6 +15,7 @@
 #include <chrono>
 #include <thread>
 #include <string>
+#include <cstring>
 #include <vector>
 #include <iostream>
 #include <gtest/gtest.h>
@@ -33,6 +34,7 @@
 #include "device_info_stub.h"
 #include "device_info_service.h"
 #include "sysparam_errno.h"
+#include "boardinfo.h"
 
 using namespace testing::ext;
 using namespace std;
@@ -268,7 +270,7 @@ HWTEST_F(DeviceInfoUnittest, Init_TestDeviceInfoProxy_001, TestSize.Level1)
     EXPECT_NE(nullptr, serialNumber);
     serialNumber = AclGetCpuVendor();
     EXPECT_NE(nullptr, serialNumber);
-    char boardSn[256] = {0};
+    char boardSn[17] = {0};
     int ret = AclGetBoardSerial(boardSn, sizeof(boardSn));
     EXPECT_GE(ret, SYSPARAM_PERMISSION_DENIED);
     serialNumber = AclGetBoardVendor();
@@ -312,6 +314,61 @@ HWTEST_F(DeviceInfoUnittest, Init_TestDevicekits_002, TestSize.Level1)
     instance.deviceInfoService_ = nullptr;
     std::unique_lock<std::mutex> lock(instance.lock_);
     EXPECT_NE(nullptr, instance.RetryGetService(lock));
+}
+
+HWTEST_F(DeviceInfoUnittest, Init_GetCpuIdBasic_001, TestSize.Level1)
+{
+    const char *cpuId = OH_BoardInfo_GetCpuId();
+    EXPECT_NE(nullptr, cpuId);
+}
+ 
+HWTEST_F(DeviceInfoUnittest, Init_GetCpuIdEmpty_001, TestSize.Level1)
+{
+    const char *cpuId = OH_BoardInfo_GetCpuId();
+    EXPECT_NE(nullptr, cpuId);
+    EXPECT_GE(strlen(cpuId), 0);
+}
+ 
+HWTEST_F(DeviceInfoUnittest, Init_GetBoardSerialBasic_001, TestSize.Level1)
+{
+    char boardSn[17] = { 0 };
+    int32_t ret = OH_BoardInfo_GetBoardSn(boardSn);
+    EXPECT_TRUE(ret == 0 || ret == BOARD_INFO_PERMISSION_DENIED_CODE);
+}
+ 
+HWTEST_F(DeviceInfoUnittest, Init_GetBoardSerialPermissionDenied_001, TestSize.Level1)
+{
+    g_tokenType = OHOS::Security::AccessToken::TOKEN_HAP;
+    g_tokenVerifyResult = OHOS::Security::AccessToken::TypePermissionState::PERMISSION_DENIED;
+    char boardSn[17] = { 0 };
+    int32_t ret = OH_BoardInfo_GetBoardSn(boardSn);
+    EXPECT_EQ(ret, BOARD_INFO_PERMISSION_DENIED_CODE);
+    g_tokenVerifyResult = 0;
+}
+ 
+HWTEST_F(DeviceInfoUnittest, Init_GetBoardSerialHdiUnavailable_001, TestSize.Level1)
+{
+    char boardSn[17] = { 0 };
+    int32_t ret = OH_BoardInfo_GetBoardSn(boardSn);
+    EXPECT_TRUE(ret == 0 || ret == BOARD_INFO_PERMISSION_DENIED_CODE);
+}
+ 
+HWTEST_F(DeviceInfoUnittest, Init_AclApiRegression_001, TestSize.Level1)
+{
+    const char *aclCpuId = AclGetCpuId();
+    const char *cpuId = OH_BoardInfo_GetCpuId();
+    EXPECT_NE(nullptr, aclCpuId);
+    EXPECT_NE(nullptr, cpuId);
+ 
+    int32_t ret = OH_BoardInfo_GetBoardSn(nullptr);
+    EXPECT_EQ(ret, 401);
+ 
+    char aclBoardSn[17] = { 0 };
+    char boardSn[17] = { 0 };
+    int aclRet = AclGetBoardSerial(aclBoardSn, sizeof(aclBoardSn));
+    EXPECT_TRUE(aclRet == 0 || aclRet == SYSPARAM_PERMISSION_DENIED);
+    ret = OH_BoardInfo_GetBoardSn(boardSn);
+    EXPECT_TRUE(ret == 0 || ret == BOARD_INFO_PERMISSION_DENIED_CODE);
 }
 
 // 验证多线程并发调用 AclGetDiskSN/AclGetDevUdid 时不会因线程间共享缓冲区

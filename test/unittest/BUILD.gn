@@ -343,6 +343,7 @@ ohos_unittest("init_unittest") {
     "//base/startup/init/services/init/standard",
     "//base/startup/init/interfaces/innerkits/include",
     "//base/startup/init/interfaces/innerkits/include/syspara",
+    "//base/startup/init/interfaces/kits/syscap/include",
     "//base/startup/init/interfaces/innerkits/fd_holder",
     "//base/startup/init/interfaces/innerkits/syspara",
     "//base/startup/init/interfaces/innerkits/control_fd",
@@ -510,6 +511,7 @@ ohos_unittest("init_unittest") {
         "deviceinfo/device_info_service_unittest.cpp",
         "deviceinfo/device_info_load_unittest.cpp",
         "deviceinfo/device_info_kits_unittest.cpp",
+        "//base/startup/init/interfaces/kits/syscap/src/boardinfo.c",
       ]
     }
     if (is_standard_system) {
