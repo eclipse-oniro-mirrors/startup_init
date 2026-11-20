@@ -77,22 +77,73 @@ public:
     // AsObject: returns nullptr so RetryGetService's AsObject() call yields
     // nullptr, making the deathRecipient_ block a no-op and avoiding any real
     // IRemoteObject interaction.
-    OHOS::sptr<OHOS::IRemoteObject> AsObject() override { return nullptr; }
+    OHOS::sptr<OHOS::IRemoteObject> AsObject() override
+    {
+        return nullptr;
+    }
 
     // Stubs for the other 12 IDL methods (not exercised here, but IDeviceInfo
     // is abstract and requires all pure-virtuals implemented).
-    OHOS::ErrCode GetUdid(std::string& udid) override { (void)udid; return 0; }
-    OHOS::ErrCode GetSerialID(std::string& serialid) override { (void)serialid; return 0; }
-    OHOS::ErrCode GetDiskSN(std::string& disksn) override { (void)disksn; return 0; }
-    OHOS::ErrCode GetCpuId(std::string& cpuid) override { (void)cpuid; return 0; }
-    OHOS::ErrCode GetCpuArchitecture(std::string& cpuarchitecture) override { (void)cpuarchitecture; return 0; }
-    OHOS::ErrCode GetCpuVendor(std::string& cpuvendor) override { (void)cpuvendor; return 0; }
-    OHOS::ErrCode GetBoardSerial(std::string& boardserial) override { (void)boardserial; return 0; }
-    OHOS::ErrCode GetBoardVendor(std::string& boardvendor) override { (void)boardvendor; return 0; }
-    OHOS::ErrCode GetBoardProductName(std::string& boardproductname) override { (void)boardproductname; return 0; }
-    OHOS::ErrCode GetBiosVendor(std::string& biosvendor) override { (void)biosvendor; return 0; }
-    OHOS::ErrCode GetBiosVersion(std::string& biosversion) override { (void)biosversion; return 0; }
-    OHOS::ErrCode GetBiosReleaseDate(std::string& biosreleasedate) override { (void)biosreleasedate; return 0; }
+    OHOS::ErrCode GetUdid(std::string& udid) override
+    {
+        (void)udid;
+        return 0;
+    }
+    OHOS::ErrCode GetSerialID(std::string& serialid) override
+    {
+        (void)serialid;
+        return 0;
+    }
+    OHOS::ErrCode GetDiskSN(std::string& disksn) override
+    {
+        (void)disksn;
+        return 0;
+    }
+    OHOS::ErrCode GetCpuId(std::string& cpuid) override
+    {
+        (void)cpuid;
+        return 0;
+    }
+    OHOS::ErrCode GetCpuArchitecture(std::string& cpuarchitecture) override
+    {
+        (void)cpuarchitecture;
+        return 0;
+    }
+    OHOS::ErrCode GetCpuVendor(std::string& cpuvendor) override
+    {
+        (void)cpuvendor;
+        return 0;
+    }
+    OHOS::ErrCode GetBoardSerial(std::string& boardserial) override
+    {
+        (void)boardserial;
+        return 0;
+    }
+    OHOS::ErrCode GetBoardVendor(std::string& boardvendor) override
+    {
+        (void)boardvendor;
+        return 0;
+    }
+    OHOS::ErrCode GetBoardProductName(std::string& boardproductname) override
+    {
+        (void)boardproductname;
+        return 0;
+    }
+    OHOS::ErrCode GetBiosVendor(std::string& biosvendor) override
+    {
+        (void)biosvendor;
+        return 0;
+    }
+    OHOS::ErrCode GetBiosVersion(std::string& biosversion) override
+    {
+        (void)biosversion;
+        return 0;
+    }
+    OHOS::ErrCode GetBiosReleaseDate(std::string& biosreleasedate) override
+    {
+        (void)biosreleasedate;
+        return 0;
+    }
 };
 
 }  // namespace init_ut
