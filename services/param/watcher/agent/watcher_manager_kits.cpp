@@ -38,7 +38,8 @@ void WatcherManagerKits::ResetService(const wptr<IRemoteObject> &remote)
 {
     {
         WATCHER_LOGI("Remote is dead, reset service instance");
-        std::lock_guard<std::mutex> lock(lock_);
+        std::lock_guard<std::mutex> lockMutex(mutex_);
+        std::lock_guard<std::mutex> lockService(lock_);
         if (watcherManager_ != nullptr) {
             sptr<IRemoteObject> object = watcherManager_->AsObject();
             if ((object != nullptr) && (remote == object)) {
@@ -191,11 +192,11 @@ int32_t WatcherManagerKits::DelWatcher(const std::string &keyPrefix, ParameterCh
     if (count != 0) {
         return 0;
     }
-    // delete watcher
-    int ret = watcherManager->DelWatcher(keyPrefix, remoteWatcherId_);
-    WATCHER_CHECK(ret == 0, return -1, "Failed to delete watcher for %s", keyPrefix.c_str());
     {
+        // ipc and cleanup in same lock scope, keep remoteWatcherId_/remoteWatcher_ consistent
         std::lock_guard<std::mutex> lock(mutex_);
+        int ret = watcherManager->DelWatcher(keyPrefix, remoteWatcherId_);
+        WATCHER_CHECK(ret == 0, return -1, "Failed to delete watcher for %s", keyPrefix.c_str());
         auto it = watchers_.find(keyPrefix); // delete watcher
         if (it != watchers_.end()) {
             watchers_.erase(it);

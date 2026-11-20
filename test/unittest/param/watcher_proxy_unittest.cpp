@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include <chrono>
+#include <new>
 #include <string>
 
 #include <gtest/gtest.h>
@@ -503,4 +504,15 @@ HWTEST_F(WatcherProxyUnitTest, Init_TestStop_001, TestSize.Level0)
     test.TestAddRemoteWatcher(getpid(), watcherId);
     test.TestAddWatcher("test.permission.watcher.stop", watcherId);
     test.TestStop();
+}
+
+HWTEST_F(WatcherProxyUnitTest, Init_TestStop_002, TestSize.Level0)
+{
+    WatcherManager *watcherManager = new (std::nothrow) WatcherManager(0, true);
+    ASSERT_NE(watcherManager, nullptr);
+    // never StartLoop, so StopLoop takes recvThread == nullptr branch
+    watcherManager->OnStop();
+    // second OnStop is idempotent
+    watcherManager->OnStop();
+    delete watcherManager;
 }

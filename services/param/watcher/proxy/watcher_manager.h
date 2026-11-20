@@ -89,6 +89,7 @@ private:
     void SendLocalChange(const std::string &keyPrefix, uint32_t remoteWatcherId);
     int SendMessage(WatcherGroupPtr group, int type);
     int GetServerFd(bool retry);
+    int GetServerFdLocked(bool retry); // caller must hold mutex_
     int GetRemoteWatcherId(uint32_t &remoteWatcherId);
     int GetGroupId(uint32_t &groupId);
     // for remote watcher

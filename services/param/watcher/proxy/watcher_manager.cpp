@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include <thread>
 
 #include "init_param.h"
@@ -261,14 +262,22 @@ int WatcherManager::SendMessage(WatcherGroupPtr group, int type)
     request->id.watcherId = group->GetGroupId();
     request->msgSize = sizeof(ParamMessage);
     int ret = PARAM_CODE_FAIL_CONNECT;
-    int fd = GetServerFd(false);
+    int fd = -1;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        int serverFd = GetServerFdLocked(false);
+        if (serverFd >= 0) {
+            fd = dup(serverFd);
+        }
+    }
     if (fd < 0) {
         WATCHER_LOGE("ParamWatcher get server fd failed!");
         free(request);
         return PARAM_CODE_FAIL_CONNECT;
     }
 
-    ssize_t sendLen = send(serverFd_, (char *)request, request->msgSize, 0);
+    ssize_t sendLen = send(fd, (char *)request, request->msgSize, 0);
+    close(fd);
     ret = (sendLen > 0) ? 0 : PARAM_CODE_IPC_ERROR;
     free(request);
     WATCHER_CHECK(ret == 0, return ret, "SendMessage key: %s %d fail!", group->GetKeyPrefix().c_str(), type);
@@ -424,16 +433,23 @@ void WatcherManager::RunLoop()
             curr += msg->msgSize;
         }
     }
-    if (serverFd_ >= 0) {
-        close(serverFd_);
-        serverFd_ = INVALID_SOCKET;
+    int exitServerFd = INVALID_SOCKET;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (serverFd_ >= 0) {
+            close(serverFd_);
+            serverFd_ = INVALID_SOCKET;
+        }
+        exitServerFd = serverFd_;
     }
-    WATCHER_LOGE("Exit runLoop serverFd %d", serverFd_);
+    WATCHER_LOGE("Exit runLoop serverFd %d", exitServerFd);
 }
 
 void WatcherManager::StartLoop()
 {
-    if (pRecvThread_ == nullptr) {
+    // create thread only when running and none exists: skip while StopLoop is in progress,
+    // avoid duplicate thread and keep stop_ semantics owned by StopLoop
+    if (!stop_ && pRecvThread_ == nullptr) {
         pRecvThread_ = new (std::nothrow)std::thread([this] {this->RunLoop();});
         WATCHER_CHECK(pRecvThread_ != nullptr, return, "failed create thread");
     }
@@ -441,9 +457,14 @@ void WatcherManager::StartLoop()
 
 int WatcherManager::GetServerFd(bool retry)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return GetServerFdLocked(retry);
+}
+
+int WatcherManager::GetServerFdLocked(bool retry)
+{
     const int32_t sleepTime = 200;
     const int32_t maxRetry = 10;
-    std::lock_guard<std::mutex> lock(mutex_);
     if (retry && serverFd_ != INVALID_SOCKET) {
         close(serverFd_);
         serverFd_ = INVALID_SOCKET;
@@ -474,6 +495,9 @@ int WatcherManager::GetServerFd(bool retry)
 
 void WatcherManager::OnStart()
 {
+    // reset stop flag so StartLoop can recreate recv thread after SA idle unload and reload;
+    // safwk serializes OnStop/OnStart, so no recv thread is running here
+    stop_ = false;
     int level = GetIntParameter(INIT_DEBUG_LEVEL, (int)INIT_ERROR);
     SetInitLogLevel((InitLogLevel)level);
     if (deathRecipient_ == nullptr) {
@@ -490,17 +514,25 @@ void WatcherManager::OnStart()
 
 void WatcherManager::StopLoop()
 {
-    WATCHER_LOGI("Watcher manager StopLoop serverFd_ %d", serverFd_);
     stop_ = true;
-    if (serverFd_ >= 0) {
-        shutdown(serverFd_, SHUT_RDWR);
-        close(serverFd_);
-        serverFd_ = INVALID_SOCKET;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        WATCHER_LOGI("Watcher manager StopLoop serverFd_ %d", serverFd_);
+        if (serverFd_ >= 0) {
+            shutdown(serverFd_, SHUT_RDWR);
+            close(serverFd_);
+            serverFd_ = INVALID_SOCKET;
+        }
     }
-    if (pRecvThread_ != nullptr) {
-        pRecvThread_->join();
-        delete pRecvThread_;
+    std::thread *thread = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(watcherMutex_);
+        thread = pRecvThread_;
         pRecvThread_ = nullptr;
+    }
+    if (thread != nullptr) {
+        thread->join();
+        delete thread;
     }
 }
 
@@ -659,18 +691,22 @@ void WatcherManager::Clear(void)
 {
     WATCHER_LOGV("Clear");
     std::lock_guard<std::mutex> lock(watcherMutex_);
-    remoteWatchers_->TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
-        list->RemoveNode(node);
-        auto group = ConvertTo<WatcherGroup>(node);
-        WATCHER_LOGV("Delete watcher group %u", group->GetGroupId());
-        delete group;
-    });
-    watcherGroups_->TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
-        list->RemoveNode(node);
-        auto remoteWatcher = ConvertTo<RemoteWatcher>(node);
-        WATCHER_LOGV("Delete remote watcher %u", remoteWatcher->GetRemoteWatcherId());
-        delete remoteWatcher;
-    });
+    if (remoteWatchers_ != nullptr) {
+        remoteWatchers_->TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+            list->RemoveNode(node);
+            auto group = ConvertTo<WatcherGroup>(node);
+            WATCHER_LOGV("Delete watcher group %u", group->GetGroupId());
+            delete group;
+        });
+    }
+    if (watcherGroups_ != nullptr) {
+        watcherGroups_->TraversalNodeSafe([](ParamWatcherListPtr list, WatcherNodePtr node, uint32_t index) {
+            list->RemoveNode(node);
+            auto remoteWatcher = ConvertTo<RemoteWatcher>(node);
+            WATCHER_LOGV("Delete remote watcher %u", remoteWatcher->GetRemoteWatcherId());
+            delete remoteWatcher;
+        });
+    }
     delete remoteWatchers_;
     remoteWatchers_ = nullptr;
     delete watcherGroups_;
