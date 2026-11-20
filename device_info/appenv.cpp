@@ -158,26 +158,27 @@ INIT_STATIC int HandleUnsetEnv(const char *key, int userId)
 }
 
 // Parse optional leading --user <userid>; default APPENV_USERID_FROM_TOKEN.
-// On parse error prints usage and exits. Sets actionStart to argv index of action.
-INIT_STATIC int ParseUserOption(int argc, char *argv[], int &actionStart)
+// On parse error prints usage and returns false (caller decides to exit/return).
+// Sets actionStart to argv index of action; userId is an out parameter.
+INIT_STATIC bool ParseUserOption(int argc, char *argv[], int &actionStart, int &userId)
 {
-    int userId = APPENV_USERID_FROM_TOKEN;
+    userId = APPENV_USERID_FROM_TOKEN;
     actionStart = ACTION_START_DEFAULT;
     if (argc > ARG_USER_FLAG_INDEX && strcmp(argv[ARG_USER_FLAG_INDEX], "--user") == 0) {
         if (argc < ARG_USER_MIN_COUNT) {
             PrintUsage(argv[0]);
-            exit(1);
+            return false;
         }
         char *end = nullptr;
         long val = strtol(argv[ARG_USER_VALUE_INDEX], &end, 10);
         if (end == argv[ARG_USER_VALUE_INDEX] || *end != '\0') {
             (void)fprintf(stderr, "invalid --user value: %s\n", argv[ARG_USER_VALUE_INDEX]);
-            exit(1);
+            return false;
         }
         userId = static_cast<int>(val);
         actionStart = ACTION_START_WITH_USER;
     }
-    return userId;
+    return true;
 }
 
 // Scan trailing argv for a misplaced global flag and emit a hint. Only --user
@@ -202,7 +203,10 @@ int main(int argc, char *argv[])
         return 1;
     }
     int actionStart = ACTION_START_DEFAULT;
-    int userId = ParseUserOption(argc, argv, actionStart);
+    int userId = APPENV_USERID_FROM_TOKEN;
+    if (!ParseUserOption(argc, argv, actionStart, userId)) {
+        return 1;
+    }
     if (argc - actionStart < GET_UNSET_ARG_COUNT) {  // need <action> <key>
         PrintUsage(argv[0]);
         return 1;

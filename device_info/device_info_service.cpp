@@ -466,6 +466,8 @@ int32_t DeviceInfoService::SetEnvConfig(const std::string& key, const std::strin
     if (ret != 0) {
         return ret;
     }
+    // Capacity guard: reject a new key when the map is already at the limit so
+    // an existing key's update is never mistaken for a new entry.
     if (config.find(key) == config.end() && config.size() >= ENV_CONFIG_MAX_ENTRIES) {
         DINFO_LOGE("env config entries reach limit %{public}zu", ENV_CONFIG_MAX_ENTRIES);
         return SYSPARAM_ENV_CONFIG_FULL;
