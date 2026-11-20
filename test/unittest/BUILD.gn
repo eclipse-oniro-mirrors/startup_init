@@ -307,6 +307,7 @@ ohos_unittest("init_unittest") {
     "loopevent/loopidle_unittest.cpp",
     "modules/eng_unittest.cpp",
     "modules/modules_unittest.cpp",
+    "modules/reboot_safe_mode_test.cpp",
     "modules/udid_unittest.cpp",
     "param/client_unittest.cpp",
     "param/dac_unittest.cpp",

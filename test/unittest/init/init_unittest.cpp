@@ -214,6 +214,20 @@ HWTEST_F(InitUnitTest, TestReadConfigBopdMode, TestSize.Level1)
     EXPECT_STREQ(g_mockCfgActions[0], "ParseCfgByPriority:etc/bopd");
 }
 
+HWTEST_F(InitUnitTest, TestReadConfigSafeMode, TestSize.Level1)
+{
+    BootModeEnvMock mock("safemode");
+    MOCK_BOOT_MODE_CFG =
+        "{\"boot_modes\":[{\"name\":\"safemode\",\"condition\":{\"type\":\"cmdline\","
+        "\"param\":\"ohos.boot.mode\",\"value\":\"safemode\"},"
+        "\"actions\":[{\"action\":\"parse_default_cfg\",\"path\":\"/etc/init.cfg\"},"
+        "{\"action\":\"parse_priority\",\"path\":\"etc/init\"}]}]}";
+    ReadConfig();
+    ASSERT_EQ(g_mockCfgActionCount, 2);
+    EXPECT_STREQ(g_mockCfgActions[0], "ParseInitCfg:/etc/init.cfg");
+    EXPECT_STREQ(g_mockCfgActions[1], "ParseCfgByPriority:etc/init");
+}
+
 HWTEST_F(InitUnitTest, TestReadConfigExistingBootModes, TestSize.Level1)
 {
     {
@@ -738,6 +752,10 @@ HWTEST_F(InitUnitTest, TestBootModeCfgFileContent, TestSize.Level1)
         { "updater",
           "updater",
           "read_dir:/etc",
+          false },
+        { "safemode",
+          "cmdline param=ohos.boot.mode value=safemode",
+          "parse_default_cfg:/etc/init.cfg , parse_priority:etc/init",
           false },
         { "default",
           "default",
