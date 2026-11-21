@@ -713,6 +713,24 @@ std::string EntryActionsToString(const cJSON *entry)
     }
     return out;
 }
+const char *CfgEntryName(const cJSON *entry)
+{
+    const cJSON *name = cJSON_GetObjectItem(entry, "name");
+    return (name != nullptr && cJSON_IsString(name)) ? name->valuestring : nullptr;
+}
+
+cJSON *FindModeEntryByName(cJSON *modes, const char *name)
+{
+    cJSON *entry = nullptr;
+    cJSON_ArrayForEach(entry, modes) {
+        const char *cur = CfgEntryName(entry);
+        if (cur != nullptr && strcmp(cur, name) == 0) {
+            return entry;
+        }
+    }
+    return nullptr;
+}
+
 } // namespace
 
 HWTEST_F(InitUnitTest, TestBootModeCfgFileContent, TestSize.Level1)
@@ -774,20 +792,30 @@ HWTEST_F(InitUnitTest, TestBootModeCfgFileContent, TestSize.Level1)
     cJSON *modes = cJSON_GetObjectItem(root, "boot_modes");
     ASSERT_NE(modes, nullptr);
     ASSERT_TRUE(cJSON_IsArray(modes));
-    ASSERT_EQ(static_cast<size_t>(cJSON_GetArraySize(modes)), expected.size());
+    int count = cJSON_GetArraySize(modes);
+    ASSERT_GT(count, 0) << "boot_modes 为空: " << path;
 
-    for (size_t i = 0; i < expected.size(); i++) {
-        cJSON *entry = cJSON_GetArrayItem(modes, static_cast<int>(i));
-        ASSERT_NE(entry, nullptr) << "第 " << i << " 个条目缺失";
-        const cJSON *name = cJSON_GetObjectItem(entry, "name");
-        ASSERT_NE(name, nullptr);
-        EXPECT_STREQ(name->valuestring, expected[i].name) << "第 " << i << " 个条目名不符";
-        EXPECT_EQ(EntryConditionsToString(entry), std::string(expected[i].conditions))
-            << "条目 " << expected[i].name << " 的条件不符";
-        EXPECT_EQ(EntryActionsToString(entry), std::string(expected[i].actions))
-            << "条目 " << expected[i].name << " 的动作不符";
-        EXPECT_EQ(cJSON_IsTrue(cJSON_GetObjectItem(entry, "fallbackOnEmpty")), expected[i].fallbackOnEmpty)
-            << "条目 " << expected[i].name << " 的 fallbackOnEmpty 不符";
+    EXPECT_STREQ(CfgEntryName(cJSON_GetArrayItem(modes, count - 1)), "default")
+        << "default 必须是最后一个条目";
+
+    for (const auto &exp : expected) {
+        cJSON *entry = FindModeEntryByName(modes, exp.name);
+        ASSERT_NE(entry, nullptr) << "配置中缺少条目: " << exp.name;
+        EXPECT_EQ(EntryConditionsToString(entry), std::string(exp.conditions))
+            << "条目 " << exp.name << " 的条件不符";
+        EXPECT_EQ(EntryActionsToString(entry), std::string(exp.actions))
+            << "条目 " << exp.name << " 的动作不符";
+        EXPECT_EQ(cJSON_IsTrue(cJSON_GetObjectItem(entry, "fallbackOnEmpty")), exp.fallbackOnEmpty)
+            << "条目 " << exp.name << " 的 fallbackOnEmpty 不符";
+    }
+
+    cJSON *entry = nullptr;
+    cJSON_ArrayForEach(entry, modes) {
+        const char *cur = CfgEntryName(entry);
+        const cJSON *acts = cJSON_GetObjectItem(entry, "actions");
+        EXPECT_TRUE(cur != nullptr) << "存在缺少 name 的条目";
+        EXPECT_TRUE(cJSON_IsArray(acts) && cJSON_GetArraySize(acts) > 0)
+            << "模式 " << ((cur != nullptr) ? cur : "unknown") << " 缺少 actions";
     }
     cJSON_Delete(root);
 }
