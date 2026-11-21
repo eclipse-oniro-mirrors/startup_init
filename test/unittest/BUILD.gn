@@ -505,9 +505,6 @@ ohos_unittest("init_unittest") {
         defined(global_parts_info.security_access_token)) {
       external_deps += [ "access_token:libaccesstoken_sdk" ]
       defines += [ "INIT_SUPPORT_ACCESS_TOKEN" ]
-      # Tests compile device_info_service.cpp directly; need -DCUSTOM_SANDBOX
-      # to compile env implementations (not the non-PC stubs).
-      defines += [ "CUSTOM_SANDBOX" ]
       sources += [
         "deviceinfo/DeviceInfoUnittest.cpp",
         "deviceinfo/device_info_service_unittest.cpp",
