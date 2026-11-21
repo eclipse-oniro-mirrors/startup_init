@@ -14,9 +14,13 @@
  */
 
 #include <errno.h>
+#include <fcntl.h>
+#include <grp.h>
+#include <poll.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <signal.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -93,6 +97,299 @@ __attribute__((weak)) char *GetExtraFsckOption(void)
 {
     BEGET_LOGW("get extra fsck option: static");
     return NULL;
+}
+
+#define REPAIR_ANIM_BIN "/system/bin/fsck_animation"
+#define FULL_FSCK_PATTERN "FULL_FSCK"
+#define FSCK_PROGRESS_PREFIX "[FSCK] Check node"
+#define FSCK_LINE_CAP 1024
+#define FSCK_STOP_GRACE_MS 1000
+
+static int ExecCommand(int argc, char **argv);
+static void RedirectToStdFd(int fd);
+
+typedef struct {
+    pid_t animation;
+    int animationInput;
+    bool animChecked;
+    bool animFailed;
+    bool droppingLine;
+    char line[FSCK_LINE_CAP];
+    size_t used;
+} FsckDisplay;
+
+static void FsckClose(int *fd)
+{
+    if (fd != NULL && *fd >= 0) {
+        (void)close(*fd);
+        *fd = -1;
+    }
+}
+
+static int FsckNonblock(int fd)
+{
+    int flags = fcntl(fd, F_GETFL);
+    if (flags < 0) {
+        return -1;
+    }
+    return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+}
+
+static int FsckTryWait(pid_t pid, int *status)
+{
+    pid_t rc;
+    do {
+        rc = waitpid(pid, status, WNOHANG);
+    } while (rc < 0 && errno == EINTR);
+    if (rc == pid) {
+        return 1;
+    }
+    return rc == 0 ? 0 : -1;
+}
+
+static bool FsckWaitPid(pid_t pid, int durationMs)
+{
+    for (int i = 0; i <= durationMs / 10; ++i) {
+        int status;
+        if (FsckTryWait(pid, &status) != 0) {
+            return true;
+        }
+        (void)poll(NULL, 0, 10);
+    }
+    return false;
+}
+
+INIT_STATIC int FsckAddAnimGroup(const char *groupName)
+{
+    struct group *groupInfo = getgrnam(groupName);
+    BEGET_ERROR_CHECK(groupInfo != NULL, return -1,
+        "fsck repair: getgrnam %s failed, errno: %d", groupName, errno);
+    gid_t targetGid = groupInfo->gr_gid;
+
+    int groupCount = getgroups(0, NULL);
+    BEGET_ERROR_CHECK(groupCount >= 0, return -1,
+        "fsck repair: getgroups count failed, errno: %d", errno);
+
+    gid_t *groupList = (gid_t *)malloc((groupCount + 1) * sizeof(gid_t));
+    BEGET_ERROR_CHECK(groupList != NULL, return -1,
+        "fsck repair: malloc group list failed, errno: %d", errno);
+
+    groupCount = getgroups(groupCount, groupList);
+    if (groupCount < 0) {
+        BEGET_LOGE("fsck repair: getgroups list failed, errno: %d", errno);
+        free(groupList);
+        return -1;
+    }
+
+    for (int i = 0; i < groupCount; i++) {
+        if (groupList[i] == targetGid) {
+            free(groupList);
+            return 0;
+        }
+    }
+
+    groupList[groupCount] = targetGid;
+    if (setgroups(groupCount + 1, groupList) != 0) {
+        BEGET_LOGE("fsck repair: setgroups failed, errno: %d", errno);
+        free(groupList);
+        return -1;
+    }
+
+    free(groupList);
+    return 0;
+}
+
+INIT_STATIC void FsckStartAnimation(FsckDisplay *display)
+{
+    if (display->animChecked || display->animFailed) {
+        return;
+    }
+    display->animChecked = true;
+    if (access(REPAIR_ANIM_BIN, F_OK) != 0) {
+        BEGET_LOGW("fsck repair: animation binary %s not exist, skip", REPAIR_ANIM_BIN);
+        display->animFailed = true;
+        return;
+    }
+    int input[2] = { -1, -1 };
+    if (pipe(input) < 0 || FsckNonblock(input[1]) < 0) {
+        FsckClose(&input[0]);
+        FsckClose(&input[1]);
+        BEGET_LOGE("fsck repair: animation pipe failed, errno: %d", errno);
+        display->animFailed = true;
+        return;
+    }
+    pid_t pid = fork();
+    if (pid == 0) {
+        (void)close(input[1]);
+        if (dup2(input[0], STDIN_FILENO) < 0) {
+            _exit(126);
+        }
+        FsckClose(&input[0]);
+        if (FsckAddAnimGroup("graphics") != 0) {
+            BEGET_LOGE("fsck repair: add graphics group failed");
+        }
+        if (FsckAddAnimGroup("composer_host") != 0) {
+            BEGET_LOGE("fsck repair: add composer_host group failed");
+        }
+        BEGET_LOGI("fsck repair: execl %s", REPAIR_ANIM_BIN);
+        execl(REPAIR_ANIM_BIN, REPAIR_ANIM_BIN, (char *)NULL);
+        BEGET_LOGE("fsck repair: execl %s failed, errno: %d", REPAIR_ANIM_BIN, errno);
+        _exit(127);
+    }
+    FsckClose(&input[0]);
+    if (pid < 0) {
+        FsckClose(&input[1]);
+        BEGET_LOGE("fsck repair: fork animation failed, errno: %d", errno);
+        display->animFailed = true;
+        return;
+    }
+    display->animation = pid;
+    display->animationInput = input[1];
+    BEGET_LOGI("fsck repair: animation forked, pid: %d", pid);
+}
+
+INIT_STATIC void FsckSendProgress(FsckDisplay *display)
+{
+    if (display->animationInput < 0 || display->used == 0) {
+        return;
+    }
+    if (strncmp(display->line, FSCK_PROGRESS_PREFIX, strlen(FSCK_PROGRESS_PREFIX)) != 0) {
+        return;
+    }
+    display->line[display->used] = '\n';
+    ssize_t rc;
+    do {
+        rc = write(display->animationInput, display->line, display->used + 1);
+    } while (rc < 0 && errno == EINTR);
+    if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+        BEGET_LOGW("fsck repair: animation input write failed, errno: %d", errno);
+        FsckClose(&display->animationInput);
+    }
+}
+
+INIT_STATIC void FsckHandleLine(FsckDisplay *display)
+{
+    display->line[display->used] = '\0';
+    BEGET_LOGI("fsck: %s", display->line);
+    if (!display->animChecked && !display->animFailed) {
+        if (strstr(display->line, FULL_FSCK_PATTERN) != NULL) {
+            FsckStartAnimation(display);
+        }
+    }
+    if (display->animationInput >= 0) {
+        FsckSendProgress(display);
+    }
+    display->used = 0;
+}
+
+INIT_STATIC void FsckConsumeByte(FsckDisplay *display, char byte)
+{
+    if (byte == '\n' || byte == '\r') {
+        if (!display->droppingLine && display->used > 0) {
+            FsckHandleLine(display);
+        }
+        display->droppingLine = false;
+        display->used = 0;
+    } else if (!display->droppingLine) {
+        if (display->used + 1 < sizeof(display->line)) {
+            display->line[display->used++] = byte;
+        } else {
+            display->line[display->used] = '\0';
+            BEGET_LOGI("fsck: %s", display->line);
+            display->droppingLine = true;
+            display->used = 0;
+            BEGET_LOGW("fsck line too long; skip to newline");
+        }
+    }
+}
+
+INIT_STATIC void FsckStopAnimation(FsckDisplay *display)
+{
+    FsckClose(&display->animationInput);
+    if (display->animation <= 0) {
+        return;
+    }
+    pid_t pid = display->animation;
+    if (!FsckWaitPid(pid, FSCK_STOP_GRACE_MS)) {
+        (void)kill(pid, SIGTERM);
+        BEGET_LOGW("fsck repair: animation pid %d not exited in 1s, SIGTERM sent", (int)pid);
+    }
+    display->animation = -1;
+}
+
+static int FsckDecodeStatus(int status)
+{
+    if (WIFEXITED(status)) {
+        BEGET_LOGI("fsck exit code %d", WEXITSTATUS(status));
+        return WEXITSTATUS(status);
+    }
+    if (WIFSIGNALED(status)) {
+        BEGET_LOGE("fsck terminated by signal %d; continue boot", WTERMSIG(status));
+    }
+    return -1;
+}
+
+INIT_STATIC void FsckReadOutput(int fd, FsckDisplay *display)
+{
+    char buffer[FSCK_LINE_CAP];
+    do {
+        ssize_t n = read(fd, buffer, sizeof(buffer));
+        if (n <= 0) {
+            if (n < 0 && errno == EINTR) {
+                continue;
+            }
+            break;
+        }
+        for (ssize_t i = 0; i < n; ++i) {
+            FsckConsumeByte(display, buffer[i]);
+        }
+    } while (1);
+    if (!display->droppingLine && display->used > 0) {
+        FsckHandleLine(display);
+    }
+}
+
+INIT_STATIC int RunFsckWithAnimation(int argc, char **argv)
+{
+    BEGET_CHECK(!(argc <= 0 || argv == NULL || argv[0] == NULL), return -1);
+
+    int pipeFds[2] = { -1, -1 };
+    if (pipe2(pipeFds, O_CLOEXEC) < 0) {
+        BEGET_LOGE("fsck repair: pipe2 failed, errno: %d, fallback to ExecCommand", errno);
+        return ExecCommand(argc, argv);
+    }
+
+    BEGET_LOGI("Execute %s begin", argv[0]);
+    pid_t pid = fork();
+    if (pid < 0) {
+        BEGET_LOGE("Fork new process to fsck failed: %d", errno);
+        FsckClose(&pipeFds[0]);
+        FsckClose(&pipeFds[1]);
+        return -1;
+    }
+    if (pid == 0) {
+        (void)close(pipeFds[0]);
+        RedirectToStdFd(pipeFds[1]);
+        BEGET_LOGI("fsck repair: execv %s", argv[0]);
+        execv(argv[0], argv);
+        BEGET_LOGE("fsck repair: execv %s failed, errno: %d", argv[0], errno);
+        _exit(1);
+    }
+    (void)close(pipeFds[1]);
+
+    FsckDisplay display = {0};
+    display.animation = -1;
+    display.animationInput = -1;
+
+    FsckReadOutput(pipeFds[0], &display);
+    (void)close(pipeFds[0]);
+
+    int status = 0;
+    waitpid(pid, &status, 0);
+    int result = FsckDecodeStatus(status);
+
+    FsckStopAnimation(&display);
+    return result;
 }
 
 static const SUPPORTED_FILE_SYSTEM supportedFileSystems[] = {
@@ -378,8 +675,8 @@ static int DoResizeF2fs(FstabItem *item, const unsigned long long size)
         return ret;
     }
     (void)DoMountOneItem(item, NULL);
-    umount(item->mountPoint);
-    BEGET_LOGE("remount and resize again.");
+    int umountRet = umount(item->mountPoint);
+    BEGET_LOGE("umount %s before retry resize, ret=%d, errno=%d", item->mountPoint, umountRet, errno);
     return ExecCommand(argc, argv);
 }
 
@@ -420,7 +717,12 @@ int DoFsckF2fs(FstabItem *item)
     BEGET_ERROR_CHECK(argc <= MAX_FSCK_PARAM_NUM, return -1, "argc: %d is too big.", argc);
 
     InitTimerControl(true);
-    int ret = ExecCommand(argc, argv);
+    if (access(REPAIR_ANIM_BIN, F_OK) != 0) {
+        int ret = ExecCommand(argc, argv);
+        InitTimerControl(false);
+        return ret;
+    }
+    int ret = RunFsckWithAnimation(argc, argv);
     InitTimerControl(false);
     return ret;
 }

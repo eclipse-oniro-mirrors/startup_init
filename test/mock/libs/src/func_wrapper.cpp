@@ -474,6 +474,102 @@ uid_t __wrap_getuid(void)
     }
 }
 
+// start wrap pipe
+static PipeFunc g_pipe = NULL;
+void UpdatePipeFunc(PipeFunc func)
+{
+    g_pipe = func;
+}
+
+int __wrap_pipe(int fds[2])
+{
+    if (g_pipe) {
+        return g_pipe(fds);
+    } else {
+        return __real_pipe(fds);
+    }
+}
+
+// start wrap write
+static WriteFunc g_write = NULL;
+void UpdateWriteFunc(WriteFunc func)
+{
+    g_write = func;
+}
+
+ssize_t __wrap_write(int fd, const void *buf, size_t count)
+{
+    if (g_write) {
+        return g_write(fd, buf, count);
+    } else {
+        return __real_write(fd, buf, count);
+    }
+}
+
+// start wrap usleep
+static UsleepFunc g_usleep = NULL;
+void UpdateUsleepFunc(UsleepFunc func)
+{
+    g_usleep = func;
+}
+
+int __wrap_usleep(useconds_t usec)
+{
+    if (g_usleep) {
+        return g_usleep(usec);
+    } else {
+        return __real_usleep(usec);
+    }
+}
+
+// start wrap kill
+static KillFunc g_kill = NULL;
+void UpdateKillFunc(KillFunc func)
+{
+    g_kill = func;
+}
+
+int __wrap_kill(pid_t pid, int sig)
+{
+    if (g_kill) {
+        return g_kill(pid, sig);
+    } else {
+        return __real_kill(pid, sig);
+    }
+}
+
+// start wrap pipe2
+static Pipe2Func g_pipe2 = NULL;
+void UpdatePipe2Func(Pipe2Func func)
+{
+    g_pipe2 = func;
+}
+
+int __wrap_pipe2(int fds[2], int flags)
+{
+    if (g_pipe2) {
+        return g_pipe2(fds, flags);
+    } else {
+        return __real_pipe2(fds, flags);
+    }
+}
+
+// start wrap poll
+static PollFunc g_poll = NULL;
+void UpdatePollFunc(PollFunc func)
+{
+    g_poll = func;
+}
+
+int __wrap_poll(struct pollfd *fds, unsigned long nfds, int timeout)
+{
+    if (g_poll) {
+        return g_poll(fds, nfds, timeout);
+    } else {
+        return __real_poll(fds, nfds, timeout);
+    }
+}
+
 #ifdef __cplusplus
 #if __cplusplus
 }
