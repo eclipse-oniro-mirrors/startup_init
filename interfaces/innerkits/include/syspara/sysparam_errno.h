@@ -35,6 +35,9 @@ enum OHOSStartUpSysParamErrorCode {
     SYSPARAM_PERMISSION_DENIED = -14700103, /* System permission operation permission denied */
     SYSPARAM_SYSTEM_ERROR = -14700104, /* System internal error including out of memory, deadlock etc. */
     SYSPARAM_WAIT_TIMEOUT = -14700105, /* System wait parameter value change time out. */
+    SYSPARAM_ENV_CONFIG_FULL = -14700106, /* Appenv config entries reached the 256 limit. */
+    SYSPARAM_INVALID_USERID = -14700109, /* Appenv caller userid is invalid (0 or undeducible). */
+    SYSPARAM_USERID_OUT_OF_RANGE = -14700110, /* Appenv explicit userid is outside [100,999]. */
 };
 
 #ifdef __cplusplus

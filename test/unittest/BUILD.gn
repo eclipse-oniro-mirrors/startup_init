@@ -959,3 +959,382 @@ ohos_unittest("init_remount_unittest") {
     "hilog:libhilog",
   ]
 }
+
+# env-config (appenv) unit tests. Split into four independent targets, one per
+# file/branch under test, so each target's coverage is attributed cleanly to its
+# own source file/branch.
+#
+# Targets:
+#   device_info_capi_ut:           tests device_info.cpp C API (CUSTOM_SANDBOX branch;
+#                                  no wrap; calls real C API)
+#   device_info_capi_no_sandbox_ut: tests device_info.cpp !CUSTOM_SANDBOX stub branch
+#                                  (returns SYSPARAM_PERMISSION_DENIED; does not
+#                                  define CUSTOM_SANDBOX/PARAM_FEATURE_DEVICEINFO)
+#   device_info_kits_env_ut:       tests device_info_kits.cpp kits env methods (no wrap;
+#                                  C++ member functions, injects MockIDeviceInfo)
+#   device_info_appenv_ut:         tests device_info_service.cpp SA-side env path
+#                                  (kept separate; has its own samgr/IPC mock scaffolding)
+#
+# Note: appenv.cpp (the CLI) is NOT covered by these targets. Its static handlers
+# (HandleSetEnv/HandleGetEnv/HandleUnsetEnv/ParseUserOption/EmitGlobalFlagHint)
+# are exercised on real devices via the appenv binary; unit-testing them here
+# would require compiling appenv.cpp into a UT target with --wrap on the C API,
+# which is out of scope for this iteration.
+#
+# The four targets share include_dirs/defines/deps/external_deps; these are not
+# extracted into a shared config/template because GN configs cannot carry deps,
+# and the per-target overhead of repeating them is clearer than a template.
+if (enable_ohos_startup_init_feature_deviceinfo) {
+
+# ---- device_info_capi_ut: tests device_info.cpp C API ----
+# No --wrap: calling SetEnvConfig/GetEnvConfig/RemoveEnvConfig here reaches the
+# real implementations in device_info.cpp. Coverage attributes to device_info.cpp.
+# Covers nullptr/size guards + the kits-call branch (valid args → instance.*
+# → kits → samgr; under no device/SA returns non-zero, forwarded by the C API).
+ohos_unittest("device_info_capi_ut") {
+  module_out_path = "init/init"
+  cflags = [
+    "-Wno-implicit-fallthrough",
+    "-Wno-unused-function",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+  cflags_cc = [ "-fexceptions" ]
+
+  sources = [
+    # C API under test: device_info.cpp compiled directly into this target.
+    "//base/startup/init/device_info/device_info.cpp",
+    # device_info_kits.cpp / device_info_load.cpp are needed because the C API
+    # calls DeviceInfoKits::GetInstance().SetEnvConfig(...), so the kits must
+    # link. Their coverage is attributed to their own files (not under test
+    # here); this target's coverage report for device_info.cpp is unaffected.
+    "//base/startup/init/device_info/device_info_kits.cpp",
+    "//base/startup/init/device_info/device_info_load.cpp",
+    # Symbols the C API / kits depend on but which are hidden in shared libs.
+    "//base/startup/init/services/modules/udid/udid_comm.c",
+    "//base/startup/init/services/log/init_commlog.c",
+    "//base/startup/init/services/log/init_log.c",
+    "//base/startup/init/services/utils/init_utils.c",
+    "//base/startup/init/interfaces/innerkits/syspara/param_comm.c",
+    # Test sources
+    "deviceinfo/device_info_capi_unittest.cpp",
+  ]
+
+  include_dirs = [
+    "//base/startup/init/device_info",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/include/syspara",
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/interfaces/innerkits/syspara",
+    "//base/startup/init/interfaces/innerkits/control_fd",
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/services/log",
+    "//base/startup/init/services/init/include",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/services/param/base",
+    "//base/startup/init/services/param/adapter",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/modules/udid",
+    "//base/startup/init/test/unittest",
+    "//base/startup/init/test/unittest/param",
+    "//base/startup/init/test/mock/libs/include",
+  ]
+
+  defines = [
+    "CUSTOM_SANDBOX",
+    "INIT_SUPPORT_ACCESS_TOKEN",
+    "PARAM_FEATURE_DEVICEINFO",
+    "STARTUP_INIT_TEST",
+    "_GNU_SOURCE",
+  ]
+  if (target_cpu == "arm64" || target_cpu == "x86_64" ||
+      target_cpu == "riscv64") {
+    defines += [ "SUPPORT_64BIT" ]
+  }
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:deviceinfo_stub",
+    "//base/startup/init/interfaces/innerkits:deviceinfo_proxy",
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+  ]
+
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "c_utils:utils",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.security_access_token)) {
+    external_deps += [
+      "access_token:libaccesstoken_sdk",
+      "access_token:libtokenid_sdk",
+      "access_token:libnativetoken",
+      "access_token:libtoken_setproc",
+    ]
+  }
+  configs = [ "//base/startup/init/test/unittest:utest_config" ]
+}
+
+# ---- device_info_kits_env_ut: tests device_info_kits.cpp kits env methods ----
+# No --wrap: kits env methods are C++ member functions (mangled symbols), not
+# intercepted by --wrap anyway. Calling kits.SetEnvConfig etc. reaches the real
+# implementations in device_info_kits.cpp. Coverage attributes to
+# device_info_kits.cpp.
+# Coverage scope (C-1): GetService failure branch only (DINFO_CHECK return -1,
+# L205/L225/L237). The success path (deviceService->SetEnvConfig via IPC) is not
+# covered — see design.md D-COV: mocking samgr (ISystemAbilityManager 20
+# pure-virtual methods + IRemoteObject/iface_cast template + LoadSystemAbility
+# async callback) is out of scope; the real business logic is already covered on
+# the SA side by device_info_appenv_unittest.cpp.
+ohos_unittest("device_info_kits_env_ut") {
+  module_out_path = "init/init"
+  cflags = [
+    "-Wno-implicit-fallthrough",
+    "-Wno-unused-function",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+  cflags_cc = [ "-fexceptions" ]
+
+  sources = [
+    # kits under test: device_info_kits.cpp compiled directly into this target.
+    "//base/startup/init/device_info/device_info_kits.cpp",
+    "//base/startup/init/device_info/device_info_load.cpp",
+    # Symbols the kits depend on but which are hidden in shared libs.
+    "//base/startup/init/services/modules/udid/udid_comm.c",
+    "//base/startup/init/services/log/init_commlog.c",
+    "//base/startup/init/services/log/init_log.c",
+    "//base/startup/init/services/utils/init_utils.c",
+    "//base/startup/init/interfaces/innerkits/syspara/param_comm.c",
+    # Test sources
+    "deviceinfo/device_info_kits_env_unittest.cpp",
+  ]
+
+  include_dirs = [
+    "//base/startup/init/device_info",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/include/syspara",
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/interfaces/innerkits/syspara",
+    "//base/startup/init/interfaces/innerkits/control_fd",
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/services/log",
+    "//base/startup/init/services/init/include",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/services/param/base",
+    "//base/startup/init/services/param/adapter",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/modules/udid",
+    "//base/startup/init/test/unittest",
+    "//base/startup/init/test/unittest/param",
+    "//base/startup/init/test/mock/libs/include",
+  ]
+
+  defines = [
+    "CUSTOM_SANDBOX",
+    "INIT_SUPPORT_ACCESS_TOKEN",
+    "PARAM_FEATURE_DEVICEINFO",
+    "STARTUP_INIT_TEST",
+    "_GNU_SOURCE",
+  ]
+  if (target_cpu == "arm64" || target_cpu == "x86_64" ||
+      target_cpu == "riscv64") {
+    defines += [ "SUPPORT_64BIT" ]
+  }
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:deviceinfo_stub",
+    "//base/startup/init/interfaces/innerkits:deviceinfo_proxy",
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+  ]
+
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "c_utils:utils",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.security_access_token)) {
+    external_deps += [
+      "access_token:libaccesstoken_sdk",
+      "access_token:libtokenid_sdk",
+      "access_token:libnativetoken",
+      "access_token:libtoken_setproc",
+    ]
+  }
+  configs = [ "//base/startup/init/test/unittest:utest_config" ]
+}
+
+# ---- device_info_appenv_ut: SA-side env path test (device_info_service.cpp) ----
+# Kept separate: this target has its own samgr/IPC scaffolding (mock
+# IPCSkeleton / AccessTokenKit via link-time symbol override) which would
+# interfere with the three targets above if merged. Its coverage is for
+# device_info_service.cpp (already ~full), not for the three files under test
+# by the targets above.
+ohos_unittest("device_info_appenv_ut") {
+  module_out_path = "init/init"
+  cflags = [
+    "-Wno-implicit-fallthrough",
+    "-Wno-unused-function",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+  cflags_cc = [ "-fexceptions" ]
+
+  sources = [
+    "//base/startup/init/device_info/device_info_service.cpp",
+    "//base/startup/init/device_info/device_info_kits.cpp",
+    "//base/startup/init/device_info/device_info_load.cpp",
+    "//base/startup/init/services/modules/udid/udid_comm.c",
+    "//base/startup/init/services/log/init_commlog.c",
+    "//base/startup/init/services/log/init_log.c",
+    "//base/startup/init/services/utils/init_utils.c",
+    "//base/startup/init/interfaces/innerkits/syspara/param_comm.c",
+    # Test sources
+    "deviceinfo/device_info_appenv_unittest.cpp",
+  ]
+
+  include_dirs = [
+    "//base/startup/init/device_info",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/include/syspara",
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/interfaces/innerkits/syspara",
+    "//base/startup/init/interfaces/innerkits/control_fd",
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/services/log",
+    "//base/startup/init/services/init/include",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/services/param/base",
+    "//base/startup/init/services/param/adapter",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/modules/udid",
+    "//base/startup/init/test/unittest",
+    "//base/startup/init/test/unittest/param",
+    "//base/startup/init/test/mock/libs/include",
+  ]
+
+  defines = [
+    "CUSTOM_SANDBOX",
+    "INIT_SUPPORT_ACCESS_TOKEN",
+    "PARAM_FEATURE_DEVICEINFO",
+    "STARTUP_INIT_TEST",
+    "_GNU_SOURCE",
+  ]
+  if (target_cpu == "arm64" || target_cpu == "x86_64" ||
+      target_cpu == "riscv64") {
+    defines += [ "SUPPORT_64BIT" ]
+  }
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:deviceinfo_stub",
+    "//base/startup/init/interfaces/innerkits:deviceinfo_proxy",
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+  ]
+
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "c_utils:utils",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.security_access_token)) {
+    external_deps += [
+      "access_token:libaccesstoken_sdk",
+      "access_token:libtokenid_sdk",
+      "access_token:libnativetoken",
+      "access_token:libtoken_setproc",
+    ]
+  }
+  configs = [ "//base/startup/init/test/unittest:utest_config" ]
+}
+
+# ---- device_info_capi_no_sandbox_ut: tests device_info.cpp !CUSTOM_SANDBOX stubs ----
+# This target does NOT define CUSTOM_SANDBOX, so device_info.cpp compiles the
+# `#else // !CUSTOM_SANDBOX` branch (L312-327): three stubs that return
+# SYSPARAM_PERMISSION_DENIED unconditionally (symbols exist for ABI stability;
+# appenv CLI is not built on non-PC products). PARAM_FEATURE_DEVICEINFO is also
+# left undefined so no kits path is pulled in. Covers L315-325 which had 0%
+# coverage (the CUSTOM_SANDBOX target above compiles the other branch).
+ohos_unittest("device_info_capi_no_sandbox_ut") {
+  module_out_path = "init/init"
+  cflags = [
+    "-Wno-implicit-fallthrough",
+    "-Wno-unused-function",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+  cflags_cc = [ "-fexceptions" ]
+
+  sources = [
+    # C API under test: device_info.cpp compiled without CUSTOM_SANDBOX, so the
+    # `#else` stub branch (L312-327) is compiled. PARAM_FEATURE_DEVICEINFO is
+    # not defined either, so the stubs are pure returns (no kits path).
+    "//base/startup/init/device_info/device_info.cpp",
+    # Symbols device_info.cpp may pull in but which are hidden in shared libs.
+    "//base/startup/init/services/modules/udid/udid_comm.c",
+    "//base/startup/init/services/log/init_commlog.c",
+    "//base/startup/init/services/log/init_log.c",
+    "//base/startup/init/services/utils/init_utils.c",
+    "//base/startup/init/interfaces/innerkits/syspara/param_comm.c",
+    # Test sources
+    "deviceinfo/device_info_capi_no_sandbox_unittest.cpp",
+  ]
+
+  include_dirs = [
+    "//base/startup/init/device_info",
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/interfaces/innerkits/include/syspara",
+    "//base/startup/init/interfaces/innerkits/include/param",
+    "//base/startup/init/interfaces/innerkits/syspara",
+    "//base/startup/init/interfaces/innerkits/control_fd",
+    "//base/startup/init/interfaces/innerkits/fd_holder",
+    "//base/startup/init/services/log",
+    "//base/startup/init/services/init/include",
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/services/param/base",
+    "//base/startup/init/services/param/adapter",
+    "//base/startup/init/services/param/linux",
+    "//base/startup/init/services/modules/udid",
+    "//base/startup/init/test/unittest",
+    "//base/startup/init/test/unittest/param",
+    "//base/startup/init/test/mock/libs/include",
+  ]
+
+  # NOTE: CUSTOM_SANDBOX and PARAM_FEATURE_DEVICEINFO are intentionally NOT
+  # defined here so device_info.cpp compiles the non-PC stub branch.
+  defines = [
+    "STARTUP_INIT_TEST",
+    "_GNU_SOURCE",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+  ]
+
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "c_utils:utils",
+    "googletest:gmock",
+    "googletest:gtest",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+  ]
+  configs = [ "//base/startup/init/test/unittest:utest_config" ]
+}
+}

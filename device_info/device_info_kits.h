@@ -34,6 +34,14 @@ public:
     int32_t GetUdid(std::string& result);
     int32_t GetSerialID(std::string& result);
     int32_t GetDiskSN(std::string& result);
+#ifdef CUSTOM_SANDBOX
+    // env config is PC-only; the appenv CLI (sole consumer) is built only when
+    // init_feature_custom_sandbox is true. IDL-generated proxy still has the
+    // methods (IDL is unconditional), but uncalled on non-PC.
+    int32_t SetEnvConfig(const std::string& key, const std::string& value, int32_t userId);
+    int32_t GetEnvConfig(const std::string& key, std::string& value, int32_t userId);
+    int32_t RemoveEnvConfig(const std::string& key, int32_t userId);
+#endif
     int32_t GetCpuId(std::string& result);
     int32_t GetCpuArchitecture(std::string& result);
     int32_t GetCpuVendor(std::string& result);
@@ -103,6 +111,7 @@ private:
 #define DINFO_LOGI(fmt, ...) STARTUP_LOGI(DINFO_DOMAIN, DINFO_TAG, fmt, ##__VA_ARGS__)
 #define DINFO_LOGE(fmt, ...) STARTUP_LOGE(DINFO_DOMAIN, DINFO_TAG, fmt, ##__VA_ARGS__)
 #define DINFO_LOGV(fmt, ...) STARTUP_LOGV(DINFO_DOMAIN, DINFO_TAG, fmt, ##__VA_ARGS__)
+#define DINFO_LOGW(fmt, ...) STARTUP_LOGW(DINFO_DOMAIN, DINFO_TAG, fmt, ##__VA_ARGS__)
 
 #define DINFO_CHECK(ret, exper, ...) \
     if (!(ret)) { \
