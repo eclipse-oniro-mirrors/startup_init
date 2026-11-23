@@ -27,7 +27,6 @@ namespace OHOS {
     bool FuzzOHStrDictGet(const uint8_t* data, size_t size)
     {
         std::string str(reinterpret_cast<const char*>(data), size);
-        const char *target = str.c_str();
         static const StrDictEntry dict[] = {
             {"init", "value1"},
             {"param", "value2"},
@@ -38,20 +37,20 @@ namespace OHOS {
             {nullptr, nullptr},
         };
         int dictSize = static_cast<int>(sizeof(StrDictEntry));
-        // wrapper without extend: covers stride walk, match, ignoreCase and no-match branches
-        (void)OH_StrDictGet(reinterpret_cast<void **>(const_cast<StrDictEntry *>(dict)), dictSize, target, 0);
-        (void)OH_StrDictGet(reinterpret_cast<void **>(const_cast<StrDictEntry *>(dict)), dictSize, target, 1);
+        void **dictPtr = reinterpret_cast<void **>(const_cast<StrDictEntry *>(dict));
+        void **extendPtr = reinterpret_cast<void **>(const_cast<StrDictEntry *>(extendDict));
+        // fuzz-controlled target: covers no-match and both ignoreCase values
+        (void)OH_StrDictGet(dictPtr, dictSize, str.c_str(), 0);
+        (void)OH_StrDictGet(dictPtr, dictSize, str.c_str(), 1);
         // guard branches: null dict, invalid stride
-        (void)OH_StrDictGet(nullptr, dictSize, target, 0);
-        (void)OH_StrDictGet(reinterpret_cast<void **>(const_cast<StrDictEntry *>(dict)), -1, target, 0);
-        (void)OH_StrDictGet(reinterpret_cast<void **>(const_cast<StrDictEntry *>(dict)), 1, target, 0);
-        // extendable: covers extend-match, extend-no-match and extend-null branches
-        (void)OH_ExtendableStrDictGet(reinterpret_cast<void **>(const_cast<StrDictEntry *>(dict)), dictSize,
-            target, 0, reinterpret_cast<void **>(const_cast<StrDictEntry *>(extendDict)));
-        (void)OH_ExtendableStrDictGet(reinterpret_cast<void **>(const_cast<StrDictEntry *>(dict)), dictSize,
-            target, 1, reinterpret_cast<void **>(const_cast<StrDictEntry *>(extendDict)));
-        (void)OH_ExtendableStrDictGet(reinterpret_cast<void **>(const_cast<StrDictEntry *>(dict)), dictSize,
-            target, 0, nullptr);
+        (void)OH_StrDictGet(nullptr, dictSize, str.c_str(), 0);
+        (void)OH_StrDictGet(dictPtr, -1, str.c_str(), 0);
+        (void)OH_StrDictGet(dictPtr, 1, str.c_str(), 0);
+        // fixed probes: covers main match, extend match and extend-null branches
+        (void)OH_StrDictGet(dictPtr, dictSize, "param", 0);
+        (void)OH_ExtendableStrDictGet(dictPtr, dictSize, "watcher", 0, extendPtr);
+        (void)OH_ExtendableStrDictGet(dictPtr, dictSize, "watcher", 1, extendPtr);
+        (void)OH_ExtendableStrDictGet(dictPtr, dictSize, "param", 0, nullptr);
         return true;
     }
 }

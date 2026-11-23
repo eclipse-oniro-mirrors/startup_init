@@ -37,10 +37,17 @@ namespace OHOS {
         }
         static const char *exclude[] = {"persist.test.exclude", nullptr};
         uint32_t context = 0;
-        // with exclude filter: covers filter-hit and filter-pass branches
-        (void)SplitParamString(&buf[0], exclude, 1, TestSplitResult, &context);
-        // without filter: covers normal split, quote-strip and space-trim branches
+        // exclude-hit line composed from fixed key and fuzz content
+        std::string exLine = "persist.test.exclude=" + str;
+        (void)SplitParamString(&exLine[0], exclude, 1, TestSplitResult, &context);
+        // raw fuzz line: covers no-equals, comment and space-trim branches
         (void)SplitParamString(&buf[0], nullptr, 0, TestSplitResult, &context);
+        // comment line composed with fixed prefix
+        std::string cmtLine = "# " + str;
+        (void)SplitParamString(&cmtLine[0], exclude, 1, TestSplitResult, &context);
+        // quoted-value line composed around fuzz content
+        std::string quotedLine = "foo.bar=\"" + str + "\"";
+        (void)SplitParamString(&quotedLine[0], nullptr, 0, TestSplitResult, &context);
         // null guard
         (void)SplitParamString(nullptr, exclude, 1, TestSplitResult, &context);
         return true;

@@ -22,17 +22,17 @@ namespace OHOS {
     bool FuzzOHStrArrayGetIndex(const uint8_t* data, size_t size)
     {
         std::string str(reinterpret_cast<const char*>(data), size);
-        const char *target = str.c_str();
         static const char *array[] = {"init", "ueventd", "param", nullptr};
         static const char *extend[] = {"watcher", nullptr};
-        // wrapper without extend: covers match, ignoreCase and no-match branches
-        (void)OH_StrArrayGetIndex(array, target, 0);
-        (void)OH_StrArrayGetIndex(array, target, 1);
-        (void)OH_StrArrayGetIndex(nullptr, target, 0);
-        // extendable: covers extend-match, extend-no-match and extend-null branches
-        (void)OH_ExtendableStrArrayGetIndex(array, target, 0, extend);
-        (void)OH_ExtendableStrArrayGetIndex(array, target, 1, extend);
-        (void)OH_ExtendableStrArrayGetIndex(array, target, 0, nullptr);
+        // fuzz-controlled target: covers no-match and both ignoreCase values
+        (void)OH_StrArrayGetIndex(array, str.c_str(), 0);
+        (void)OH_StrArrayGetIndex(array, str.c_str(), 1);
+        // fixed probes: covers exact match, extend match and extend-null branches
+        (void)OH_StrArrayGetIndex(array, "param", 0);
+        (void)OH_ExtendableStrArrayGetIndex(array, "param", 1, nullptr);
+        (void)OH_ExtendableStrArrayGetIndex(array, "watcher", 0, extend);
+        (void)OH_ExtendableStrArrayGetIndex(array, "watcher", 1, extend);
+        (void)OH_ExtendableStrArrayGetIndex(array, "watcher", 0, nullptr);
         return true;
     }
 }

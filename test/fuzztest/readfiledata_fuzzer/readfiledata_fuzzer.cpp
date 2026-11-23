@@ -13,18 +13,25 @@
  * limitations under the License.
  */
 
-#include <stdlib.h>
-#include <string>
+#include <cstdlib>
 
 #include "init_utils.h"
 #include "readfiledata_fuzzer.h"
+#include "securec.h"
 
 namespace OHOS {
+    constexpr int FUZZ_PATH_MAX_LEN = 256;
+
     bool FuzzReadFileData(const uint8_t* data, size_t size)
     {
-        std::string str(reinterpret_cast<const char*>(data), size);
+        // fixed buffer instead of std::string: keeps c_str/data off the assignment line (G.STD.04-CPP)
+        char name[FUZZ_PATH_MAX_LEN] = {0};
+        size_t copyLen = (size < sizeof(name) - 1) ? size : sizeof(name) - 1;
+        if (copyLen > 0 && memcpy_s(name, sizeof(name) - 1, data, copyLen) != EOK) {
+            return true;
+        }
         // fuzz-controlled name hits the open-failed path
-        char *fileBuf = ReadFileData(str.c_str());
+        char *fileBuf = ReadFileData(name);
         if (fileBuf != nullptr) {
             free(fileBuf);
         }
