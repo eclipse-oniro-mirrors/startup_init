@@ -1,0 +1,1 @@
+init=/init loop.max_part=7 quiet
