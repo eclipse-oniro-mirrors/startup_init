@@ -19,11 +19,13 @@
 #include "getproccmdlinevalue_fuzzer.h"
 
 namespace OHOS {
+    constexpr int CMDLINE_VALUE_MAX_LEN = 256;
+
     bool FuzzGetProcCmdlineValue(const uint8_t* data, size_t size)
     {
         std::string str(reinterpret_cast<const char*>(data), size);
-        // value uses fixed char[256] buffer and passes sizeof(value) as length
-        char value[256] = {0};
+        // value uses fixed-size buffer and passes sizeof(value) as length
+        char value[CMDLINE_VALUE_MAX_LEN] = {0};
         // fixed name against fuzz buffer: covers match, miss and nested '=' paths
         (void)GetProcCmdlineValue("root", str.c_str(), value, sizeof(value));
         (void)GetProcCmdlineValue("test.name", str.c_str(), value, sizeof(value));

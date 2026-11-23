@@ -19,6 +19,8 @@
 #include "splitstringext_fuzzer.h"
 
 namespace OHOS {
+    constexpr int MAX_ITEM_COUNT = 64;
+
     bool FuzzSplitStringExt(const uint8_t* data, size_t size)
     {
         std::string str(reinterpret_cast<const char*>(data), size);
@@ -26,8 +28,8 @@ namespace OHOS {
             return true;
         }
         int returnCount = 0;
-        // maxItemCount 64: internal default 50 clamp and dynamic expand paths are reachable
-        char **items = SplitStringExt(&str[0], " ", &returnCount, 64);
+        // MAX_ITEM_COUNT: internal default 50 clamp and dynamic expand paths are reachable
+        char **items = SplitStringExt(&str[0], " ", &returnCount, MAX_ITEM_COUNT);
         if (items != nullptr) {
             FreeStringVector(items, returnCount);
         }
