@@ -31,6 +31,7 @@ ohos_unittest("fstab_mount_unittest") {
   sources = [
     "//base/startup/init/interfaces/innerkits/fs_manager/fstab_mount.c",
     "//base/startup/init/test/unittest/single_test/fstab_mount/src/fstab_mount_test.cpp",
+    "//base/startup/init/test/unittest/single_test/fstab_mount/src/fsck_group_wrapper.c",
     "//base/startup/init/test/mock/libs/src/func_wrapper.cpp",
     "//base/startup/init/interfaces/innerkits/fs_manager/erofs_overlay/erofs_mount_overlay.c",
   ]
@@ -47,6 +48,19 @@ ohos_unittest("fstab_mount_unittest") {
     "-Wl,--wrap=read",
     "-Wl,--wrap=access",
     "-Wl,--wrap=open",
+    "-Wl,--wrap=close",
+    "-Wl,--wrap=fork",
+    "-Wl,--wrap=pipe",
+    "-Wl,--wrap=pipe2",
+    "-Wl,--wrap=write",
+    "-Wl,--wrap=waitpid",
+    "-Wl,--wrap=usleep",
+    "-Wl,--wrap=poll",
+    "-Wl,--wrap=kill",
+    "-Wl,--wrap=fcntl",
+    "-Wl,--wrap=getgrnam",
+    "-Wl,--wrap=getgroups",
+    "-Wl,--wrap=setgroups",
     "-Wl,--wrap=NeedDoAllResize",
   ]
   deps = [

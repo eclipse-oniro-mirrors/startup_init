@@ -167,6 +167,36 @@ uid_t __real_getuid(void);
 typedef uid_t (*GetuidFunc)(void);
 void UpdateGetuidFunc(GetuidFunc func);
 
+// for wrapper pipe;
+int __real_pipe(int fds[2]);
+typedef int (*PipeFunc)(int fds[2]);
+void UpdatePipeFunc(PipeFunc func);
+
+// for wrapper write;
+ssize_t __real_write(int fd, const void *buf, size_t count);
+typedef ssize_t (*WriteFunc)(int fd, const void *buf, size_t count);
+void UpdateWriteFunc(WriteFunc func);
+
+// for wrapper usleep;
+int __real_usleep(useconds_t usec);
+typedef int (*UsleepFunc)(useconds_t usec);
+void UpdateUsleepFunc(UsleepFunc func);
+
+// for wrapper kill;
+int __real_kill(pid_t pid, int sig);
+typedef int (*KillFunc)(pid_t pid, int sig);
+void UpdateKillFunc(KillFunc func);
+
+// for wrapper pipe2;
+int __real_pipe2(int fds[2], int flags);
+typedef int (*Pipe2Func)(int fds[2], int flags);
+void UpdatePipe2Func(Pipe2Func func);
+
+// for wrapper poll;
+int __real_poll(struct pollfd *fds, unsigned long nfds, int timeout);
+typedef int (*PollFunc)(struct pollfd *fds, unsigned long nfds, int timeout);
+void UpdatePollFunc(PollFunc func);
+
 #ifdef __cplusplus
 #if __cplusplus
 }
