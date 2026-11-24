@@ -2334,6 +2334,67 @@ ohos_fuzztest("GetAbiListFuzzTest") {
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
+ohos_fuzztest("GetDeviceInfoFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/getdeviceinfo_fuzzer"
+
+  include_dirs = [ "//base/startup/init/test/fuzztest/utils/include" ]
+
+  deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [ "hilog:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "getdeviceinfo_fuzzer/getdeviceinfo_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetVersionInfoFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/getversioninfo_fuzzer"
+
+  include_dirs = [ "//base/startup/init/test/fuzztest/utils/include" ]
+
+  deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [ "hilog:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "getversioninfo_fuzzer/getversioninfo_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetDistributionOSFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/getdistributionos_fuzzer"
+
+  include_dirs = [ "//base/startup/init/test/fuzztest/utils/include" ]
+
+  deps = [ "//base/startup/init/interfaces/innerkits:libbegetutil" ]
+  external_deps = [ "bounds_checking_function:libsec_static" ]
+  external_deps += [ "hilog:libhilog" ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "getdistributionos_fuzzer/getdistributionos_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
 ohos_fuzztest("GetBootloaderVersionFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
@@ -2612,6 +2673,64 @@ ohos_fuzztest("InitWorkSpaceFuzzTest") {
   sources = [ 
     "initworkspace_fuzzer/initworkspace_fuzzer.cpp",
    ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("SplitParamStringFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/splitparamstring_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/param:parameter",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "splitparamstring_fuzzer/splitparamstring_fuzzer.cpp" ]
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetParamSecurityFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/getparamsecurity_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/services/param/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/interfaces/innerkits:libbegetutil",
+    "//base/startup/init/services/param:parameter",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "getparamsecurity_fuzzer/getparamsecurity_fuzzer.cpp" ]
   defines = [ "STARTUP_INIT_TEST" ]
 }
 
@@ -3362,6 +3481,243 @@ ohos_fuzztest("ReadFileToBufFuzzTest") {
     "//base/startup/init/services/log/init_commlog.c",
     "readfiletobuf_fuzzer/readfiletobuf_fuzzer.cpp",
   ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("ReadFileDataFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/readfiledata_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "readfiledata_fuzzer/readfiledata_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("IterateNameValuePairsFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/iteratenamevaluepairs_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "iteratenamevaluepairs_fuzzer/iteratenamevaluepairs_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("GetProcCmdlineValueFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/getproccmdlinevalue_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "getproccmdlinevalue_fuzzer/getproccmdlinevalue_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("SplitStringExtFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/splitstringext_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "splitstringext_fuzzer/splitstringext_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("InitDiffTimeFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/initdifftime_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "initdifftime_fuzzer/initdifftime_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("StringReplaceChrFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/stringreplacechr_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "stringreplacechr_fuzzer/stringreplacechr_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("OHStrArrayGetIndexFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "//base/startup/init/test/fuzztest/ohstrarraygetindex_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ohstrarraygetindex_fuzzer/ohstrarraygetindex_fuzzer.cpp" ]
+
+  defines = [ "STARTUP_INIT_TEST" ]
+}
+
+ohos_fuzztest("OHStrDictGetFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//base/startup/init/test/fuzztest/ohstrdictget_fuzzer"
+
+  include_dirs = [
+    "//base/startup/init/interfaces/innerkits/include",
+    "//base/startup/init/test/fuzztest/utils/include",
+  ]
+
+  deps = [
+    "//base/startup/init/services/param:parameter",
+    "//base/startup/init/services/utils:libinit_utils",
+  ]
+  external_deps = [
+    "bounds_checking_function:libsec_static",
+    "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [ "ohstrdictget_fuzzer/ohstrdictget_fuzzer.cpp" ]
 
   defines = [ "STARTUP_INIT_TEST" ]
 }
@@ -4452,17 +4808,21 @@ group("fuzztest") {
     ":GetControlSocketFuzzTest",
     ":GetCurrentSlotFuzzTest",
     ":GetDevUdidFuzzTest",
+    ":GetDeviceInfoFuzzTest",
     ":GetDeviceNodePermissionsFuzzTest",
     ":GetDeviceUdevConfByDevNodeFuzzTest",
+    ":GetDistributionOSFuzzTest",
     ":GetFeatureVersionFuzzTest",
     ":GetIntParameterCFuzzTest",
     ":GetIntParameterCppFuzzTest",
     ":GetMajorVersionFuzzTest",
     ":GetManufactureFuzzTest",
     ":GetMountStatusForMountPointFuzzTest",
+    ":GetProcCmdlineValueFuzzTest",
     ":GetOSFullNameFuzzTest",
     ":GetOsReleaseTypeFuzzTest",
     ":GetParamSecurityAuditDataFuzzTest",
+    ":GetParamSecurityFuzzTest",
     ":GetParameterCFuzzTest",
     ":GetParameterCommitIdFuzzTest",
     ":GetParameterCppFuzzTest",
@@ -4474,6 +4834,7 @@ group("fuzztest") {
     ":GetServiceCtrlInfoFuzzTest",
     ":GetStringParameterFuzzTest",
     ":GetUintParameterCFuzzTest",
+    ":GetVersionInfoFuzzTest",
     ":HandleBlockDeviceEventFuzzTest",
     ":HandleOtherDeviceEventFuzzTest",
     ":HasSystemCapabilityFuzzTest",
@@ -4485,8 +4846,10 @@ group("fuzztest") {
     ":HookMgrGetHooksCntFuzzTest",
     ":HookMgrGetStagesCntFuzzTest",
     ":HookMgrTraversalFuzzTest",
+    ":InitDiffTimeFuzzTest",
     ":InitWorkSpaceFuzzTest",
     ":IsSupportedFilesystemFuzzTest",
+    ":IterateNameValuePairsFuzzTest",
     ":LoadFscryptPolicyFuzzTest",
     ":LoadParamFromCmdLineFuzzTest",
     ":ModuleMgrCreateFuzzTest",
@@ -4500,10 +4863,13 @@ group("fuzztest") {
     ":MountAllWithFstabFuzzTest",
     ":MountOneItemFuzzTest",
     ":MountOneWithFstabFileFuzzTest",
+    ":OHStrArrayGetIndexFuzzTest",
+    ":OHStrDictGetFuzzTest",
     ":ParseFstabPerLineFuzzTest",
     ":ParseUeventConfigFuzzTest",
     ":ParseUeventdConfigFileFuzzTest",
     ":ProcessWatcherMessageFuzzTest",
+    ":ReadFileDataFuzzTest",
     ":ReadFileInDirFuzzTest",
     ":ReadFileToBufFuzzTest",
     ":ReadFstabFromFileFuzzTest",
@@ -4525,9 +4891,12 @@ group("fuzztest") {
     ":SetBootCompletedFuzzTest",
     ":SetParameterCFuzzTest",
     ":SetParameterCppFuzzTest",
+    ":SplitParamStringFuzzTest",
+    ":SplitStringExtFuzzTest",
     ":SplitStringFuzzTest",
     ":StartServiceByTimerFuzzTest",
     ":StopServiceTimerFuzzTest",
+    ":StringReplaceChrFuzzTest",
     ":StringToIntFuzzTest",
     ":StringToLLFuzzTest",
     ":StringToUintFuzzTest",
