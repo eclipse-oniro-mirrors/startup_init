@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include <limits.h>
+#include <climits>
 #include <cstdio>
 #include <cstring>
 #include <string>
