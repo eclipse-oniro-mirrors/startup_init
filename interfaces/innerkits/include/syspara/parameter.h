@@ -191,6 +191,8 @@ const char *AclGetBiosReleaseDate(void);
     "Permission verification failed. The application does not have " \
     "the permission required to call the API."
 
+#define BOARD_INFO_INVALID_PARAM_CODE 401
+
 int GetPerformanceClass(void);
 
 /**

@@ -14,6 +14,7 @@
  */
 #include "beget_ext.h"
 #include "parameter.h"
+#include "sysparam_errno.h"
 #include <stddef.h>
 
 #define DISK_SN_LEN 65
@@ -172,7 +173,7 @@ int32_t OH_GetDiskSN(char *diskSn)
 {
     if (diskSn == NULL) {
         BEGET_LOGE("GetDiskSN invalid param, diskSn is null");
-        return 0;
+        return BOARD_INFO_INVALID_PARAM_CODE;
     }
     int32_t ret = AclGetDiskSN(diskSn, DISK_SN_LEN);
     if (ret != 0) {
