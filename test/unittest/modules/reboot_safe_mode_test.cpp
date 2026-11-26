@@ -29,6 +29,9 @@ using namespace std;
 using namespace testing::ext;
 
 namespace init_ut {
+static constexpr size_t MISC_COMMAND_SIZE = 32;
+static constexpr size_t MISC_UPDATE_MESSAGE_SIZE = 2048;
+
 extern "C" int DoRebootSafemode(int id, const char *name, int argc, const char **argv);
 
 class RebootSafeModeTest : public testing::Test {
@@ -41,7 +44,7 @@ public:
 
 static int CallDoRebootSafemode(const char *arg)
 {
-    char buffer[32] = {0};
+    char buffer[MISC_COMMAND_SIZE] = {0};
     if (arg != nullptr) {
         if (strcpy_s(buffer, sizeof(buffer), arg) != EOK) {
             return -1;
@@ -66,7 +69,7 @@ HWTEST_F(RebootSafeModeTest, DoRebootSafemode_MiscContent, TestSize.Level1)
 {
     int ret = CallDoRebootSafemode("safemode");
     EXPECT_EQ(ret, 0);
-    char reason[32] = {0};
+    char reason[MISC_COMMAND_SIZE] = {0};
     int readRet = GetRebootReasonFromMisc(reason, sizeof(reason));
     if (readRet == 0) {
         EXPECT_STREQ(reason, "boot_safe");
@@ -76,7 +79,7 @@ HWTEST_F(RebootSafeModeTest, DoRebootSafemode_MiscContent, TestSize.Level1)
 HWTEST_F(RebootSafeModeTest, DoRebootSafemode_MiscWriteFailure_NoHang, TestSize.Level1)
 {
     EXPECT_EQ(CallDoRebootSafemode("safemode"), 0);
-    char buffer[32] = {0};
+    char buffer[MISC_COMMAND_SIZE] = {0};
     ASSERT_EQ(strcpy_s(buffer, sizeof(buffer), "safemode"), EOK);
     const char *argv[] = {buffer, nullptr};
     EXPECT_EQ(PluginExecCmd("reboot.safemode", 1, argv), 0);
@@ -117,7 +120,7 @@ HWTEST_F(RebootSafeModeTest, DoRebootSafemode_Registered, TestSize.Level1)
 
 HWTEST_F(RebootSafeModeTest, DoRebootSafemode_DispatchByCmd, TestSize.Level1)
 {
-    char buffer[32] = {0};
+    char buffer[MISC_COMMAND_SIZE] = {0};
     ASSERT_EQ(strcpy_s(buffer, sizeof(buffer), "safemode"), EOK);
     const char *argv[] = {buffer, nullptr};
     int ret = PluginExecCmd("reboot.safemode", 1, argv);
@@ -143,7 +146,7 @@ HWTEST_F(RebootSafeModeTest, DoRebootSafemode_NoMiscMount_ReturnsZero, TestSize.
     WriteSafeModeCmdLine(nullptr);
     char miscPath[PATH_MAX] = {0};
     ASSERT_NE(GetBlockDevicePath("/misc", miscPath, sizeof(miscPath)), 0);
-    char buffer[32] = {0};
+    char buffer[MISC_COMMAND_SIZE] = {0};
     ASSERT_EQ(strcpy_s(buffer, sizeof(buffer), "safemode"), EOK);
     const char *argv[] = {buffer, nullptr};
     int ret = DoRebootSafemode(0, "reboot.safemode", 1, argv);
@@ -157,9 +160,9 @@ HWTEST_F(RebootSafeModeTest, DoRebootSafemode_MiscReadFailure_ReturnsZero, TestS
     WriteSafeModeCmdLine(missingMisc);
     char miscPath[PATH_MAX] = {0};
     ASSERT_EQ(GetBlockDevicePath("/misc", miscPath, sizeof(miscPath)), 0);
-    char reason[32] = {0};
+    char reason[MISC_COMMAND_SIZE] = {0};
     ASSERT_NE(GetRebootReasonFromMisc(reason, sizeof(reason)), 0);
-    char buffer[32] = {0};
+    char buffer[MISC_COMMAND_SIZE] = {0};
     ASSERT_EQ(strcpy_s(buffer, sizeof(buffer), "safemode"), EOK);
     const char *argv[] = {buffer, nullptr};
     int ret = DoRebootSafemode(0, "reboot.safemode", 1, argv);
@@ -178,14 +181,14 @@ HWTEST_F(RebootSafeModeTest, DoRebootSafemode_MiscWriteFailure_ReturnsZero, Test
     FILE *writeFp = fopen(miscPath, "rb+");
     bool writable = false;
     if (writeFp != nullptr) {
-        char probe[2048] = {0};
+        char probe[MISC_UPDATE_MESSAGE_SIZE] = {0};
         size_t writeLen = fwrite(probe, sizeof(probe), 1, writeFp);
         int flushRet = fflush(writeFp);
         writable = (writeLen == 1) && (flushRet == 0) && (ferror(writeFp) == 0);
         (void)fclose(writeFp);
     }
     EXPECT_FALSE(writable) << "misc path must be readable but not writable";
-    char buffer[32] = {0};
+    char buffer[MISC_COMMAND_SIZE] = {0};
     ASSERT_EQ(strcpy_s(buffer, sizeof(buffer), "safemode"), EOK);
     const char *argv[] = {buffer, nullptr};
     int ret = DoRebootSafemode(0, "reboot.safemode", 1, argv);

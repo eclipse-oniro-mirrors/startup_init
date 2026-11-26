@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 #include <cstdio>
 #include <string>
+#include <unistd.h>
 
 #include "init_param.h"
 #include "param_message.h"
@@ -24,10 +25,12 @@
 #include "le_timer.h"
 #include "reboot_adp.h"
 #include "init_utils.h"
-#include "fs_manager/fs_manager.h"
 
 using namespace testing::ext;
 using namespace std;
+
+static constexpr size_t MISC_COMMAND_SIZE = 32;
+static constexpr size_t MISC_UPDATE_MESSAGE_SIZE = 2048;
 
 static int TestTriggerExecute(TriggerNode *trigger, const char *content, uint32_t size)
 {
@@ -644,7 +647,7 @@ HWTEST_F(ParamServiceUnitTest, Init_TestServiceCtrl_001, TestSize.Level0)
 HWTEST_F(ParamServiceUnitTest, Init_TestPowerCtrlDacForbidSafemode_001, TestSize.Level0)
 {
     const char *miscPath = STARTUP_INIT_UT_PATH "/misc_dac";
-    char miscBuf[2048] = {0};
+    char miscBuf[MISC_UPDATE_MESSAGE_SIZE] = {0};
     ASSERT_EQ(strcpy_s(miscBuf, sizeof(miscBuf), "boot_normal"), EOK);
     FILE *miscFp = fopen(miscPath, "wb");
     ASSERT_NE(miscFp, nullptr);
@@ -658,7 +661,7 @@ HWTEST_F(ParamServiceUnitTest, Init_TestPowerCtrlDacForbidSafemode_001, TestSize
     cmdLine += miscPath;
     cmdLine += "@/misc@none@none@wait,required ";
     CreateTestFile(BOOT_CMD_LINE, cmdLine.c_str());
-    char before[32] = {0};
+    char before[MISC_COMMAND_SIZE] = {0};
     ASSERT_EQ(GetRebootReasonFromMisc(before, sizeof(before)), 0);
     ASSERT_STREQ(before, "boot_normal");
     ParamServiceUnitTest test;
@@ -667,9 +670,10 @@ HWTEST_F(ParamServiceUnitTest, Init_TestPowerCtrlDacForbidSafemode_001, TestSize
 #ifndef PARAM_SUPPORT_SELINUX
     EXPECT_EQ(ret, DAC_RESULT_FORBIDED);
 #endif
-    char after[32] = {0};
+    char after[MISC_COMMAND_SIZE] = {0};
     EXPECT_EQ(GetRebootReasonFromMisc(after, sizeof(after)), 0);
     EXPECT_STREQ(after, "boot_normal");
+    (void)unlink(miscPath);
     PrepareCmdLineData();
 }
 
