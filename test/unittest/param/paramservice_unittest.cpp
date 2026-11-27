@@ -22,7 +22,9 @@
 #include "param_init.h"
 #include "trigger_manager.h"
 #include "le_timer.h"
+#ifndef OHOS_LITE
 #include "reboot_adp.h"
+#endif
 #include "init_utils.h"
 #include "fs_manager/fs_manager.h"
 
