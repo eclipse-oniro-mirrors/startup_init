@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 #include <gtest/gtest.h>
+#include <cstdio>
+#include <string>
+#include <unistd.h>
 
 #include "init_param.h"
 #include "param_message.h"
@@ -20,9 +23,14 @@
 #include "param_init.h"
 #include "trigger_manager.h"
 #include "le_timer.h"
+#include "reboot_adp.h"
+#include "init_utils.h"
 
 using namespace testing::ext;
 using namespace std;
+
+static constexpr size_t MISC_COMMAND_SIZE = 32;
+static constexpr size_t MISC_UPDATE_MESSAGE_SIZE = 2048;
 
 static int TestTriggerExecute(TriggerNode *trigger, const char *content, uint32_t size)
 {
@@ -634,6 +642,39 @@ HWTEST_F(ParamServiceUnitTest, Init_TestServiceCtrl_001, TestSize.Level0)
     EXPECT_NE(ret, 0);
 #endif
     ret = 0;
+}
+
+HWTEST_F(ParamServiceUnitTest, Init_TestPowerCtrlDacForbidSafemode_001, TestSize.Level0)
+{
+    const char *miscPath = STARTUP_INIT_UT_PATH "/misc_dac";
+    char miscBuf[MISC_UPDATE_MESSAGE_SIZE] = {0};
+    ASSERT_EQ(strcpy_s(miscBuf, sizeof(miscBuf), "boot_normal"), EOK);
+    FILE *miscFp = fopen(miscPath, "wb");
+    ASSERT_NE(miscFp, nullptr);
+    ASSERT_EQ(fwrite(miscBuf, 1, sizeof(miscBuf), miscFp), sizeof(miscBuf));
+    (void)fclose(miscFp);
+    std::string cmdLine = "bootgroup=device.boot.group earlycon=uart8250,mmio32,0xfe660000 "
+        "root=PARTUUID=614e0000-0000 rw rootwait rootfstype=ext4 console=ttyFIQ0 hardware=rk3568 "
+        "ohos.required_mount.system="
+        "/dev/block/platform/fe310000.sdhci/by-name/system@/usr@ext4@ro,barrier=1@wait,required "
+        "ohos.required_mount.misc=";
+    cmdLine += miscPath;
+    cmdLine += "@/misc@none@none@wait,required ";
+    CreateTestFile(BOOT_CMD_LINE, cmdLine.c_str());
+    char before[MISC_COMMAND_SIZE] = {0};
+    ASSERT_EQ(GetRebootReasonFromMisc(before, sizeof(before)), 0);
+    ASSERT_STREQ(before, "boot_normal");
+    ParamServiceUnitTest test;
+    int ret = test.TestPowerCtrl("reboot,safemode", 0770);
+    EXPECT_NE(ret, 0);
+#ifndef PARAM_SUPPORT_SELINUX
+    EXPECT_EQ(ret, DAC_RESULT_FORBIDED);
+#endif
+    char after[MISC_COMMAND_SIZE] = {0};
+    EXPECT_EQ(GetRebootReasonFromMisc(after, sizeof(after)), 0);
+    EXPECT_STREQ(after, "boot_normal");
+    (void)unlink(miscPath);
+    PrepareCmdLineData();
 }
 
 HWTEST_F(ParamServiceUnitTest, Init_TestPowerCtrl_001, TestSize.Level0)
